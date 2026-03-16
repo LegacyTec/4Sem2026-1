@@ -1,4 +1,4 @@
-# [Nome do Projeto] - [Nome da Empresa Parceira]
+# Sistema de Gestão de Manutenções - Altave
 
 > 🚀 **LegacyTech** | 4º Semestre - FATEC SJC | API - Sprint 1 🔄 EM ANDAMENTO
 
@@ -14,11 +14,9 @@
 
 ## 🎯 Sobre o Projeto
 
-<!-- Descreva o contexto e o problema que o projeto resolve -->
+**Problema:** A Altave opera cerca de 100 sistemas distribuídos mundialmente, cada um exigindo manutenções periódicas conforme suas horas de uso. O controle dessas manutenções — que variam em duração e criticidade conforme a localização dos sistemas (de um dia para intervenções próximas até vários dias para regiões como a Ásia) — é feito de forma manual ou descentralizada, sem visibilidade adequada do histórico, agendamentos, criticidade e logística envolvida.
 
-**Problema:** [Descrever o problema identificado pelo cliente/empresa parceira]
-
-**Solução:** [Descrever a solução proposta pela equipe]
+**Solução:** Desenvolvimento de um sistema web para gestão de manutenções preventivas e corretivas, permitindo o cadastro e acompanhamento de equipamentos, controle de técnicos e suas competências, agendamento de visitas com checklist de execução, controle de ferramentas e materiais para viagem, e visualização geográfica da localização dos sistemas e técnicos.
 
 # 🚀 [Link do Deploy - quando disponível]
 
@@ -27,11 +25,11 @@
 ## 📁 Estrutura do Projeto
 
 ```
-Documentacao/
-├── backend/              # 📦 Código-fonte do backend
+/
+├── backend/              # 📦 Código-fonte do backend (Spring Boot)
 │   ├── src/
 │   └── README.md
-├── frontend/             # 📦 Código-fonte do frontend
+├── frontend/             # 📦 Código-fonte do frontend (Vue.js)
 │   ├── src/
 │   └── README.md
 ├── Documentacao/         # Modelagem de dados, diagramas
@@ -57,10 +55,13 @@ Documentacao/
 
 | Tecnologia | Uso |
 | --- | --- |
-| **[Tecnologia 1]** | [Descrição do uso] |
-| **[Tecnologia 2]** | [Descrição do uso] |
-| **[Tecnologia 3]** | [Descrição do uso] |
-| **[Tecnologia 4]** | [Descrição do uso] |
+| **Spring Boot** | Backend — criação de APIs RESTful, injeção de dependências, segurança |
+| **Spring Data JPA / Hibernate** | Persistência e mapeamento objeto-relacional com Oracle |
+| **Oracle Database** | Banco de dados relacional principal; PL/SQL para programação backend |
+| **Vue.js** | Frontend — componentização, gerenciamento de estado, renderização condicional |
+| **Axios** | Integração do frontend com as APIs RESTful |
+| **Leaflet / Vue Chart.js** | Visualização de mapas (GIS) e gráficos dinâmicos |
+| **Spring Security** | Autenticação e autorização de usuários |
 
 ---
 
@@ -70,8 +71,8 @@ Consulte o [Manual de Instalação](./Manual%20de%20Instalação.md) para instru
 
 **Resumo:**
 
-* **Backend:** `[comando para rodar o backend]`
-* **Frontend:** `[comando para rodar o frontend]`
+* **Backend:** `./mvnw spring-boot:run`
+* **Frontend:** `npm install && npm run dev`
 
 ---
 
@@ -98,30 +99,39 @@ Consulte o [Manual de Instalação](./Manual%20de%20Instalação.md) para instru
 
 **Requisitos Funcionais**
 
-* [RF01] - [Descrição]
-* [RF02] - [Descrição]
-* [RF03] - [Descrição]
-* [RF04] - [Descrição] *(desejável)*
+* [RF01] - Agendar manutenções (preventivas e corretivas) respeitando intervalo contratual e criticidade
+* [RF02] - Registrar e acompanhar a execução de manutenções por meio de checklist
+* [RF03] - Controlar ferramentas e equipamentos necessários para cada viagem de manutenção (formulário de retirada)
+* [RF04] - Visualizar localização geográfica dos sistemas e técnicos em mapa (GIS)
+* [RF05] - Consultar histórico completo de manutenções por equipamento
+* [RF06] - Calcular e exibir previsão de chegada dos técnicos aos locais de manutenção
+* [RF07] - Avaliar impacto de manutenções urgentes sobre o planejamento existente *(desejável)*
+* [RF08] - Telas de cadastro de equipamentos, técnicos e contratos *(desejável — Sprint 3 se houver tempo)*
 
 **Requisitos Não Funcionais**
 
-* [RNF01] - [Descrição]
-* [RNF02] - [Descrição]
-* [RNF03] - [Descrição]
+* [RNF01] - Manual de Instalação disponível no repositório Git (requisito Fatec – obrigatório)
+* [RNF02] - Manual do Usuário disponível (requisito Fatec – obrigatório)
+* [RNF03] - Documentação da API (Swagger / OpenAPI)
+* [RNF04] - Modelagem de Banco de Dados com DER e dicionário de dados
+* [RNF05] - Sistema operacional em cloud (Oracle Cloud)
+* [RNF06] - Backend desenvolvido com Spring Boot (Java) + Spring Security + Spring Data JPA com Oracle
+* [RNF07] - Frontend desenvolvido com Vue.js + Axios + Leaflet/Vue Chart.js
 
 ---
 
 ## ⭐ Product Backlog
 
-| Rank | Prioridade | User Story | Estimativa (Story Points) | Sprint |
+| Rank | Prioridade | User Story | Estimativa (SP) | Sprint |
 | --- | --- | --- | --- | --- |
-| 1 | Alta | Como **[Ator]**, quero **[ação]** para que **[benefício]**. | - | 1 |
-| 2 | Alta | Como **[Ator]**, quero **[ação]** para que **[benefício]**. | - | 1 |
-| 3 | Alta | Como **[Ator]**, quero **[ação]** para que **[benefício]**. | - | 2 |
-| 4 | Média | Como **[Ator]**, quero **[ação]** para que **[benefício]**. | - | 2 |
-| 5 | Média | Como **[Ator]**, quero **[ação]** para que **[benefício]**. | - | 3 |
-| 6 | Baixa | Como **[Ator]**, quero **[ação]** para que **[benefício]**. | - | 3 |
-| 7 | Baixa | Como **[Ator]**, quero **[ação]** para que **[benefício]**. | - | 4 |
+| 1 | Alta | Como **gestor**, quero **agendar manutenções preventivas e corretivas** para que **o intervalo contratual seja respeitado e as prioridades sejam atendidas**. | 13 | 1 |
+| 2 | Alta | Como **técnico**, quero **acessar e preencher o checklist de manutenção** para que **a execução seja padronizada e registrada corretamente**. | 8 | 1 |
+| 3 | Alta | Como **gestor**, quero **controlar a retirada de ferramentas e equipamentos para a viagem** para que **extravios sejam evitados e a logística seja rastreável**. | 8 | 2 |
+| 4 | Alta | Como **gestor**, quero **visualizar a localização dos sistemas e técnicos em um mapa** para que **eu possa tomar decisões logísticas com base na posição geográfica**. | 13 | 2 |
+| 5 | Média | Como **gestor**, quero **consultar o histórico de manutenções por equipamento** para que **eu tenha rastreabilidade completa das intervenções realizadas**. | 5 | 2 |
+| 6 | Média | Como **gestor**, quero **visualizar a previsão de chegada dos técnicos** para que **o planejamento das manutenções seja mais preciso**. | 8 | 3 |
+| 7 | Média | Como **gestor**, quero **avaliar o impacto de uma manutenção urgente no planejamento vigente** para que **eu possa reordenar prioridades sem comprometer outros atendimentos**. | 8 | 3 |
+| 8 | Baixa | Como **gestor**, quero **cadastrar equipamentos, técnicos e contratos** para que **os dados possam ser mantidos diretamente pelo sistema quando necessário**. | 13 | 3 *(se houver tempo)* |
 
 ---
 
@@ -129,10 +139,9 @@ Consulte o [Manual de Instalação](./Manual%20de%20Instalação.md) para instru
 
 | SPRINTS | PERÍODOS | DESCRIÇÃO |
 | --- | --- | --- |
-| Sprint 1 | [data início] à [data fim] | [Descrição das entregas da Sprint 1] |
-| Sprint 2 | [data início] à [data fim] | [Descrição das entregas da Sprint 2] |
-| Sprint 3 | [data início] à [data fim] | [Descrição das entregas da Sprint 3] |
-| Sprint 4 | [data início] à [data fim] | [Descrição das entregas da Sprint 4] |
+| Sprint 1 | [data início] à [data fim] | Agendamento de manutenções com criticidade e intervalos contratuais; checklist de execução; setup base do projeto (Spring Boot + Vue.js + Oracle) |
+| Sprint 2 | [data início] à [data fim] | Controle logístico de ferramentas e viagem; visualização GIS com Leaflet; histórico de manutenções por equipamento |
+| Sprint 3 | [data início] à [data fim] | Previsão de chegada; avaliação de impacto de urgências; telas de cadastro (se houver tempo); deploy em cloud e ajustes finais |
 
 ---
 
@@ -146,10 +155,25 @@ Consulte o [Manual de Instalação](./Manual%20de%20Instalação.md) para instru
 
 **User Stories:**
 
-* 🔄 **US 1:** [Descrição] (- SP)
-* 🔄 **US 2:** [Descrição] (- SP)
+* 🔄 **US 1:** Agendamento de manutenções preventivas e corretivas (13 SP)
+* 🔄 **US 2:** Checklist de execução de manutenção (8 SP)
 
-**Progress:** - tarefas | ✅ - concluídas | 🔄 - em progresso | 📋 - a fazer
+**Progress:** 21 SP total | ✅ 0 concluídas | 🔄 2 em progresso | 📋 0 a fazer
+
+#### 📉 Burndown — Sprint 1
+
+| Dia | SP Restantes (Ideal) | SP Restantes (Real) |
+| --- | --- | --- |
+| Dia 1 | 21 | 21 |
+| Dia 2 | 18 | - |
+| Dia 3 | 15 | - |
+| Dia 4 | 12 | - |
+| Dia 5 | 9 | - |
+| Dia 6 | 6 | - |
+| Dia 7 | 3 | - |
+| Dia 8 | 0 | - |
+
+> 📌 Preencher a coluna **Real** ao final de cada dia de trabalho.
 
 ---
 
@@ -166,14 +190,6 @@ Consulte o [Manual de Instalação](./Manual%20de%20Instalação.md) para instru
 **Período:** [data início] – [data fim]
 
 📄 **[Ver alocação detalhada e burndown → SPRINT_3.md](./SPRINT_3.md)**
-
----
-
-### 🏃‍♂️ Sprint 4 (📋 Aguardando)
-
-**Período:** [data início] – [data fim]
-
-📄 **[Ver alocação detalhada e burndown → SPRINT_4.md](./SPRINT_4.md)**
 
 ---
 
@@ -197,7 +213,7 @@ Consulte o [Manual de Instalação](./Manual%20de%20Instalação.md) para instru
 ```
 main            → Código estável/produção
 sprint-N        → Branch de cada sprint (ex: sprint-1, sprint-2)
-feature/nome    → Features individuais (ex: feature/nome-da-feature)
+feature/nome    → Features individuais (ex: feature/cadastro-equipamentos)
 ```
 
 **Fluxo:**
@@ -230,10 +246,10 @@ tipo(escopo): descrição curta
 **Exemplos:**
 
 ```
-feat(backend): adicionar endpoint de [funcionalidade]
-fix(frontend): corrigir [problema]
+feat(backend): adicionar endpoint de agendamento de manutenção
+fix(frontend): corrigir exibição do mapa GIS
 docs(readme): atualizar instruções de instalação
-refactor(backend): extrair lógica de [classe/serviço]
+refactor(backend): extrair lógica de cálculo de prioridade para serviço dedicado
 ```
 
 ---
