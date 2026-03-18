@@ -112,6 +112,7 @@ O sistema é composto por cinco módulos funcionais. Cada um possui documentaç�
 | **Vue Chart.js** | Gráficos e dashboards dinâmicos |
 | **Spring Security + JWT** | Autenticação e autorização |
 | **JavaMail / SMTP** | Disparo de e-mails de alerta automático |
+| **Tailwind** | Biblioteca front end |
 
 ---
 
