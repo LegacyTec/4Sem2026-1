@@ -1,6 +1,7 @@
 package com.legacytech.altave.service;
 
 import com.legacytech.altave.dto.ChecklistExecucaoRequest;
+import com.legacytech.altave.dto.ChecklistExecucaoResponse;
 import com.legacytech.altave.model.ChecklistExecucao;
 import com.legacytech.altave.model.OrdemServico;
 import com.legacytech.altave.repository.ChecklistExecucaoRepository;
@@ -22,24 +23,43 @@ public class ChecklistService {
     @Autowired
     private OrdemServicoRepository ordemServicoRepository;
 
-    public List<ChecklistExecucao> listarPorOrdem(Long ordemServicoId) {
+    public List<ChecklistExecucaoResponse> listarPorOrdem(Long ordemServicoId) {
         ordemServicoRepository.findById(ordemServicoId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Ordem de servico nao encontrada"));
 
-        return checklistExecucaoRepository.findByOrdemServicoId(ordemServicoId);
+        List<ChecklistExecucao> execucoes = 
+                checklistExecucaoRepository.findByOrdemServicoId(ordemServicoId);
+        
+            return execucoes.stream()
+                .map(this::toResponse)
+                .toList();
     }
 
-    public ChecklistExecucao atualizarItem(Long itemExecucaoId, ChecklistExecucaoRequest request) {
+    public ChecklistExecucaoResponse atualizarItem(Long itemExecucaoId, ChecklistExecucaoRequest request) {
         ChecklistExecucao execucao = checklistExecucaoRepository.findById(itemExecucaoId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Item do checklist nao encontrado"));
 
-        execucao.setConcluido(request.getConcluido());
+        execucao.setConcluido(request.getConcluido() ? "S" : "N");
         execucao.setObservacao(request.getObservacao());
         execucao.setDtRegistro(LocalDateTime.now());
 
-        return checklistExecucaoRepository.save(execucao);
+        checklistExecucaoRepository.save(execucao);
+        return toResponse(execucao);
+    }
+
+    private ChecklistExecucaoResponse toResponse(ChecklistExecucao execucao) {
+        ChecklistExecucaoResponse response = new ChecklistExecucaoResponse();
+        response.setId(execucao.getId());
+        response.setObservacao(execucao.getObservacao());
+        response.setDtRegistro(execucao.getDtRegistro());
+        response.setConcluido(execucao.getConcluido().equals("S"));
+
+        response.setDescricaoItem(execucao.getItem().getDescricao());
+        response.setObrigatorioItem(execucao.getItem().getObrigatorio().equals("S") ? "Sim" : "Nao");
+        
+        return response;
     }
 
     public boolean todosObrigatoriosConcluidos(Long ordemServicoId) {

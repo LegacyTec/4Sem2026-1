@@ -12,7 +12,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/ativos")
-@CrossOrigin(origins = "*")
 @Tag(name = "Ativos", description = "Endpoints para consulta de equipamentos")
 public class AtivoController {
 
