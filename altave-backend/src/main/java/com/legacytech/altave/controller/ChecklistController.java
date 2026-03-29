@@ -13,7 +13,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/ordens")
-@CrossOrigin(origins = "*")
 @Tag(name = "Checklist", description = "Endpoints para execucao do checklist de campo")
 public class ChecklistController {
 

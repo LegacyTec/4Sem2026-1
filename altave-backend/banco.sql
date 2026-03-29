@@ -281,8 +281,8 @@ END;
 INSERT INTO cliente VALUES (seq_cliente.NEXTVAL, 'Altave Monitoramento', 'Brasil', 'alta', 'S');
 INSERT INTO cliente VALUES (seq_cliente.NEXTVAL, 'Cliente Asia Ltda', 'Japao', 'media', 'S');
 
-INSERT INTO contrato VALUES (seq_contrato.NEXTVAL, 1, 'CTR-2024-001', 'alta', 30, DATE '2024-01-01', DATE '2026-12-31');
-INSERT INTO contrato VALUES (seq_contrato.NEXTVAL, 2, 'CTR-2024-002', 'media', 60, DATE '2024-06-01', DATE '2026-06-30');
+INSERT INTO contrato VALUES (seq_contrato.NEXTVAL, 1, 'CTR-2024-001', 'alta', 30, TO_DATE('2024-01-01', 'YYYY-MM-DD'), TO_DATE('2026-12-31', 'YYYY-MM-DD'));
+INSERT INTO contrato VALUES (seq_contrato.NEXTVAL, 2, 'CTR-2024-002', 'media', 60, TO_DATE('2024-06-01', 'YYYY-MM-DD'), TO_DATE('2026-06-30', 'YYYY-MM-DD'));
 
 INSERT INTO certificacao VALUES (seq_certificacao.NEXTVAL, 'NR35', 'Trabalho em altura', 24);
 INSERT INTO certificacao VALUES (seq_certificacao.NEXTVAL, 'NR10', 'Seguranca em eletricidade', 12);
@@ -300,22 +300,22 @@ INSERT INTO tipo_equipamento VALUES (seq_tipo_equip.NEXTVAL, 'Sistema de Comunic
 INSERT INTO regra_manutencao VALUES (seq_regra_manut.NEXTVAL, 1, 'preventiva', 90, 500, 15);
 INSERT INTO regra_manutencao VALUES (seq_regra_manut.NEXTVAL, 2, 'preventiva', 180, 1000, 30);
 
-INSERT INTO ativo VALUES (seq_ativo.NEXTVAL, 1, 1, 1, 'SN-AX200-001', DATE '2023-01-15', 480, 'operacional');
-INSERT INTO ativo VALUES (seq_ativo.NEXTVAL, 1, 1, 1, 'SN-AX200-002', DATE '2023-03-10', 320, 'operacional');
-INSERT INTO ativo VALUES (seq_ativo.NEXTVAL, 2, 2, 2, 'SN-COM100-001', DATE '2022-07-01', 950, 'operacional');
+INSERT INTO ativo VALUES (seq_ativo.NEXTVAL, 1, 1, 1, 'SN-AX200-001', TO_DATE('2023-01-15', 'YYYY-MM-DD'), 480, 'operacional');
+INSERT INTO ativo VALUES (seq_ativo.NEXTVAL, 1, 1, 1, 'SN-AX200-002', TO_DATE('2023-03-10', 'YYYY-MM-DD'), 320, 'operacional');
+INSERT INTO ativo VALUES (seq_ativo.NEXTVAL, 2, 2, 2, 'SN-COM100-001', TO_DATE('2022-07-01', 'YYYY-MM-DD'), 950, 'operacional');
 
 INSERT INTO tecnico VALUES (seq_tecnico.NEXTVAL, 'Carlos Silva', 'carlos.silva@altave.com', 'senior', 'disponivel', 1, 1, -22.9068, -43.1729, NULL, NULL);
 INSERT INTO tecnico VALUES (seq_tecnico.NEXTVAL, 'Ana Souza', 'ana.souza@altave.com', 'pleno', 'disponivel', 1, 1, -22.9068, -43.1729, NULL, NULL);
 INSERT INTO tecnico VALUES (seq_tecnico.NEXTVAL, 'Pedro Yamamoto', 'pedro.yamamoto@altave.com', 'junior', 'disponivel', 2, 2, 35.6762, 139.6503, NULL, NULL);
 
-INSERT INTO tecnico_certificacao VALUES (1, 1, DATE '2023-01-10', DATE '2025-01-10', 'DOC-NR35-001');
-INSERT INTO tecnico_certificacao VALUES (1, 2, DATE '2023-01-10', DATE '2024-12-31', 'DOC-NR10-001');
-INSERT INTO tecnico_certificacao VALUES (2, 1, DATE '2023-06-15', DATE '2025-06-15', 'DOC-NR35-002');
+INSERT INTO tecnico_certificacao VALUES (1, 1, TO_DATE('2023-01-10', 'YYYY-MM-DD'), TO_DATE('2025-01-10', 'YYYY-MM-DD'), 'DOC-NR35-001');
+INSERT INTO tecnico_certificacao VALUES (1, 2, TO_DATE('2023-01-10', 'YYYY-MM-DD'), TO_DATE('2024-12-31', 'YYYY-MM-DD'), 'DOC-NR10-001');
+INSERT INTO tecnico_certificacao VALUES (2, 1, TO_DATE('2023-06-15', 'YYYY-MM-DD'), TO_DATE('2025-06-15', 'YYYY-MM-DD'), 'DOC-NR35-002');
 
 INSERT INTO manutencao VALUES (seq_manutencao.NEXTVAL, 1, NULL, 'preventiva', 'pendente', 'alta',
-    DATE '2025-04-01', DATE '2025-04-15', NULL, NULL, 480, NULL, 'S');
+    TO_DATE('2025-04-01', 'YYYY-MM-DD'), TO_DATE('2025-04-15', 'YYYY-MM-DD'), NULL, NULL, 480, NULL, 'S');
 INSERT INTO manutencao VALUES (seq_manutencao.NEXTVAL, 3, NULL, 'corretiva', 'pendente', 'media',
-    DATE '2025-03-25', DATE '2025-03-30', NULL, NULL, 950, NULL, 'N');
+    TO_DATE('2025-03-25', 'YYYY-MM-DD'), TO_DATE('2025-03-30', 'YYYY-MM-DD'), NULL, NULL, 950, NULL, 'N');
 
 INSERT INTO checklist_template VALUES (seq_ck_template.NEXTVAL, 1, 'Revisao Trimestral Drone AX-200');
 INSERT INTO checklist_item VALUES (seq_ck_item.NEXTVAL, 1, 'Verificar integridade das helices', 'S');

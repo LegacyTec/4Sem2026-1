@@ -15,7 +15,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/manutencoes")
-@CrossOrigin(origins = "*")
 @Tag(name = "Manutencoes", description = "Endpoints para gestao do ciclo de vida das manutencoes")
 public class ManutencaoController {
 
