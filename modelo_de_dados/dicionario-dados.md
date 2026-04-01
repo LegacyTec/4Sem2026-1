@@ -37,7 +37,7 @@ Representa os contratos firmados com o cliente
 
 ### ⭐ Tabela certificacao
 
-Representa as certificações que a empresa exige e também as certificações que o técnico possue.
+Representa as certificações que a empresa exige e também as certificações que o técnico possui.
 
 | Campo | Tipo | Obrigatório | Descrição | Observação |
 |-------|------|-------------|-----------|------------|
@@ -93,6 +93,8 @@ Representa as regras de manutenção que a empresa altave deve seguir de acordo 
 
 ### ⚡ Tabela ativo
 
+Representa os equipamentos ativados dentro da empresa (Cliente).
+
 | Campo | Tipo | Obrigatório | Descrição | Observação |
 |-------|------|-------------|-----------|------------|
 | id | NUMBER | Sim | Identificador do ativo | PK |
@@ -104,13 +106,56 @@ Representa as regras de manutenção que a empresa altave deve seguir de acordo 
 | horas_uso_acumuladas | NUMBER | Sim | Horas de uso acumuladas | DEFAULT 0 | 
 | status | VARCHAR2(20) | Sim | Status do ativo | CHECK | 
 
+## 👩‍💻 MODULO 2 - Tecnicos e Competências
+
+### 👨‍🔧 Tabela tecnico
+
+Armazena os dados dos técnicos responsáveis pelas manutenções, incluindo nível, status e localização.
+
+| Campo                | Tipo          | Obrigatório | Descrição                     | Observação          |
+| -------------------- | ------------- | ----------- | ----------------------------- | ------------------- |
+| id                   | NUMBER        | Sim         | Identificador do técnico      | PK                  |
+| nome                 | VARCHAR2(200) | Sim         | Nome completo                 |                     |
+| email                | VARCHAR2(200) | Sim         | Email do técnico              | UNIQUE              |
+| nivel                | VARCHAR2(10)  | Sim         | Nível (junior, pleno, senior) | CHECK               |
+| status               | VARCHAR2(20)  | Sim         | Status atual                  | DEFAULT + CHECK     |
+| localizacao_base_id  | NUMBER        | Não         | Localização base do técnico   | FK → localizacao.id |
+| localizacao_atual_id | NUMBER        | Não         | Localização atual             | FK → localizacao.id |
+| lat_atual            | NUMBER(10,7)  | Não         | Latitude atual                |                     |
+| lng_atual            | NUMBER(10,7)  | Não         | Longitude atual               |                     |
+| dt_ultimo_embarque   | DATE          | Não         | Data do último embarque       |                     |
+| dt_previsto_retorno  | DATE          | Não         | Data prevista de retorno      |                     |
 
 
+### 🎓 Tabela: tecnico_certificacao
 
+Relaciona técnicos com suas certificações.
 
+| Campo           | Tipo          | Obrigatório | Descrição                     | Observação              |
+| --------------- | ------------- | ----------- | ----------------------------- | ----------------------- |
+| tecnico_id      | NUMBER        | Sim         | Identificador do técnico      | PK/FK → tecnico.id      |
+| certificacao_id | NUMBER        | Sim         | Identificador da certificação | PK/FK → certificacao.id |
+| dt_obtencao     | DATE          | Sim         | Data de obtenção              |                         |
+| dt_vencimento   | DATE          | Sim         | Data de vencimento            |                         |
+| documento_ref   | VARCHAR2(200) | Não         | Referência do documento       |                         |
 
+### 📅 Tabela: disponibilidade_tecnico
 
+Controla períodos de indisponibilidade dos técnicos.
 
+| Campo              | Tipo         | Obrigatório | Descrição                       | Observação            |
+| ------------------ | ------------ | ----------- | ------------------------------- | --------------------- |
+| id                 | NUMBER       | Sim         | Identificador                   | PK                    |
+| tecnico_id         | NUMBER       | Sim         | Técnico associado               | FK → tecnico.id       |
+| dt_inicio_bloqueio | DATE         | Sim         | Início do bloqueio              |                       |
+| dt_fim_bloqueio    | DATE         | Sim         | Fim do bloqueio                 |                       |
+| motivo             | VARCHAR2(20) | Sim         | Motivo (férias, embarque, etc.) | CHECK                 |
+| manutencao_id      | NUMBER       | Não         | Manutenção associada            | (relacional indireto) |
 
+### 🔗 Relacionamentos
 
-
+- tecnico.localizacao_base_id → localizacao.id
+- tecnico.localizacao_atual_id → localizacao.id
+- tecnico_certificacao.tecnico_id → tecnico.id
+- tecnico_certificacao.certificacao_id → certificacao.id
+- disponibilidade_tecnico.tecnico_id → tecnico.id
