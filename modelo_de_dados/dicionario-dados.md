@@ -106,7 +106,16 @@ Representa os equipamentos ativados dentro da empresa (Cliente).
 | horas_uso_acumuladas | NUMBER | Sim | Horas de uso acumuladas | DEFAULT 0 | 
 | status | VARCHAR2(20) | Sim | Status do ativo | CHECK | 
 
-## 👩‍💻 MODULO 2 - Tecnicos e Competências
+### 🔗 Relacionamentos
+- contrato.cliente_id → cliente.id
+- contrato_certificacao.contrato_id → contrato.id
+- contrato_certificacao.certificacao_id → certificacao.id
+- regra_manutencao.contrato_id → contrato.id
+- ativo.contrato_id → contrato.id
+- ativo.tipo_equipamento_id → tipo_equipamento.id
+- ativo.localizacao_id → localizacao.id
+
+## 👩‍💻 MODULO 2 - Técnicos e Competências
 
 ### 👨‍🔧 Tabela tecnico
 
@@ -127,7 +136,7 @@ Armazena os dados dos técnicos responsáveis pelas manutenções, incluindo ní
 | dt_previsto_retorno  | DATE          | Não         | Data prevista de retorno      |                     |
 
 
-### 🎓 Tabela: tecnico_certificacao
+### 🎓 Tabela tecnico_certificacao
 
 Relaciona técnicos com suas certificações.
 
@@ -139,7 +148,7 @@ Relaciona técnicos com suas certificações.
 | dt_vencimento   | DATE          | Sim         | Data de vencimento            |                         |
 | documento_ref   | VARCHAR2(200) | Não         | Referência do documento       |                         |
 
-### 📅 Tabela: disponibilidade_tecnico
+### 📅 Tabela disponibilidade_tecnico
 
 Controla períodos de indisponibilidade dos técnicos.
 
@@ -159,3 +168,147 @@ Controla períodos de indisponibilidade dos técnicos.
 - tecnico_certificacao.tecnico_id → tecnico.id
 - tecnico_certificacao.certificacao_id → certificacao.id
 - disponibilidade_tecnico.tecnico_id → tecnico.id
+
+## 🔧 MODULO 3 - Manutenções
+
+### 🛠️ Tabela manutencao
+
+Armazena as manutenções realizadas ou planejadas para os ativos, incluindo informações de execução, status e criticidade.
+
+| Campo                  | Tipo         | Obrigatório | Descrição                                  | Observação        |
+| ---------------------- | ------------ | ----------- | ------------------------------------------ | ----------------- |
+| id                     | NUMBER       | Sim         | Identificador da manutenção                | PK                |
+| ativo_id               | NUMBER       | Sim         | Ativo associado                            | FK → ativo.id     |
+| tecnico_id             | NUMBER       | Não         | Técnico responsável                        | FK → tecnico.id   |
+| tipo                   | VARCHAR2(20) | Sim         | Tipo (preventiva ou corretiva)             | CHECK             |
+| status                 | VARCHAR2(20) | Sim         | Status da manutenção                       | DEFAULT + CHECK   |
+| criticidade            | VARCHAR2(10) | Sim         | Nível de criticidade                       | CHECK             |
+| dt_prevista            | DATE         | Sim         | Data prevista                              |                   |
+| dt_limite              | DATE         | Sim         | Data limite para execução                  |                   |
+| dt_inicio_execucao     | TIMESTAMP    | Não         | Início da execução                         |                   |
+| dt_conclusao           | TIMESTAMP    | Não         | Conclusão da manutenção                    |                   |
+| horas_uso_no_momento   | NUMBER       | Não         | Horas de uso do ativo no momento           | DEFAULT 0         |
+| observacoes            | CLOB         | Não         | Observações gerais                         |                   |
+| gerado_automaticamente | CHAR(1)      | Sim         | Indica se foi gerada automaticamente (S/N) | DEFAULT N + CHECK |
+
+### 👥 Tabela equipe_manutencao
+
+Define os técnicos alocados em uma manutenção e seus respectivos papéis.
+
+| Campo         | Tipo         | Obrigatório | Descrição                        | Observação            |
+| ------------- | ------------ | ----------- | -------------------------------- | --------------------- |
+| manutencao_id | NUMBER       | Sim         | Identificador da manutenção      | PK/FK → manutencao.id |
+| tecnico_id    | NUMBER       | Sim         | Técnico participante             | PK/FK → tecnico.id    |
+| papel         | VARCHAR2(20) | Sim         | Papel na equipe (líder/auxiliar) | CHECK                 |
+| dt_alocacao   | DATE         | Sim         | Data de alocação                 |                       |
+
+### 📊 Tabela historico_status
+
+Registra o histórico de mudanças de status das manutenções.
+
+| Campo           | Tipo          | Obrigatório | Descrição              | Observação         |
+| --------------- | ------------- | ----------- | ---------------------- | ------------------ |
+| id              | NUMBER        | Sim         | Identificador          | PK                 |
+| manutencao_id   | NUMBER        | Sim         | Manutenção associada   | FK → manutencao.id |
+| status_anterior | VARCHAR2(20)  | Não         | Status anterior        |                    |
+| status_novo     | VARCHAR2(20)  | Sim         | Novo status            |                    |
+| dt_transicao    | TIMESTAMP     | Sim         | Data/hora da transição |                    |
+| usuario_id      | NUMBER        | Não         | Usuário responsável    | (não referenciado) |
+| motivo          | VARCHAR2(500) | Não         | Motivo da alteração    |                    |
+
+### 🔗 Relacionamentos
+
+* manutencao.ativo_id → ativo.id
+* manutencao.tecnico_id → tecnico.id
+* equipe_manutencao.manutencao_id → manutencao.id
+* equipe_manutencao.tecnico_id → tecnico.id
+* historico_status.manutencao_id → manutencao.id
+
+## 🚚 Módulo 4 - Logística e Checklist
+
+### 📦 Tabela: ordem_servico
+
+Representa a execução logística de uma manutenção, controlando deslocamento e atuação do técnico em campo.
+
+| Campo          | Tipo         | Obrigatório | Descrição                         | Observação         |
+| -------------- | ------------ | ----------- | --------------------------------- | ------------------ |
+| id             | NUMBER       | Sim         | Identificador da ordem de serviço | PK                 |
+| manutencao_id  | NUMBER       | Sim         | Manutenção associada              | FK → manutencao.id |
+| tecnico_id     | NUMBER       | Sim         | Técnico responsável               | FK → tecnico.id    |
+| status         | VARCHAR2(20) | Sim         | Status da ordem                   | DEFAULT + CHECK    |
+| dt_saida       | DATE         | Não         | Data de saída                     |                    |
+| dt_retorno     | DATE         | Não         | Data de retorno                   |                    |
+| tempo_viagem_h | NUMBER       | Não         | Tempo de viagem em horas          | DEFAULT 0          |
+
+### 🧰 Tabela: item_estoque
+
+Controla os itens disponíveis em estoque utilizados nas operações.
+
+| Campo          | Tipo          | Obrigatório | Descrição             | Observação |
+| -------------- | ------------- | ----------- | --------------------- | ---------- |
+| id             | NUMBER        | Sim         | Identificador         | PK         |
+| nome           | VARCHAR2(200) | Sim         | Nome do item          |            |
+| categoria      | VARCHAR2(20)  | Sim         | Categoria do item     | CHECK      |
+| qtd_disponivel | NUMBER        | Sim         | Quantidade disponível | DEFAULT 0  |
+
+
+### 📤 Tabela: retirada_item
+
+Registra a retirada e devolução de itens do estoque para ordens de serviço.
+
+| Campo            | Tipo   | Obrigatório | Descrição            | Observação            |
+| ---------------- | ------ | ----------- | -------------------- | --------------------- |
+| id               | NUMBER | Sim         | Identificador        | PK                    |
+| ordem_servico_id | NUMBER | Sim         | Ordem de serviço     | FK → ordem_servico.id |
+| item_estoque_id  | NUMBER | Sim         | Item retirado        | FK → item_estoque.id  |
+| qtd_retirada     | NUMBER | Sim         | Quantidade retirada  |                       |
+| qtd_devolvida    | NUMBER | Não         | Quantidade devolvida | DEFAULT 0             |
+| dt_retirada      | DATE   | Sim         | Data da retirada     |                       |
+
+
+### 📋 Tabela: checklist_template
+
+Define modelos de checklist por tipo de equipamento.
+
+| Campo               | Tipo          | Obrigatório | Descrição           | Observação               |
+| ------------------- | ------------- | ----------- | ------------------- | ------------------------ |
+| id                  | NUMBER        | Sim         | Identificador       | PK                       |
+| tipo_equipamento_id | NUMBER        | Sim         | Tipo de equipamento | FK → tipo_equipamento.id |
+| nome                | VARCHAR2(200) | Sim         | Nome do template    |                          |
+
+### ✅ Tabela: checklist_item
+
+Itens que compõem um template de checklist.
+
+| Campo       | Tipo          | Obrigatório | Descrição               | Observação                 |
+| ----------- | ------------- | ----------- | ----------------------- | -------------------------- |
+| id          | NUMBER        | Sim         | Identificador           | PK                         |
+| template_id | NUMBER        | Sim         | Template associado      | FK → checklist_template.id |
+| descricao   | VARCHAR2(500) | Sim         | Descrição do item       |                            |
+| obrigatorio | CHAR(1)       | Sim         | Indica se é obrigatório | DEFAULT N + CHECK          |
+
+
+### 📝 Tabela: checklist_execucao
+
+Registra a execução dos itens de checklist em uma ordem de serviço.
+
+| Campo            | Tipo      | Obrigatório | Descrição              | Observação             |
+| ---------------- | --------- | ----------- | ---------------------- | ---------------------- |
+| id               | NUMBER    | Sim         | Identificador          | PK                     |
+| ordem_servico_id | NUMBER    | Sim         | Ordem de serviço       | FK → ordem_servico.id  |
+| item_id          | NUMBER    | Sim         | Item do checklist      | FK → checklist_item.id |
+| concluido        | CHAR(1)   | Sim         | Indica conclusão (S/N) | DEFAULT N + CHECK      |
+| observacao       | CLOB      | Não         | Observações            |                        |
+| dt_registro      | TIMESTAMP | Sim         | Data/hora do registro  |                        |
+
+### 🔗 Relacionamentos
+
+* ordem_servico.manutencao_id → manutencao.id
+* ordem_servico.tecnico_id → tecnico.id
+* retirada_item.ordem_servico_id → ordem_servico.id
+* retirada_item.item_estoque_id → item_estoque.id
+* checklist_template.tipo_equipamento_id → tipo_equipamento.id
+* checklist_item.template_id → checklist_template.id
+* checklist_execucao.ordem_servico_id → ordem_servico.id
+* checklist_execucao.item_id → checklist_item.id
+
