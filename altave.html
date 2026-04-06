@@ -1,0 +1,1841 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ALTAVE — Sistema de Gestão de Manutenção</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --blue-900: #0B1F33;
+    --blue-800: #112A44;
+    --blue-700: #1F4E79;
+    --blue-600: #2F6FA5;
+    --blue-400: #4A90E2;
+    --blue-200: #A8CCEF;
+    --blue-100: #D4E8F7;
+    --blue-50:  #EBF4FB;
+    --gray-900: #111827;
+    --gray-700: #374151;
+    --gray-500: #6B7280;
+    --gray-300: #D1D5DB;
+    --gray-200: #E5E7EB;
+    --gray-100: #F3F4F6;
+    --gray-50:  #F9FAFB;
+    --white:    #FFFFFF;
+    --green:    #16A34A;
+    --green-bg: #DCFCE7;
+    --amber:    #D97706;
+    --amber-bg: #FEF3C7;
+    --red:      #DC2626;
+    --red-bg:   #FEE2E2;
+    --sidebar-w: 220px;
+    --topbar-h:  60px;
+    --font: 'DM Sans', sans-serif;
+    --mono: 'DM Mono', monospace;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+  }
+
+  body {
+    font-family: var(--font);
+    background: var(--gray-100);
+    color: var(--gray-900);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* ─── SCREEN SWITCHER ─── */
+  #screen-switcher {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 1000;
+    background: var(--blue-900);
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding: 0 20px;
+    height: 48px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  #screen-switcher .brand {
+    font-size: 13px;
+    font-weight: 600;
+    color: white;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-right: 24px;
+    opacity: 0.9;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  #screen-switcher .brand-dot {
+    width: 8px; height: 8px;
+    background: var(--blue-400);
+    border-radius: 50%;
+  }
+  #screen-switcher .label {
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+    margin-right: 8px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .sw-btn {
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: rgba(255,255,255,0.55);
+    font-family: var(--font);
+    font-size: 12.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .sw-btn:hover { color: white; background: rgba(255,255,255,0.08); }
+  .sw-btn.active { background: var(--blue-600); color: white; }
+
+  .screen { display: none; padding-top: 48px; min-height: 100vh; }
+  .screen.active { display: block; }
+
+  /* ─── SHARED LAYOUT ─── */
+  .app-shell {
+    display: flex;
+    height: calc(100vh - 48px);
+    overflow: hidden;
+  }
+
+  /* ─── SIDEBAR ─── */
+  .sidebar {
+    width: var(--sidebar-w);
+    background: var(--blue-700);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    overflow-y: auto;
+  }
+  .sidebar-logo {
+    padding: 20px 20px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: var(--blue-400);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .logo-icon svg { width: 20px; height: 20px; fill: white; }
+  .logo-text { font-size: 15px; font-weight: 600; color: white; letter-spacing: 0.04em; }
+  .logo-sub { font-size: 10px; color: rgba(255,255,255,0.45); letter-spacing: 0.06em; text-transform: uppercase; }
+
+  .sidebar-section { padding: 12px 12px 4px; }
+  .sidebar-section-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(255,255,255,0.35);
+    padding: 0 8px;
+    margin-bottom: 4px;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    color: rgba(255,255,255,0.65);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 13.5px;
+    font-weight: 400;
+    margin-bottom: 1px;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.08); color: white; }
+  .nav-item.active { background: rgba(255,255,255,0.15); color: white; font-weight: 500; }
+  .nav-item .nav-icon { width: 16px; height: 16px; opacity: 0.8; flex-shrink: 0; }
+  .nav-badge {
+    margin-left: auto;
+    background: var(--blue-400);
+    color: white;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 6px;
+    border-radius: 20px;
+    min-width: 18px;
+    text-align: center;
+  }
+  .nav-badge.red { background: var(--red); }
+
+  .sidebar-footer {
+    margin-top: auto;
+    padding: 12px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
+  .user-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .user-card:hover { background: rgba(255,255,255,0.08); }
+  .avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600;
+    flex-shrink: 0;
+  }
+  .avatar-blue { background: var(--blue-400); color: white; }
+  .avatar-green { background: #16A34A; color: white; }
+  .avatar-amber { background: #D97706; color: white; }
+  .avatar-purple { background: #7C3AED; color: white; }
+  .user-info { flex: 1; min-width: 0; }
+  .user-name { font-size: 12.5px; font-weight: 500; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-role { font-size: 10.5px; color: rgba(255,255,255,0.4); }
+  .status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .status-online { background: #22C55E; }
+  .status-busy { background: var(--amber); }
+
+  /* ─── MAIN CONTENT ─── */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .topbar {
+    height: var(--topbar-h);
+    background: var(--white);
+    border-bottom: 1px solid var(--gray-200);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+  .topbar-title { font-size: 16px; font-weight: 600; color: var(--gray-900); flex: 1; }
+  .topbar-sub { font-size: 12px; color: var(--gray-500); font-weight: 400; margin-left: 8px; }
+  .topbar-actions { display: flex; align-items: center; gap: 10px; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px;
+    border-radius: var(--radius-sm);
+    border: none;
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .btn-primary { background: var(--blue-600); color: white; }
+  .btn-primary:hover { background: var(--blue-700); }
+  .btn-secondary { background: var(--white); color: var(--gray-700); border: 1px solid var(--gray-300); }
+  .btn-secondary:hover { background: var(--gray-50); }
+  .btn-ghost { background: transparent; color: var(--gray-500); }
+  .btn-ghost:hover { background: var(--gray-100); color: var(--gray-700); }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+  .btn-danger { background: var(--red); color: white; }
+
+  .content-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+    background: var(--gray-50);
+  }
+
+  /* ─── CARDS ─── */
+  .card {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    box-shadow: var(--shadow);
+  }
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .card-title { font-size: 14px; font-weight: 600; color: var(--gray-900); }
+  .card-sub { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
+
+  /* ─── METRIC CARDS ─── */
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+  .metrics-grid.cols-6 {
+    grid-template-columns: repeat(6, 1fr);
+  }
+  .metric-card {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    padding: 16px 18px;
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+  }
+  .metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .metric-card.blue::before { background: var(--blue-600); }
+  .metric-card.green::before { background: var(--green); }
+  .metric-card.amber::before { background: var(--amber); }
+  .metric-card.red::before { background: var(--red); }
+  .metric-icon {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 12px;
+  }
+  .metric-icon.blue { background: var(--blue-50); }
+  .metric-icon.green { background: var(--green-bg); }
+  .metric-icon.amber { background: var(--amber-bg); }
+  .metric-icon.red { background: var(--red-bg); }
+  .metric-icon svg { width: 18px; height: 18px; }
+  .metric-label { font-size: 11.5px; color: var(--gray-500); font-weight: 400; margin-bottom: 4px; }
+  .metric-value { font-size: 26px; font-weight: 600; color: var(--gray-900); line-height: 1.2; }
+  .metric-delta { font-size: 11px; margin-top: 4px; display: flex; align-items: center; gap: 3px; }
+  .metric-delta.metric-footer-muted { color: var(--gray-600); }
+  .metric-value.metric-asset {
+    font-size: 17px;
+    font-family: var(--mono);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    word-break: break-all;
+  }
+  .delta-up { color: var(--green); }
+  .delta-down { color: var(--red); }
+
+  /* ─── TABLE ─── */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th {
+    text-align: left;
+    padding: 10px 14px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--gray-500);
+    background: var(--gray-50);
+    border-bottom: 1px solid var(--gray-200);
+    white-space: nowrap;
+  }
+  tbody td {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--gray-100);
+    color: var(--gray-700);
+    vertical-align: middle;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: var(--gray-50); }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .badge-dot { width: 5px; height: 5px; border-radius: 50%; }
+  .badge-active { background: var(--green-bg); color: #15803D; }
+  .badge-pending { background: var(--amber-bg); color: #92400E; }
+  .badge-progress { background: var(--blue-50); color: var(--blue-700); }
+  .badge-done { background: var(--gray-100); color: var(--gray-600); }
+  .badge-late { background: var(--red-bg); color: #991B1B; }
+  .badge-install { background: #EDE9FE; color: #5B21B6; }
+
+  /* ─── GRID LAYOUTS ─── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  .section-title { font-size: 13px; font-weight: 600; color: var(--gray-700); margin-bottom: 12px; }
+
+  /* ─── SEARCH & FILTER BAR ─── */
+  .filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .search-input {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--white);
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-sm);
+    padding: 7px 12px;
+    flex: 1;
+    max-width: 300px;
+  }
+  .search-input svg { width: 14px; height: 14px; color: var(--gray-400); flex-shrink: 0; }
+  .search-input input {
+    border: none;
+    outline: none;
+    font-family: var(--font);
+    font-size: 13px;
+    color: var(--gray-700);
+    width: 100%;
+    background: transparent;
+  }
+  .filter-select {
+    padding: 7px 10px;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-sm);
+    font-family: var(--font);
+    font-size: 13px;
+    color: var(--gray-700);
+    background: var(--white);
+    outline: none;
+    cursor: pointer;
+  }
+
+  /* ─── PROGRESS BAR ─── */
+  .progress-bar-wrap { background: var(--gray-200); border-radius: 20px; height: 6px; overflow: hidden; }
+  .progress-bar { height: 100%; border-radius: 20px; transition: width 0.3s; }
+  .progress-blue { background: var(--blue-600); }
+  .progress-green { background: var(--green); }
+  .progress-amber { background: var(--amber); }
+  .progress-red { background: var(--red); }
+
+  /* ─── MINI CHART (SVG bars) ─── */
+  .chart-svg { width: 100%; height: 140px; display: block; }
+
+  /* ─── KANBAN ─── */
+  .kanban-board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    align-items: start;
+  }
+  .kanban-col {
+    background: var(--gray-100);
+    border-radius: var(--radius-lg);
+    padding: 14px;
+    border: 1px solid var(--gray-200);
+  }
+  .kanban-col-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    padding: 0 2px;
+  }
+  .kanban-col-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-700);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .kanban-count {
+    background: var(--gray-300);
+    color: var(--gray-600);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 1px 7px;
+    border-radius: 20px;
+  }
+  .kanban-col.col-progress .kanban-col-title { color: var(--blue-700); }
+  .kanban-col.col-progress .kanban-count { background: var(--blue-100); color: var(--blue-700); }
+  .kanban-col.col-done .kanban-col-title { color: var(--green); }
+  .kanban-col.col-done .kanban-count { background: var(--green-bg); color: #15803D; }
+
+  .kanban-card {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    box-shadow: var(--shadow);
+  }
+  .kanban-card:hover { border-color: var(--blue-200); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+  .kanban-card:last-child { margin-bottom: 0; }
+  .kanban-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .kanban-card-name { font-size: 13px; font-weight: 500; color: var(--gray-900); line-height: 1.4; }
+  .kanban-card-asset { font-size: 11.5px; color: var(--gray-500); margin-bottom: 10px; font-family: var(--mono); }
+  .kanban-card-footer { display: flex; align-items: center; justify-content: space-between; }
+  .kanban-avatars { display: flex; gap: -4px; }
+  .kanban-avatar {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    font-size: 9px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid var(--white);
+    margin-left: -4px;
+    color: white;
+  }
+  .kanban-avatar:first-child { margin-left: 0; }
+  .kanban-date { font-size: 11px; color: var(--gray-400); }
+  .kanban-type-stripe {
+    width: 3px;
+    position: absolute;
+    left: 0; top: 12px; bottom: 12px;
+    border-radius: 2px;
+  }
+
+  /* ─── CHECKLIST ─── */
+  .checklist-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--gray-100);
+    font-size: 13px;
+    color: var(--gray-700);
+  }
+  .checklist-item:last-child { border-bottom: none; }
+  .check-box {
+    width: 16px; height: 16px;
+    border: 2px solid var(--gray-300);
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+  .check-box.checked { border-color: var(--green); background: var(--green); }
+  .check-box.checked::after { content: '✓'; font-size: 10px; color: white; font-weight: 700; }
+
+  /* ─── DETAIL PANEL ─── */
+  .detail-overlay {
+    position: fixed;
+    top: 48px; right: 0;
+    width: 420px;
+    height: calc(100vh - 48px);
+    background: var(--white);
+    border-left: 1px solid var(--gray-200);
+    box-shadow: -4px 0 24px rgba(0,0,0,0.08);
+    z-index: 100;
+    display: none;
+    overflow-y: auto;
+  }
+  .detail-overlay.open { display: block; }
+  .detail-header {
+    padding: 20px;
+    border-bottom: 1px solid var(--gray-200);
+    position: sticky;
+    top: 0;
+    background: var(--white);
+    z-index: 1;
+  }
+  .detail-body { padding: 20px; }
+  .detail-close {
+    position: absolute;
+    top: 16px; right: 16px;
+    background: none; border: none; cursor: pointer;
+    color: var(--gray-400);
+    font-size: 18px;
+    width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 6px;
+  }
+  .detail-close:hover { background: var(--gray-100); color: var(--gray-700); }
+  .detail-field { margin-bottom: 16px; }
+  .detail-field-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--gray-400); font-weight: 600; margin-bottom: 4px; }
+  .detail-field-value { font-size: 13.5px; color: var(--gray-800); }
+
+  /* ─── MINI DONUT CHART ─── */
+  .donut-wrap { display: flex; align-items: center; gap: 20px; }
+  .donut-legend { flex: 1; }
+  .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 12.5px; color: var(--gray-600); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ─── ASSET TYPE ICONS ─── */
+  .asset-icon {
+    width: 30px; height: 30px;
+    border-radius: 7px;
+    background: var(--blue-50);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+
+  /* ─── TAG / CHIP ─── */
+  .chip {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+    background: var(--gray-100);
+    color: var(--gray-600);
+  }
+
+  /* ─── DIVIDER ─── */
+  .divider { height: 1px; background: var(--gray-200); margin: 16px 0; }
+
+  /* ─── ALERTS ─── */
+  .alert {
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .alert-warning { background: var(--amber-bg); color: #92400E; border-left: 3px solid var(--amber); }
+  .alert-info { background: var(--blue-50); color: var(--blue-700); border-left: 3px solid var(--blue-400); }
+
+  /* ─── USER STATUS ─── */
+  .user-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+  .status-online-badge { background: var(--green-bg); color: #15803D; }
+  .status-busy-badge { background: var(--amber-bg); color: #92400E; }
+  .status-offline-badge { background: var(--gray-100); color: var(--gray-500); }
+  .status-service-badge { background: var(--blue-50); color: var(--blue-700); }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 1200px) {
+    .metrics-grid.cols-6 { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (max-width: 900px) {
+    .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+    .metrics-grid.cols-6 { grid-template-columns: repeat(2, 1fr); }
+    .grid-2 { grid-template-columns: 1fr; }
+    .kanban-board { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ─── SCREEN SWITCHER ─── -->
+<nav id="screen-switcher">
+  <div class="brand"><div class="brand-dot"></div>ALTAVE — SGM</div>
+  <span class="label">Tela:</span>
+  <button class="sw-btn active" onclick="showScreen('adm')">ADM</button>
+  <button class="sw-btn" onclick="showScreen('supervisor')">Supervisor</button>
+  <button class="sw-btn" onclick="showScreen('planejador')">Planejador</button>
+  <button class="sw-btn" onclick="showScreen('tecnico')">Técnico</button>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════════
+     TELA 1 — ADM
+═══════════════════════════════════════════════════════ -->
+<div id="screen-adm" class="screen active">
+  <div class="app-shell">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        </div>
+        <div><div class="logo-text">Altave</div><div class="logo-sub">Gestão</div></div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Menu</div>
+        <div class="nav-item active">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          Dashboard
+        </div>
+        <div class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12h6M9 16h6M9 8h6M5 20h14a2 2 0 002-2V8l-6-6H5a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+          Contratos
+          <span class="nav-badge">8</span>
+        </div>
+        <div class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="3"/><path d="M12 8v4M8 12H4a8 8 0 0016 0h-4"/></svg>
+          Ativos
+          <span class="nav-badge">312</span>
+        </div>
+        <div class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+          Usuários
+          <span class="nav-badge">47</span>
+        </div>
+        <div class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          Ordens
+          <span class="nav-badge red">14</span>
+        </div>
+        <div class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          Relatórios
+        </div>
+        <div class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
+          Configurações
+        </div>
+      </div>
+      <div class="sidebar-footer">
+        <div class="user-card">
+          <div class="avatar avatar-blue">RG</div>
+          <div class="user-info">
+            <div class="user-name">Rafael Gomes</div>
+            <div class="user-role">Administrador</div>
+          </div>
+          <div class="status-dot status-online"></div>
+        </div>
+      </div>
+    </aside>
+    <!-- MAIN -->
+    <div class="main">
+      <div class="topbar">
+        <div>
+          <span class="topbar-title">Dashboard</span>
+          <span class="topbar-sub">Visão geral do sistema</span>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn btn-secondary btn-sm">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Abril 2025
+          </button>
+          <button class="btn btn-primary btn-sm">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Criar Contrato
+          </button>
+        </div>
+      </div>
+      <div class="content-area">
+
+        <!-- METRICS -->
+        <div class="metrics-grid">
+          <div class="metric-card blue">
+            <div class="metric-icon blue">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#2F6FA5" stroke-width="2"><path d="M9 12h6M9 16h6M9 8h6M5 20h14a2 2 0 002-2V8l-6-6H5a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+            </div>
+            <div class="metric-label">Total de Contratos</div>
+            <div class="metric-value">8</div>
+            <div class="metric-delta delta-up">↑ 2 este mês</div>
+          </div>
+          <div class="metric-card blue">
+            <div class="metric-icon blue">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#2F6FA5" stroke-width="2"><circle cx="12" cy="5" r="3"/><path d="M12 8v4M8 12H4a8 8 0 0016 0h-4"/></svg>
+            </div>
+            <div class="metric-label">Total de Ativos</div>
+            <div class="metric-value">312</div>
+            <div class="metric-delta delta-up">↑ 18 este mês</div>
+          </div>
+          <div class="metric-card green">
+            <div class="metric-icon green">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+            </div>
+            <div class="metric-label">Total de Usuários</div>
+            <div class="metric-value">47</div>
+            <div class="metric-delta delta-up">↑ 3 novos</div>
+          </div>
+          <div class="metric-card red">
+            <div class="metric-icon red">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="8"/></svg>
+            </div>
+            <div class="metric-label">Ordens em Andamento</div>
+            <div class="metric-value">41</div>
+            <div class="metric-delta delta-down">14 atrasadas</div>
+          </div>
+        </div>
+
+        <!-- TABLE + SIDEBAR INFO -->
+        <div class="grid-2" style="align-items: start;">
+          <!-- CONTRACTS TABLE -->
+          <div class="card" style="grid-column: 1 / -1;">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Contratos Ativos</div>
+                <div class="card-sub">8 contratos no total</div>
+              </div>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <div class="search-input" style="max-width:200px;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  <input type="text" placeholder="Buscar contrato...">
+                </div>
+                <button class="btn btn-secondary btn-sm">Exportar</button>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr>
+                  <th>Empresa</th><th>Início</th><th>Término</th><th>Plantas</th><th>Ativos</th><th>Ordens abertas</th><th>Status</th><th></th>
+                </tr></thead>
+                <tbody>
+                  <tr>
+                    <td><div style="font-weight:500;color:var(--gray-900);">Petrobras S.A.</div><div style="font-size:11px;color:var(--gray-400);margin-top:2px;">Rio de Janeiro / RJ</div></td>
+                    <td>01/03/2023</td><td>28/02/2026</td><td>3</td><td>124</td>
+                    <td><span style="font-weight:600;color:var(--red);">8</span></td>
+                    <td><span class="badge badge-active"><span class="badge-dot" style="background:#16A34A;"></span>Ativo</span></td>
+                    <td><button class="btn btn-ghost btn-sm">Ver →</button></td>
+                  </tr>
+                  <tr>
+                    <td><div style="font-weight:500;color:var(--gray-900);">Vale S.A.</div><div style="font-size:11px;color:var(--gray-400);margin-top:2px;">Belo Horizonte / MG</div></td>
+                    <td>15/06/2023</td><td>14/06/2026</td><td>2</td><td>87</td>
+                    <td><span style="font-weight:600;color:var(--red);">3</span></td>
+                    <td><span class="badge badge-active"><span class="badge-dot" style="background:#16A34A;"></span>Ativo</span></td>
+                    <td><button class="btn btn-ghost btn-sm">Ver →</button></td>
+                  </tr>
+                  <tr>
+                    <td><div style="font-weight:500;color:var(--gray-900);">Volkswagen do Brasil</div><div style="font-size:11px;color:var(--gray-400);margin-top:2px;">São Bernardo / SP</div></td>
+                    <td>01/09/2022</td><td>31/08/2025</td><td>1</td><td>45</td>
+                    <td><span style="font-weight:600;color:var(--amber);">2</span></td>
+                    <td><span class="badge badge-pending"><span class="badge-dot" style="background:#D97706;"></span>Expirando</span></td>
+                    <td><button class="btn btn-ghost btn-sm">Ver →</button></td>
+                  </tr>
+                  <tr>
+                    <td><div style="font-weight:500;color:var(--gray-900);">Embraer S.A.</div><div style="font-size:11px;color:var(--gray-400);margin-top:2px;">São José dos Campos / SP</div></td>
+                    <td>10/01/2024</td><td>09/01/2027</td><td>2</td><td>56</td>
+                    <td><span style="font-weight:600;color:var(--blue-600);">1</span></td>
+                    <td><span class="badge badge-active"><span class="badge-dot" style="background:#16A34A;"></span>Ativo</span></td>
+                    <td><button class="btn btn-ghost btn-sm">Ver →</button></td>
+                  </tr>
+                  <tr>
+                    <td><div style="font-weight:500;color:var(--gray-900);">Ambev</div><div style="font-size:11px;color:var(--gray-400);margin-top:2px;">São Paulo / SP</div></td>
+                    <td>05/04/2023</td><td>04/04/2026</td><td>4</td><td>0</td>
+                    <td>—</td>
+                    <td><span class="badge badge-done"><span class="badge-dot" style="background:#9CA3AF;"></span>Inativo</span></td>
+                    <td><button class="btn btn-ghost btn-sm">Ver →</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- BOTTOM SECTION -->
+        <div class="grid-2" style="margin-top:16px; align-items:start;">
+          <!-- RECENT USERS -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Usuários Recentes</div>
+              <button class="btn btn-ghost btn-sm">Ver todos</button>
+            </div>
+            <table>
+              <thead><tr><th>Usuário</th><th>Perfil</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><div style="display:flex;align-items:center;gap:9px;"><div class="avatar avatar-green" style="width:28px;height:28px;font-size:10px;">CS</div><div><div style="font-weight:500;font-size:13px;">Carlos Santos</div><div style="font-size:11px;color:var(--gray-400);">carlos@altave.com.br</div></div></div></td>
+                  <td><span class="chip">Técnico</span></td>
+                  <td><span class="user-status-badge status-service-badge">Em serviço</span></td>
+                </tr>
+                <tr>
+                  <td><div style="display:flex;align-items:center;gap:9px;"><div class="avatar avatar-amber" style="width:28px;height:28px;font-size:10px;">LM</div><div><div style="font-weight:500;font-size:13px;">Lívia Mendes</div><div style="font-size:11px;color:var(--gray-400);">livia@altave.com.br</div></div></div></td>
+                  <td><span class="chip">Supervisor</span></td>
+                  <td><span class="user-status-badge status-online-badge">Online</span></td>
+                </tr>
+                <tr>
+                  <td><div style="display:flex;align-items:center;gap:9px;"><div class="avatar avatar-purple" style="width:28px;height:28px;font-size:10px;">TN</div><div><div style="font-weight:500;font-size:13px;">Thiago Neves</div><div style="font-size:11px;color:var(--gray-400);">thiago@altave.com.br</div></div></div></td>
+                  <td><span class="chip">Planejador</span></td>
+                  <td><span class="user-status-badge status-offline-badge">Offline</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <!-- ALERTS -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Alertas do Sistema</div>
+              <span class="badge badge-late">4 pendentes</span>
+            </div>
+            <div class="alert alert-warning">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12" y2="17"/></svg>
+              <div><strong>Contrato Volkswagen</strong> expira em 47 dias. Renovação pendente.</div>
+            </div>
+            <div class="alert alert-warning">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12" y2="17"/></svg>
+              <div><strong>8 ordens atrasadas</strong> no contrato Petrobras aguardam reatribuição.</div>
+            </div>
+            <div class="alert alert-info">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12" y2="16"/></svg>
+              <div><strong>18 novos ativos</strong> cadastrados este mês. Preventivas ainda não agendadas.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     TELA 2 — SUPERVISOR
+═══════════════════════════════════════════════════════ -->
+<div id="screen-supervisor" class="screen">
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+        <div><div class="logo-text">Altave</div><div class="logo-sub">Petrobras</div></div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Visão geral</div>
+        <div class="nav-item active">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          Dashboard
+        </div>
+        <div class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="3"/><path d="M12 8v4M8 12H4a8 8 0 0016 0h-4"/></svg>
+          Ativos
+          <span class="nav-badge">124</span>
+        </div>
+        <div class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          Minha Equipe
+          <span class="nav-badge">12</span>
+        </div>
+        <div class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>
+          Ordens
+          <span class="nav-badge red">8</span>
+        </div>
+        <div class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/></svg>
+          Manutenção
+        </div>
+      </div>
+      <div class="sidebar-footer">
+        <div class="user-card">
+          <div class="avatar avatar-amber">LM</div>
+          <div class="user-info">
+            <div class="user-name">Lívia Mendes</div>
+            <div class="user-role">Supervisora</div>
+          </div>
+          <div class="status-dot status-online"></div>
+        </div>
+      </div>
+    </aside>
+    <div class="main">
+      <div class="topbar">
+        <div>
+          <span class="topbar-title">Contrato Petrobras</span>
+          <span class="topbar-sub">Plataforma P-63 + Replan + REDUC</span>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn btn-secondary btn-sm">Relatório</button>
+          <button class="btn btn-primary btn-sm">+ Novo Ativo</button>
+        </div>
+      </div>
+      <div class="content-area">
+        <!-- METRICS -->
+        <div class="metrics-grid cols-6">
+          <div class="metric-card blue">
+            <div class="metric-icon blue">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#2F6FA5" stroke-width="2"><circle cx="12" cy="5" r="3"/><path d="M12 8v4M8 12H4a8 8 0 0016 0h-4"/></svg>
+            </div>
+            <div class="metric-label">Ativos Operando</div>
+            <div class="metric-value">117</div>
+            <div class="metric-delta">de 124 ativos</div>
+          </div>
+          <div class="metric-card amber">
+            <div class="metric-icon amber">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>
+            </div>
+            <div class="metric-label">Em Manutenção</div>
+            <div class="metric-value">23</div>
+            <div class="metric-delta delta-down">↑ 5 vs. mês anterior</div>
+          </div>
+          <div class="metric-card red">
+            <div class="metric-icon red">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12" y2="16"/></svg>
+            </div>
+            <div class="metric-label">MTTR Médio</div>
+            <div class="metric-value">6,4 h</div>
+            <div class="metric-delta delta-down">↓ 0,8 h vs. mês anterior</div>
+          </div>
+          <div class="metric-card green">
+            <div class="metric-icon green">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            </div>
+            <div class="metric-label">MTBF Médio</div>
+            <div class="metric-value">42 dias</div>
+            <div class="metric-delta delta-up">↑ 6 dias vs. mês anterior</div>
+          </div>
+          <div class="metric-card red">
+            <div class="metric-icon red">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div class="metric-label">Ordens Atrasadas</div>
+            <div class="metric-value">8</div>
+            <div class="metric-delta" style="color: var(--red); font-weight: 500;">Ação necessária</div>
+          </div>
+          <div class="metric-card green">
+            <div class="metric-icon green">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            </div>
+            <div class="metric-label">Mais Manutenções</div>
+            <div class="metric-value metric-asset">CAMERA-SONY-031</div>
+            <div class="metric-delta metric-footer-muted">14 ordens no ano</div>
+          </div>
+        </div>
+
+        <div class="grid-2" style="align-items:start;">
+          <!-- CHART -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Preventiva × Corretiva</div>
+                <div class="card-sub">Últimos 6 meses</div>
+              </div>
+              <div style="display:flex;gap:12px;font-size:11px;align-items:center;">
+                <span style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;border-radius:2px;background:var(--blue-600);display:inline-block;"></span>Preventiva</span>
+                <span style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;border-radius:2px;background:var(--amber);display:inline-block;"></span>Corretiva</span>
+              </div>
+            </div>
+            <svg class="chart-svg" viewBox="0 0 400 140" preserveAspectRatio="none">
+              <!-- Grid lines -->
+              <line x1="0" y1="110" x2="400" y2="110" stroke="#E5E7EB" stroke-width="1"/>
+              <line x1="0" y1="80" x2="400" y2="80" stroke="#E5E7EB" stroke-width="0.5" stroke-dasharray="4,4"/>
+              <line x1="0" y1="50" x2="400" y2="50" stroke="#E5E7EB" stroke-width="0.5" stroke-dasharray="4,4"/>
+              <line x1="0" y1="20" x2="400" y2="20" stroke="#E5E7EB" stroke-width="0.5" stroke-dasharray="4,4"/>
+              <!-- Labels -->
+              <text x="30" y="125" fill="#9CA3AF" font-size="11" text-anchor="middle" font-family="DM Sans">Nov</text>
+              <text x="96" y="125" fill="#9CA3AF" font-size="11" text-anchor="middle" font-family="DM Sans">Dez</text>
+              <text x="162" y="125" fill="#9CA3AF" font-size="11" text-anchor="middle" font-family="DM Sans">Jan</text>
+              <text x="228" y="125" fill="#9CA3AF" font-size="11" text-anchor="middle" font-family="DM Sans">Fev</text>
+              <text x="294" y="125" fill="#9CA3AF" font-size="11" text-anchor="middle" font-family="DM Sans">Mar</text>
+              <text x="360" y="125" fill="#9CA3AF" font-size="11" text-anchor="middle" font-family="DM Sans">Abr</text>
+              <!-- Preventiva bars -->
+              <rect x="12" y="50" width="22" height="60" rx="3" fill="#2F6FA5" opacity="0.9"/>
+              <rect x="78" y="40" width="22" height="70" rx="3" fill="#2F6FA5" opacity="0.9"/>
+              <rect x="144" y="55" width="22" height="55" rx="3" fill="#2F6FA5" opacity="0.9"/>
+              <rect x="210" y="45" width="22" height="65" rx="3" fill="#2F6FA5" opacity="0.9"/>
+              <rect x="276" y="35" width="22" height="75" rx="3" fill="#2F6FA5" opacity="0.9"/>
+              <rect x="342" y="48" width="22" height="62" rx="3" fill="#2F6FA5" opacity="0.9"/>
+              <!-- Corretiva bars -->
+              <rect x="36" y="75" width="22" height="35" rx="3" fill="#D97706" opacity="0.85"/>
+              <rect x="102" y="85" width="22" height="25" rx="3" fill="#D97706" opacity="0.85"/>
+              <rect x="168" y="70" width="22" height="40" rx="3" fill="#D97706" opacity="0.85"/>
+              <rect x="234" y="80" width="22" height="30" rx="3" fill="#D97706" opacity="0.85"/>
+              <rect x="300" y="65" width="22" height="45" rx="3" fill="#D97706" opacity="0.85"/>
+              <rect x="366" y="72" width="22" height="38" rx="3" fill="#D97706" opacity="0.85"/>
+            </svg>
+          </div>
+
+          <!-- TOP ASSETS -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Ativos em Alerta</div>
+              <span class="badge badge-late">7 críticos</span>
+            </div>
+            <table>
+              <thead><tr><th>Ativo</th><th>Tipo</th><th>Último PM</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><div style="font-family:var(--mono);font-size:11.5px;color:var(--gray-800);font-weight:500;">CAMERA-SONY-031</div></td>
+                  <td><span class="chip" style="font-size:10px;">Câmera</span></td>
+                  <td style="color:var(--red);font-size:12px;">68 dias</td>
+                  <td><span class="badge badge-late">Atrasado</span></td>
+                </tr>
+                <tr>
+                  <td><div style="font-family:var(--mono);font-size:11.5px;color:var(--gray-800);font-weight:500;">BATT-ELGIN-P63-04</div></td>
+                  <td><span class="chip" style="font-size:10px;">Bateria</span></td>
+                  <td style="color:var(--red);font-size:12px;">45 dias</td>
+                  <td><span class="badge badge-late">Atrasado</span></td>
+                </tr>
+                <tr>
+                  <td><div style="font-family:var(--mono);font-size:11.5px;color:var(--gray-800);font-weight:500;">WKS-DELL-REPLAN-02</div></td>
+                  <td><span class="chip" style="font-size:10px;">Workstation</span></td>
+                  <td style="color:var(--amber);font-size:12px;">28 dias</td>
+                  <td><span class="badge badge-pending">A vencer</span></td>
+                </tr>
+                <tr>
+                  <td><div style="font-family:var(--mono);font-size:11.5px;color:var(--gray-800);font-weight:500;">ROUT-CISCO-P63-11</div></td>
+                  <td><span class="chip" style="font-size:10px;">Roteador</span></td>
+                  <td style="color:var(--amber);font-size:12px;">25 dias</td>
+                  <td><span class="badge badge-pending">A vencer</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ORDERS TABLE -->
+        <div class="card" style="margin-top:16px;">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Ordens em Andamento</div>
+              <div class="card-sub">Contrato Petrobras — todas as plantas</div>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <select class="filter-select"><option>Todos os tipos</option><option>Preventiva</option><option>Corretiva</option></select>
+              <select class="filter-select"><option>Todos os status</option><option>Em andamento</option><option>Atrasada</option></select>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Ordem</th><th>Tipo</th><th>Ativo</th><th>Técnico Resp.</th><th>Início previsto</th><th>Prazo</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><div style="font-weight:500;">#OM-2025-0412</div></td>
+                  <td><span class="badge badge-progress">Preventiva</span></td>
+                  <td><span style="font-family:var(--mono);font-size:11px;">CAMERA-SONY-031</span></td>
+                  <td><div style="display:flex;align-items:center;gap:7px;"><div class="avatar avatar-green" style="width:24px;height:24px;font-size:9px;">CS</div> Carlos Santos</div></td>
+                  <td>10/04/2025</td><td style="color:var(--red);font-weight:500;">08/04/2025</td>
+                  <td><span class="badge badge-late">Atrasada</span></td>
+                </tr>
+                <tr>
+                  <td><div style="font-weight:500;">#OM-2025-0418</div></td>
+                  <td><span class="badge badge-late" style="background:#FEE2E2;color:#991B1B;">Corretiva</span></td>
+                  <td><span style="font-family:var(--mono);font-size:11px;">BATT-ELGIN-P63-04</span></td>
+                  <td><div style="display:flex;align-items:center;gap:7px;"><div class="avatar avatar-purple" style="width:24px;height:24px;font-size:9px;">MR</div> Marcos Ramos</div></td>
+                  <td>12/04/2025</td><td>15/04/2025</td>
+                  <td><span class="badge badge-progress">Em andamento</span></td>
+                </tr>
+                <tr>
+                  <td><div style="font-weight:500;">#OM-2025-0421</div></td>
+                  <td><span class="badge badge-install">Instalação</span></td>
+                  <td><span style="font-family:var(--mono);font-size:11px;">CAMERA-HIK-REPLAN-07</span></td>
+                  <td><div style="display:flex;align-items:center;gap:7px;"><div class="avatar avatar-amber" style="width:24px;height:24px;font-size:9px;">JA</div> João Alves</div></td>
+                  <td>14/04/2025</td><td>16/04/2025</td>
+                  <td><span class="badge badge-pending">Pendente</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     TELA 3 — PLANEJADOR
+═══════════════════════════════════════════════════════ -->
+<div id="screen-planejador" class="screen">
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+        <div><div class="logo-text">Altave</div><div class="logo-sub">Planejamento</div></div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Menu</div>
+        <div class="nav-item active">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+          Ordens
+          <span class="nav-badge">31</span>
+        </div>
+        <div class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="3"/><path d="M12 8v4M8 12H4a8 8 0 0016 0h-4"/></svg>
+          Ativos
+        </div>
+        <div class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          Minha Equipe
+          <span class="nav-badge">8</span>
+        </div>
+        <div class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Calendário
+        </div>
+        <div class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          Relatórios
+        </div>
+      </div>
+      <div class="sidebar-footer">
+        <div class="user-card">
+          <div class="avatar avatar-purple">TN</div>
+          <div class="user-info">
+            <div class="user-name">Thiago Neves</div>
+            <div class="user-role">Planejador</div>
+          </div>
+          <div class="status-dot status-online"></div>
+        </div>
+      </div>
+    </aside>
+    <div class="main">
+      <div class="topbar">
+        <div>
+          <span class="topbar-title">Ordens de Manutenção</span>
+          <span class="topbar-sub">Petrobras + Vale + Embraer</span>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn btn-secondary btn-sm">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="21" y1="4" x2="14" y2="4"/><line x1="10" y1="4" x2="3" y2="4"/><line x1="21" y1="12" x2="12" y2="12"/><line x1="8" y1="12" x2="3" y2="12"/><line x1="21" y1="20" x2="16" y2="20"/><line x1="12" y1="20" x2="3" y2="20"/><line x1="14" y1="2" x2="14" y2="6"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="16" y1="18" x2="16" y2="22"/></svg>
+            Filtros
+          </button>
+          <button class="btn btn-primary btn-sm" onclick="openOrderDetail()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Criar Ordem
+          </button>
+        </div>
+      </div>
+      <div class="content-area">
+
+        <!-- PLANNER KPIS -->
+        <div class="metrics-grid">
+          <div class="metric-card blue">
+            <div class="metric-icon blue">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#2F6FA5" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+            </div>
+            <div class="metric-label">Ordens no Backlog</div>
+            <div class="metric-value">31</div>
+            <div class="metric-delta">12 preventivas · 19 corretivas</div>
+          </div>
+          <div class="metric-card amber">
+            <div class="metric-icon amber">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12" y2="16"/></svg>
+            </div>
+            <div class="metric-label">Ordens Atrasadas</div>
+            <div class="metric-value">14</div>
+            <div class="metric-delta delta-down">5 críticas para replanejar</div>
+          </div>
+          <div class="metric-card red">
+            <div class="metric-icon red">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2"><path d="M3 12h18"/><path d="M12 3v18"/><circle cx="12" cy="12" r="9" opacity="0.2"/></svg>
+            </div>
+            <div class="metric-label">MTTR Planejado</div>
+            <div class="metric-value">5,8 h</div>
+            <div class="metric-delta delta-down">↓ 0,6 h com kits pré-montados</div>
+          </div>
+          <div class="metric-card green">
+            <div class="metric-icon green">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 4-6"/></svg>
+            </div>
+            <div class="metric-label">MTBF da Carteira</div>
+            <div class="metric-value">39 dias</div>
+            <div class="metric-delta delta-up">↑ 4 dias após plano preventivo</div>
+          </div>
+        </div>
+
+        <!-- QUICK ACTIONS -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">
+          <div class="card" style="padding:16px;cursor:pointer;border:1px solid var(--blue-200);text-align:center;" onclick="openOrderDetail()">
+            <div style="width:40px;height:40px;border-radius:10px;background:var(--blue-50);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2F6FA5" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </div>
+            <div style="font-size:13px;font-weight:600;color:var(--blue-700);">Criar Ordem</div>
+            <div style="font-size:11px;color:var(--gray-400);margin-top:3px;">Nova manutenção</div>
+          </div>
+          <div class="card" style="padding:16px;cursor:pointer;text-align:center;">
+            <div style="width:40px;height:40px;border-radius:10px;background:var(--gray-100);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            </div>
+            <div style="font-size:13px;font-weight:600;color:var(--gray-700);">Minha Equipe</div>
+            <div style="font-size:11px;color:var(--gray-400);margin-top:3px;">8 técnicos</div>
+          </div>
+          <div class="card" style="padding:16px;cursor:pointer;text-align:center;">
+            <div style="width:40px;height:40px;border-radius:10px;background:var(--gray-100);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2"><circle cx="12" cy="5" r="3"/><path d="M12 8v4M8 12H4a8 8 0 0016 0h-4"/></svg>
+            </div>
+            <div style="font-size:13px;font-weight:600;color:var(--gray-700);">Ativos</div>
+            <div style="font-size:11px;color:var(--gray-400);margin-top:3px;">Ver todos</div>
+          </div>
+          <div class="card" style="padding:16px;cursor:pointer;text-align:center;">
+            <div style="width:40px;height:40px;border-radius:10px;background:var(--red-bg);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12" y2="16"/></svg>
+            </div>
+            <div style="font-size:13px;font-weight:600;color:var(--red);">Atrasadas</div>
+            <div style="font-size:11px;color:var(--gray-400);margin-top:3px;">14 ordens</div>
+          </div>
+        </div>
+
+        <!-- FILTERS + TABLE -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Todas as Ordens</div>
+              <div class="card-sub">31 ordens no período</div>
+            </div>
+          </div>
+          <div class="filter-bar">
+            <div class="search-input">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" placeholder="Buscar ordem ou ativo...">
+            </div>
+            <select class="filter-select">
+              <option>Todos os tipos</option>
+              <option>Preventiva</option>
+              <option>Corretiva</option>
+              <option>Instalação</option>
+              <option>Retirada</option>
+            </select>
+            <select class="filter-select">
+              <option>Todos os status</option>
+              <option>Pendente</option>
+              <option>Em andamento</option>
+              <option>Concluída</option>
+              <option>Atrasada</option>
+            </select>
+            <select class="filter-select">
+              <option>Todos os contratos</option>
+              <option>Petrobras</option>
+              <option>Vale</option>
+              <option>Embraer</option>
+            </select>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>#</th><th>Nome da Ordem</th><th>Tipo</th><th>Ativo</th><th>Técnico(s)</th><th>Início</th><th>Prazo</th><th>Status</th><th></th></tr></thead>
+              <tbody>
+                <tr onclick="openOrderDetail()" style="cursor:pointer;">
+                  <td style="font-family:var(--mono);font-size:11px;color:var(--gray-400);">0412</td>
+                  <td><div style="font-weight:500;color:var(--gray-900);">PM mensal — Câmera P-63</div></td>
+                  <td><span class="badge badge-progress">Preventiva</span></td>
+                  <td><span style="font-family:var(--mono);font-size:11px;">CAMERA-SONY-031</span></td>
+                  <td><div style="display:flex;align-items:center;gap:6px;"><div class="avatar avatar-green" style="width:22px;height:22px;font-size:9px;">CS</div><span>Carlos</span></div></td>
+                  <td style="font-size:12px;">10/04</td><td style="font-size:12px;color:var(--red);font-weight:500;">08/04</td>
+                  <td><span class="badge badge-late">Atrasada</span></td>
+                  <td><button class="btn btn-ghost btn-sm">→</button></td>
+                </tr>
+                <tr onclick="openOrderDetail()" style="cursor:pointer;">
+                  <td style="font-family:var(--mono);font-size:11px;color:var(--gray-400);">0418</td>
+                  <td><div style="font-weight:500;color:var(--gray-900);">Troca de bateria P-63</div></td>
+                  <td><span class="badge badge-late" style="background:#FEE2E2;color:#991B1B;">Corretiva</span></td>
+                  <td><span style="font-family:var(--mono);font-size:11px;">BATT-ELGIN-P63-04</span></td>
+                  <td><div style="display:flex;align-items:center;gap:6px;"><div class="avatar avatar-purple" style="width:22px;height:22px;font-size:9px;">MR</div><span>Marcos</span></div></td>
+                  <td style="font-size:12px;">12/04</td><td style="font-size:12px;">15/04</td>
+                  <td><span class="badge badge-progress">Em andamento</span></td>
+                  <td><button class="btn btn-ghost btn-sm">→</button></td>
+                </tr>
+                <tr onclick="openOrderDetail()" style="cursor:pointer;">
+                  <td style="font-family:var(--mono);font-size:11px;color:var(--gray-400);">0421</td>
+                  <td><div style="font-weight:500;color:var(--gray-900);">Instalação câmera Replan</div></td>
+                  <td><span class="badge badge-install">Instalação</span></td>
+                  <td><span style="font-family:var(--mono);font-size:11px;">CAMERA-HIK-REPLAN-07</span></td>
+                  <td><div style="display:flex;align-items:center;gap:6px;"><div class="avatar avatar-amber" style="width:22px;height:22px;font-size:9px;">JA</div><span>João</span></div></td>
+                  <td style="font-size:12px;">14/04</td><td style="font-size:12px;">16/04</td>
+                  <td><span class="badge badge-pending">Pendente</span></td>
+                  <td><button class="btn btn-ghost btn-sm">→</button></td>
+                </tr>
+                <tr onclick="openOrderDetail()" style="cursor:pointer;">
+                  <td style="font-family:var(--mono);font-size:11px;color:var(--gray-400);">0425</td>
+                  <td><div style="font-weight:500;color:var(--gray-900);">PM trimestral — Workstation Vale</div></td>
+                  <td><span class="badge badge-progress">Preventiva</span></td>
+                  <td><span style="font-family:var(--mono);font-size:11px;">WKS-DELL-VALE-02</span></td>
+                  <td><div style="display:flex;align-items:center;gap:6px;"><div class="avatar avatar-blue" style="width:22px;height:22px;font-size:9px;">RF</div><span>Ricardo</span></div></td>
+                  <td style="font-size:12px;">16/04</td><td style="font-size:12px;">18/04</td>
+                  <td><span class="badge badge-pending">Pendente</span></td>
+                  <td><button class="btn btn-ghost btn-sm">→</button></td>
+                </tr>
+                <tr onclick="openOrderDetail()" style="cursor:pointer;">
+                  <td style="font-family:var(--mono);font-size:11px;color:var(--gray-400);">0398</td>
+                  <td><div style="font-weight:500;color:var(--gray-900);">Revisão sensor Embraer</div></td>
+                  <td><span class="badge badge-late" style="background:#FEE2E2;color:#991B1B;">Corretiva</span></td>
+                  <td><span style="font-family:var(--mono);font-size:11px;">SENSOR-EMB-001</span></td>
+                  <td><div style="display:flex;align-items:center;gap:6px;"><div class="avatar avatar-green" style="width:22px;height:22px;font-size:9px;">CS</div><span>Carlos</span></div></td>
+                  <td style="font-size:12px;">02/04</td><td style="font-size:12px;color:var(--red);font-weight:500;">05/04</td>
+                  <td><span class="badge badge-done">Concluída</span></td>
+                  <td><button class="btn btn-ghost btn-sm">→</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ORDER DETAIL PANEL -->
+  <div id="order-detail" class="detail-overlay">
+    <div class="detail-header">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <span class="badge badge-progress">Preventiva</span>
+        <span style="font-family:var(--mono);font-size:11px;color:var(--gray-400);">#OM-2025-0412</span>
+      </div>
+      <div style="font-size:16px;font-weight:600;color:var(--gray-900);padding-right:32px;">PM mensal — Câmera P-63</div>
+      <button class="detail-close" onclick="closeOrderDetail()">✕</button>
+    </div>
+    <div class="detail-body">
+      <div class="detail-field">
+        <div class="detail-field-label">Status</div>
+        <span class="badge badge-late">Atrasada — 2 dias</span>
+      </div>
+      <div class="grid-2" style="gap:12px;">
+        <div class="detail-field">
+          <div class="detail-field-label">Início Previsto</div>
+          <div class="detail-field-value">10/04/2025</div>
+        </div>
+        <div class="detail-field">
+          <div class="detail-field-label">Prazo</div>
+          <div class="detail-field-value" style="color:var(--red);font-weight:500;">08/04/2025</div>
+        </div>
+      </div>
+      <div class="detail-field">
+        <div class="detail-field-label">Ativo</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:4px;">
+          <div class="asset-icon">📷</div>
+          <div>
+            <div style="font-family:var(--mono);font-size:12px;font-weight:500;">CAMERA-SONY-031</div>
+            <div style="font-size:11px;color:var(--gray-400);">Câmera · Plataforma P-63 · Sony</div>
+          </div>
+        </div>
+      </div>
+      <div class="detail-field">
+        <div class="detail-field-label">Técnico Responsável</div>
+        <div style="display:flex;align-items:center;gap:9px;margin-top:4px;">
+          <div class="avatar avatar-green">CS</div>
+          <div>
+            <div style="font-size:13px;font-weight:500;">Carlos Santos</div>
+            <div style="font-size:11px;color:var(--gray-400);">carlos@altave.com.br</div>
+          </div>
+          <span class="user-status-badge status-service-badge" style="margin-left:auto;">Em serviço</span>
+        </div>
+      </div>
+      <div class="detail-field">
+        <div class="detail-field-label">Descrição</div>
+        <div class="detail-field-value" style="color:var(--gray-600);line-height:1.6;font-size:13px;">Inspeção e limpeza do sensor óptico. Verificação de alinhamento e foco. Teste de comunicação com servidor central. Registro fotográfico antes e depois.</div>
+      </div>
+      <div class="divider"></div>
+      <div class="section-title">Checklist</div>
+      <div class="checklist-item"><div class="check-box checked"></div>Verificar alimentação e LEDs</div>
+      <div class="checklist-item"><div class="check-box checked"></div>Limpar lente com solução específica</div>
+      <div class="checklist-item"><div class="check-box"></div>Testar ângulo e zoom remoto</div>
+      <div class="checklist-item"><div class="check-box"></div>Conferir conectividade na central</div>
+      <div class="checklist-item"><div class="check-box"></div>Fotografar antes/depois</div>
+      <div class="divider"></div>
+      <div class="section-title">Comentários</div>
+      <div style="background:var(--gray-50);border:1px solid var(--gray-200);border-radius:8px;padding:12px;font-size:13px;color:var(--gray-600);margin-bottom:12px;">
+        <div style="font-weight:500;color:var(--gray-700);margin-bottom:4px;">Carlos Santos · há 2h</div>
+        Sensor com acúmulo de sal marinho na lente. Preciso de solução específica antes de prosseguir.
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px;">
+        <button class="btn btn-secondary" style="flex:1;">Reagendar</button>
+        <button class="btn btn-primary" style="flex:1;">Marcar concluída</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     TELA 4 — TÉCNICO
+═══════════════════════════════════════════════════════ -->
+<div id="screen-tecnico" class="screen">
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+        <div><div class="logo-text">Altave</div><div class="logo-sub">Técnico</div></div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Menu</div>
+        <div class="nav-item active">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="5" height="7"/><rect x="11" y="3" width="5" height="5"/><rect x="3" y="13" width="5" height="8"/><rect x="11" y="11" width="5" height="10"/></svg>
+          Minhas Ordens
+          <span class="nav-badge">6</span>
+        </div>
+        <div class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="3"/><path d="M12 8v4M8 12H4a8 8 0 0016 0h-4"/></svg>
+          Ativos
+        </div>
+        <div class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Histórico
+        </div>
+      </div>
+      <div class="sidebar-footer">
+        <div style="padding:0 10px 10px;">
+          <div style="background:var(--blue-600);border-radius:8px;padding:10px 12px;text-align:center;">
+            <div style="font-size:11px;color:rgba(255,255,255,0.6);margin-bottom:4px;">Status atual</div>
+            <div style="display:flex;align-items:center;justify-content:center;gap:6px;">
+              <div class="status-dot status-busy"></div>
+              <span style="font-size:12px;font-weight:600;color:white;">Em Serviço</span>
+            </div>
+          </div>
+        </div>
+        <div class="user-card">
+          <div class="avatar avatar-green">CS</div>
+          <div class="user-info">
+            <div class="user-name">Carlos Santos</div>
+            <div class="user-role">Técnico</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+    <div class="main">
+      <div class="topbar">
+        <div>
+          <span class="topbar-title">Minhas Ordens</span>
+          <span class="topbar-sub">6 ordens atribuídas</span>
+        </div>
+        <div class="topbar-actions">
+          <span class="badge badge-late" style="padding:5px 12px;font-size:12px;">2 atrasadas</span>
+          <button class="btn btn-secondary btn-sm">Histórico</button>
+        </div>
+      </div>
+      <div class="content-area">
+
+        <div class="kanban-board">
+          <!-- PENDENTE -->
+          <div class="kanban-col">
+            <div class="kanban-col-header">
+              <div class="kanban-col-title">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/></svg>
+                Pendente
+              </div>
+              <span class="kanban-count">3</span>
+            </div>
+            <!-- CARD 1 -->
+            <div class="kanban-card" onclick="openTecnicoDetail('pm-camera')">
+              <div class="kanban-card-header">
+                <div style="flex:1;padding-right:8px;">
+                  <div class="kanban-card-name">PM mensal — Câmera P-63</div>
+                </div>
+                <span class="badge badge-late" style="font-size:10px;">Atrasada</span>
+              </div>
+              <div class="kanban-card-asset">CAMERA-SONY-031</div>
+              <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
+                <span class="badge badge-progress" style="font-size:10px;">Preventiva</span>
+                <span style="font-size:10px;color:var(--gray-400);">P-63 · Petrobras</span>
+              </div>
+              <div class="kanban-card-footer">
+                <div class="kanban-avatars">
+                  <div class="kanban-avatar" style="background:#16A34A;">CS</div>
+                </div>
+                <div class="kanban-date" style="color:var(--red);font-weight:500;">08/04 ⚠</div>
+              </div>
+            </div>
+            <!-- CARD 2 -->
+            <div class="kanban-card" onclick="openTecnicoDetail('revisao')">
+              <div class="kanban-card-header">
+                <div style="flex:1;padding-right:8px;">
+                  <div class="kanban-card-name">Revisão sensor — Embraer</div>
+                </div>
+                <span class="badge badge-late" style="font-size:10px;">Atrasada</span>
+              </div>
+              <div class="kanban-card-asset">SENSOR-EMB-001</div>
+              <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
+                <span class="badge badge-late" style="font-size:10px;background:#FEE2E2;color:#991B1B;">Corretiva</span>
+                <span style="font-size:10px;color:var(--gray-400);">Embraer · SJC</span>
+              </div>
+              <div class="kanban-card-footer">
+                <div class="kanban-avatars">
+                  <div class="kanban-avatar" style="background:#16A34A;">CS</div>
+                </div>
+                <div class="kanban-date" style="color:var(--red);font-weight:500;">05/04 ⚠</div>
+              </div>
+            </div>
+            <!-- CARD 3 -->
+            <div class="kanban-card">
+              <div class="kanban-card-header">
+                <div style="flex:1;padding-right:8px;">
+                  <div class="kanban-card-name">Instalação câmera Vale Itabira</div>
+                </div>
+                <span class="badge badge-install" style="font-size:10px;">Instalação</span>
+              </div>
+              <div class="kanban-card-asset">CAMERA-HIK-VALE-12</div>
+              <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
+                <span class="badge badge-install" style="font-size:10px;">Instalação</span>
+                <span style="font-size:10px;color:var(--gray-400);">Vale · Itabira / MG</span>
+              </div>
+              <div class="kanban-card-footer">
+                <div class="kanban-avatars">
+                  <div class="kanban-avatar" style="background:#16A34A;">CS</div>
+                  <div class="kanban-avatar" style="background:#7C3AED;">MR</div>
+                </div>
+                <div class="kanban-date">20/04</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- EM PROGRESSO -->
+          <div class="kanban-col col-progress">
+            <div class="kanban-col-header">
+              <div class="kanban-col-title">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1F4E79" stroke-width="2.5"><path d="M12 22c5.52 0 10-4.48 10-10S17.52 2 12 2"/><path d="M12 2a10 10 0 010 20"/></svg>
+                Em Progresso
+              </div>
+              <span class="kanban-count">2</span>
+            </div>
+            <!-- CARD EM PROGRESSO -->
+            <div class="kanban-card" onclick="openTecnicoDetail('bateria')">
+              <div class="kanban-card-header">
+                <div style="flex:1;padding-right:8px;">
+                  <div class="kanban-card-name">Troca de bateria — P-63</div>
+                </div>
+                <span class="badge badge-progress" style="font-size:10px;">Corretiva</span>
+              </div>
+              <div class="kanban-card-asset">BATT-ELGIN-P63-04</div>
+              <div style="margin-bottom:10px;">
+                <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--gray-500);margin-bottom:4px;">
+                  <span>Checklist</span><span style="font-weight:600;color:var(--blue-600);">2/5</span>
+                </div>
+                <div class="progress-bar-wrap">
+                  <div class="progress-bar progress-blue" style="width:40%;"></div>
+                </div>
+              </div>
+              <div class="kanban-card-footer">
+                <div class="kanban-avatars">
+                  <div class="kanban-avatar" style="background:#16A34A;">CS</div>
+                </div>
+                <div class="kanban-date">15/04</div>
+              </div>
+            </div>
+            <div class="kanban-card">
+              <div class="kanban-card-header">
+                <div style="flex:1;padding-right:8px;">
+                  <div class="kanban-card-name">Configuração roteador REPLAN</div>
+                </div>
+                <span class="badge badge-progress" style="font-size:10px;">Corretiva</span>
+              </div>
+              <div class="kanban-card-asset">ROUT-CISCO-REPLAN-03</div>
+              <div style="margin-bottom:10px;">
+                <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--gray-500);margin-bottom:4px;">
+                  <span>Checklist</span><span style="font-weight:600;color:var(--blue-600);">4/6</span>
+                </div>
+                <div class="progress-bar-wrap">
+                  <div class="progress-bar progress-blue" style="width:66%;"></div>
+                </div>
+              </div>
+              <div class="kanban-card-footer">
+                <div class="kanban-avatars">
+                  <div class="kanban-avatar" style="background:#16A34A;">CS</div>
+                </div>
+                <div class="kanban-date">13/04</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- CONCLUÍDA -->
+          <div class="kanban-col col-done">
+            <div class="kanban-col-header">
+              <div class="kanban-col-title">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                Concluída
+              </div>
+              <span class="kanban-count">1</span>
+            </div>
+            <div class="kanban-card" style="opacity:0.75;">
+              <div class="kanban-card-header">
+                <div style="flex:1;padding-right:8px;">
+                  <div class="kanban-card-name" style="text-decoration:line-through;color:var(--gray-400);">Inspeção Raspberry — Vale</div>
+                </div>
+                <span class="badge badge-done" style="font-size:10px;">Concluída</span>
+              </div>
+              <div class="kanban-card-asset" style="color:var(--gray-300);">RPI-VALE-008</div>
+              <div style="display:flex;gap:6px;margin-bottom:10px;">
+                <span class="badge badge-progress" style="font-size:10px;opacity:0.6;">Preventiva</span>
+              </div>
+              <div class="kanban-card-footer">
+                <div style="font-size:11px;color:var(--green);font-weight:500;">✓ Concluída em 02/04</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TECNICO ORDER DETAIL -->
+  <div id="tecnico-detail" class="detail-overlay">
+    <div id="td-header" class="detail-header">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <span id="td-badge" class="badge badge-progress">Preventiva</span>
+        <span style="font-family:var(--mono);font-size:11px;color:var(--gray-400);">#OM-2025-0412</span>
+      </div>
+      <div id="td-title" style="font-size:16px;font-weight:600;color:var(--gray-900);padding-right:32px;">PM mensal — Câmera P-63</div>
+      <button class="detail-close" onclick="closeTecnicoDetail()">✕</button>
+    </div>
+    <div class="detail-body">
+      <div class="detail-field">
+        <div class="detail-field-label">Localização</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2F6FA5" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <span style="font-size:13px;color:var(--blue-600);">Plataforma P-63 · Supervisão Alpha · Torre Leste</span>
+        </div>
+      </div>
+      <div class="grid-2" style="gap:12px;">
+        <div class="detail-field">
+          <div class="detail-field-label">Prazo</div>
+          <div class="detail-field-value" id="td-prazo" style="color:var(--red);font-weight:500;">08/04/2025 — Atrasada</div>
+        </div>
+        <div class="detail-field">
+          <div class="detail-field-label">Status</div>
+          <span id="td-status" class="badge badge-late">Atrasada</span>
+        </div>
+      </div>
+      <div class="detail-field">
+        <div class="detail-field-label">Ativo</div>
+        <div style="background:var(--gray-50);border:1px solid var(--gray-200);border-radius:8px;padding:12px;margin-top:4px;">
+          <div style="font-family:var(--mono);font-size:12px;font-weight:600;color:var(--gray-800);" id="td-ativo">CAMERA-SONY-031</div>
+          <div style="font-size:11.5px;color:var(--gray-400);margin-top:3px;">Câmera de Segurança · Sony · Instalação: 12/01/2023</div>
+        </div>
+      </div>
+      <div class="detail-field">
+        <div class="detail-field-label">Descrição</div>
+        <div style="font-size:13px;color:var(--gray-600);line-height:1.6;" id="td-desc">Inspeção e limpeza do sensor óptico. Verificação de alinhamento e foco. Teste de comunicação com servidor central.</div>
+      </div>
+      <div class="divider"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div class="section-title" style="margin-bottom:0;">Checklist de Execução</div>
+        <span style="font-size:11px;color:var(--gray-400);" id="td-checklist-count">0 de 5 concluídos</span>
+      </div>
+      <div id="td-checklist">
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="check-box checked"></div>
+          <span>Verificar alimentação e LEDs de status</span>
+        </div>
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="check-box checked"></div>
+          <span>Limpar lente com solução específica SP-200</span>
+        </div>
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="check-box"></div>
+          <span>Testar ângulo e zoom via controle remoto</span>
+        </div>
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="check-box"></div>
+          <span>Conferir conectividade na central de monitoramento</span>
+        </div>
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="check-box"></div>
+          <span>Fotografar antes/depois e anexar à ordem</span>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="section-title">Comentários</div>
+      <div style="background:var(--gray-50);border:1px solid var(--gray-200);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--gray-600);margin-bottom:10px;">
+        <div style="font-weight:500;color:var(--gray-700);margin-bottom:3px;">Carlos Santos · há 2h</div>
+        Sensor com acúmulo de sal marinho na lente. Precisou de solução SP-200 extra.
+      </div>
+      <textarea placeholder="Adicionar comentário..." style="width:100%;padding:10px 12px;border:1px solid var(--gray-300);border-radius:8px;font-family:var(--font);font-size:13px;resize:none;height:72px;outline:none;color:var(--gray-700);"></textarea>
+      <div style="display:flex;gap:8px;margin-top:12px;">
+        <button class="btn btn-secondary" style="flex:1;">Pausar</button>
+        <button class="btn btn-primary" style="flex:1;" id="td-action-btn">Iniciar Execução</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function showScreen(name) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.sw-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('screen-' + name).classList.add('active');
+    event.target.classList.add('active');
+    // close any open panels
+    closeOrderDetail();
+    closeTecnicoDetail();
+  }
+
+  function openOrderDetail() {
+    document.getElementById('order-detail').classList.add('open');
+  }
+  function closeOrderDetail() {
+    const el = document.getElementById('order-detail');
+    if (el) el.classList.remove('open');
+  }
+
+  const tecnicoOrders = {
+    'pm-camera': {
+      title: 'PM mensal — Câmera P-63',
+      badge: 'Preventiva',
+      badgeClass: 'badge-progress',
+      prazo: '08/04/2025 — Atrasada',
+      prazoColor: 'var(--red)',
+      statusBadge: 'Atrasada',
+      statusClass: 'badge-late',
+      ativo: 'CAMERA-SONY-031',
+      desc: 'Inspeção e limpeza do sensor óptico. Verificação de alinhamento e foco. Teste de comunicação com servidor central.',
+      actionBtn: 'Iniciar Execução'
+    },
+    'revisao': {
+      title: 'Revisão sensor — Embraer',
+      badge: 'Corretiva',
+      badgeClass: 'badge-late',
+      prazo: '05/04/2025 — Atrasada',
+      prazoColor: 'var(--red)',
+      statusBadge: 'Atrasada',
+      statusClass: 'badge-late',
+      ativo: 'SENSOR-EMB-001',
+      desc: 'Diagnóstico e reparo do sensor de temperatura. Verificar fiação e módulo de controle.',
+      actionBtn: 'Iniciar Execução'
+    },
+    'bateria': {
+      title: 'Troca de bateria — P-63',
+      badge: 'Corretiva',
+      badgeClass: 'badge-progress',
+      prazo: '15/04/2025',
+      prazoColor: 'var(--gray-700)',
+      statusBadge: 'Em andamento',
+      statusClass: 'badge-progress',
+      ativo: 'BATT-ELGIN-P63-04',
+      desc: 'Substituição da bateria de backup do sistema. Testar autonomia após troca. Registrar leitura de voltagem.',
+      actionBtn: 'Concluir Ordem'
+    }
+  };
+
+  function openTecnicoDetail(key) {
+    const o = tecnicoOrders[key];
+    document.getElementById('td-title').textContent = o.title;
+    const badge = document.getElementById('td-badge');
+    badge.textContent = o.badge;
+    badge.className = 'badge ' + o.badgeClass;
+    document.getElementById('td-prazo').textContent = o.prazo;
+    document.getElementById('td-prazo').style.color = o.prazoColor;
+    const sb = document.getElementById('td-status');
+    sb.textContent = o.statusBadge;
+    sb.className = 'badge ' + o.statusClass;
+    document.getElementById('td-ativo').textContent = o.ativo;
+    document.getElementById('td-desc').textContent = o.desc;
+    document.getElementById('td-action-btn').textContent = o.actionBtn;
+    updateChecklistCount();
+    document.getElementById('tecnico-detail').classList.add('open');
+  }
+
+  function closeTecnicoDetail() {
+    const el = document.getElementById('tecnico-detail');
+    if (el) el.classList.remove('open');
+  }
+
+  function toggleCheck(item) {
+    const box = item.querySelector('.check-box');
+    const text = item.querySelector('span');
+    if (box.classList.contains('checked')) {
+      box.classList.remove('checked');
+      text.style.textDecoration = '';
+      text.style.color = '';
+    } else {
+      box.classList.add('checked');
+      text.style.textDecoration = 'line-through';
+      text.style.color = 'var(--gray-400)';
+    }
+    updateChecklistCount();
+  }
+
+  function updateChecklistCount() {
+    const items = document.querySelectorAll('#td-checklist .check-box');
+    const checked = document.querySelectorAll('#td-checklist .check-box.checked').length;
+    const el = document.getElementById('td-checklist-count');
+    if (el) el.textContent = checked + ' de ' + items.length + ' concluídos';
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { closeOrderDetail(); closeTecnicoDetail(); }
+  });
+</script>
+</body>
+</html>
