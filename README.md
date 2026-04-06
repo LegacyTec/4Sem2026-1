@@ -144,10 +144,11 @@ Para acessar o detalhamento técnico, as User Stories executadas e o **Gráfico 
 
 | Função | Nome | Redes |
 |--------|------|-------|
-| Product Owner | [Nome] | [LinkedIn](#) · [GitHub](#) |
-| Scrum Master | [Nome] | [LinkedIn](#) · [GitHub](#) |
-| Developer | Cleber | [LinkedIn](#) · [GitHub](#) |
-
+| Product OWner | Pedro H. Mattos | [![Linkedin](https://img.shields.io/badge/Linkedin-blue?style=flat-square&logo=Linkedin&logoColor=white)]() [![GitHub](https://img.shields.io/badge/GitHub-111217?style=flat-square&logo=github&logoColor=white)]() |<p align="center"><img src= "https://github.com/user-attachments/assets/8108bdb8-c9d3-473e-9800-da1286cc91e5" alt="Pedro" style="width:60px;height:60px;">
+| Scrum Master| Cleber Kirch | [![Linkedin](https://img.shields.io/badge/Linkedin-blue?style=flat-square&logo=Linkedin&logoColor=white)](https://www.linkedin.com/in/cleberkirch/) [![GitHub](https://img.shields.io/badge/GitHub-111217?style=flat-square&logo=github&logoColor=white)](https://github.com/cleberkirch86/) |<p align="center"><img src= "https://github.com/user-attachments/assets/9683e19f-7d59-4273-8a08-8cbddadcf2c8" alt="Cleber" style="width:60px;height:60px;">
+| Developer | Ed Wilson | [![Linkedin](https://img.shields.io/badge/Linkedin-blue?style=flat-square&logo=Linkedin&logoColor=white)](https://linkedin.com) [![GitHub](https://img.shields.io/badge/GitHub-111217?style=flat-square&logo=github&logoColor=white)](https://github.com) |<p align="center"><img src= "https://github.com/user-attachments/assets/32812572-8636-43e6-bc31-88844c1fe8c3" alt=" Ed " style="width:60px;height:60px;">
+| DBA | Diego Vitvicki | [![Linkedin](https://img.shields.io/badge/Linkedin-blue?style=flat-square&logo=Linkedin&logoColor=white)](https://www.linkedin.com/in/diegovitvicki/) [![GitHub](https://img.shields.io/badge/GitHub-111217?style=flat-square&logo=github&logoColor=white)](https://github.com/dievit) |<p align="center"><img src= "https://github.com/user-attachments/assets/947ab778-da15-455e-b3b7-bd90b4758dfc" alt="Diego" style="width:60px;height:60px;">
+| Developer | Johnatan Coelho | [![Linkedin](https://img.shields.io/badge/Linkedin-blue?style=flat-square&logo=Linkedin&logoColor=white)]() [![GitHub](https://img.shields.io/badge/GitHub-111217?style=flat-square&logo=github&logoColor=white)]|<p align="center"><img src= "" alt="" style="width:60px;height:60px;">
 ---
 
 ## 📜 Padrões e Convenções
