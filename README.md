@@ -22,8 +22,6 @@ Sistema web para gestão de manutenções preventivas e corretivas da Altave. O 
 
 **Solução:** Centralização da gestão de ativos, automação de cronogramas de manutenção e suporte logístico para equipes de campo.
 
-<h1 align="center"> 🚀 <a href="https://front-altave.vercel.app/">https://front-altave.vercel.app/</a> </h1>
-
 ---
 
 ## 📁 Estrutura do Projeto
