@@ -100,17 +100,16 @@ Consulte o [Manual de Instalação](./Manual%20de%20Instalação.md) para instru
 | RF07 | Avaliar impacto de manutenções urgentes sobre o planejamento vigente *(desejável)* | 3 |
 | RF08 | Telas de cadastro de equipamentos, técnicos e contratos *(desejável)* | 3 |
 
-### Não Funcionais
-
-| ID | Descrição |
-|----|-----------|
-| RNF01 | Manual de Instalação no repositório Git (requisito Fatec — obrigatório) |
-| RNF02 | Manual do Usuário disponível (requisito Fatec — obrigatório) |
-| RNF03 | Documentação da API via Swagger / OpenAPI |
-| RNF04 | Modelagem de banco de dados com DER e dicionário de dados |
-| RNF05 | Sistema operacional em cloud (Railway / Vercel) |
-| RNF06 | Backend: Spring Boot 3 + Spring Data JPA + MySQL |
-| RNF07 | Frontend: Next.js 15 + Tailwind CSS + Axios + Lucide |
+**Requisitos Não Funcionais**
+| ID | Descrição | Sprint |
+|----|-----------|--------|
+| [RNF01] | Manual de Instalação disponível no repositório Git (requisito Fatec – obrigatório)
+| [RNF02] | Manual do Usuário disponível (requisito Fatec – obrigatório)
+|[RNF03] | Documentação da API (Swagger / OpenAPI)
+| [RNF04] | Modelagem de Banco de Dados com DER e dicionário de dados
+| [RNF05] | Sistema operacional em cloud (Oracle Cloud)
+| [RNF06] | Backend desenvolvido com Spring Boot (Java) + Spring Security + Spring Data JPA com Oracle
+| [RNF07] | Frontend desenvolvido com Vue.js + Axios + Leaflet/Vue Chart.js
 
 ---
 
@@ -137,6 +136,13 @@ Consulte o [Manual de Instalação](./Manual%20de%20Instalação.md) para instru
 Para acessar o detalhamento técnico, as User Stories executadas e o **Gráfico de Burndown**, consulte:
 
 📄 [**Relatório Completo da Sprint 1 → SPRINT_1.md**](./SPRINT_1.md)
+
+
+### Sprint 2 
+Controle logístico de ferramentas e viagem; visualização GIS com Leaflet; histórico de manutenções por equipamento 
+
+### Sprint 3
+Previsão de chegada; avaliação de impacto de urgências; telas de cadastro (se houver tempo); deploy em cloud e ajustes finais
 
 ---
 
