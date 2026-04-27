@@ -1,4 +1,4 @@
-package com.sem2026_1.altave_backend.Service;
+package com.sem2026_1.altave_backend.service;
 
 import java.util.HashSet;
 import java.util.List;
