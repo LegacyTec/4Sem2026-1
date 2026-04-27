@@ -3,7 +3,8 @@ package com.sem2026_1.altave_backend.entity;
 import java.time.LocalDate;
 import java.util.Set;
 
-import org.hibernate.annotations.ManyToAny;
+import com.fasterxml.jackson.annotation.JsonView;
+import com.sem2026_1.altave_backend.controller.View;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -21,21 +22,26 @@ public class Tecnico {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "tecnico_id")
+    @JsonView(View.Contrato.class)
     private Long id;
 
     @Column(name = "nome_completo")
+    @JsonView(View.Contrato.class)
     private String nomeCompleto;
 
     @Column(name = "email")
+    @JsonView(View.Contrato.class)
     private String email;
 
     @Column(name = "status")
+    @JsonView(View.Contrato.class)
     private String status;
 
     @Column(name = "data_nascimento")
     private LocalDate dataNascimento;
 
     @Column(name = "cargo")
+    @JsonView(View.Contrato.class)
     private String cargo;
 
     @ManyToMany(mappedBy = "tecnicos")
