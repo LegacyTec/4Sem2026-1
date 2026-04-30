@@ -7,18 +7,18 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import com.sem2026_1.altave_backend.entity.Contrato;
-import com.sem2026_1.altave_backend.entity.Tecnico;
+import com.sem2026_1.altave_backend.entity.Usuario;
 import com.sem2026_1.altave_backend.repository.ContratoRepository;
 
 @Service
 public class ContratoServiceImpl implements ContratoService  {
 
     private ContratoRepository contratoRepository;
-    private TecnicoService tecnicoService;
+    private UsuarioService usuarioService;
 
-    public ContratoServiceImpl(ContratoRepository contratoRepository, TecnicoService tecnicoService) {
+    public ContratoServiceImpl(ContratoRepository contratoRepository, UsuarioService usuarioService) {
         this.contratoRepository = contratoRepository;
-        this.tecnicoService = tecnicoService;
+        this.usuarioService = usuarioService;
     }
 
     @Override
@@ -39,17 +39,17 @@ public class ContratoServiceImpl implements ContratoService  {
             contrato.getDataFim() == null || 
             contrato.getDescricao() == null ||
             contrato.getDescricao().isBlank() ||
-            contrato.getTecnicos().isEmpty() ||
-            contrato.getTecnicos() == null
+            contrato.getUsuarios().isEmpty() ||
+            contrato.getUsuarios() == null
         ){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Dados inválidos para cadastrar o contrato!");
         }
-        Set<Tecnico> tecnicos = new HashSet<>();
+        Set<Usuario> tecnicos = new HashSet<>();
 
-        for(Tecnico tecnico: contrato.getTecnicos()){
-            tecnicos.add(tecnicoService.buscarPorId(tecnico.getId()));
+        for(Usuario tecnico: contrato.getUsuarios()){
+            tecnicos.add(usuarioService.buscarPorId(tecnico.getId()));
         }
-        contrato.setTecnicos(tecnicos);
+        contrato.setUsuarios(tecnicos);
 
         return contratoRepository.save(contrato);
     }

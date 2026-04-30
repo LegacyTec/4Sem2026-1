@@ -3,7 +3,8 @@ package com.sem2026_1.altave_backend.entity;
 import java.time.LocalDate;
 import java.util.Set;
 
-import org.hibernate.annotations.ManyToAny;
+import com.fasterxml.jackson.annotation.JsonView;
+import com.sem2026_1.altave_backend.controller.View;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -14,19 +15,21 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "tecnico")
-public class Tecnico {
-    
+@Table(name = "usuario")
+public class Usuario {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "tecnico_id")
+    @Column(name = "usuario_id")
+    @JsonView(View.Contrato.class)
     private Long id;
 
     @Column(name = "nome_completo")
+    @JsonView(View.Contrato.class)
     private String nomeCompleto;
 
     @Column(name = "email")
+    @JsonView(View.Contrato.class)
     private String email;
 
     @Column(name = "status")
@@ -36,9 +39,13 @@ public class Tecnico {
     private LocalDate dataNascimento;
 
     @Column(name = "cargo")
+    @JsonView(View.Contrato.class)
     private String cargo;
 
-    @ManyToMany(mappedBy = "tecnicos")
+    @Column(name = "funcao")
+    private String funcao;
+
+    @ManyToMany(mappedBy = "usuarios")
     private Set<Contrato> contratos;
 
     public Long getId() {
