@@ -33,6 +33,7 @@ public class Usuario {
     private String email;
 
     @Column(name = "status")
+    @JsonView(View.Contrato.class)
     private String status;
 
     @Column(name = "data_nascimento")

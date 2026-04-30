@@ -30,6 +30,7 @@ public class Contrato {
     @JsonView(View.Contrato.class)
     private String nomeEmpresa;
 
+
     @Column(name = "quantidade_plantas")
     @JsonView(View.Contrato.class)
     private Integer quantidadePlanta;
@@ -57,6 +58,7 @@ public class Contrato {
     )
     @JsonView(View.Contrato.class)
     private Set<Usuario> usuarios;
+
 
     public Long getId() {
         return id;
