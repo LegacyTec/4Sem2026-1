@@ -1,6 +1,7 @@
 package com.sem2026_1.altave_backend.entity;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonView;
@@ -11,6 +12,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 
@@ -48,6 +51,13 @@ public class Usuario {
 
     @ManyToMany(mappedBy = "usuarios")
     private Set<Contrato> contratos;
+
+    @ManyToMany
+    @JoinTable(name = "ordem_usuario",
+        joinColumns = {@JoinColumn(name="id_usuario")},
+        inverseJoinColumns = {@JoinColumn(name="id_ordem")}
+    )
+    private Set<OrdemManutencao> ordens;
 
     public Long getId() {
         return id;

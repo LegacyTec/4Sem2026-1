@@ -10,6 +10,8 @@ import com.sem2026_1.altave_backend.entity.Contrato;
 import com.sem2026_1.altave_backend.entity.Usuario;
 import com.sem2026_1.altave_backend.repository.ContratoRepository;
 
+import jakarta.transaction.Transactional;
+
 @Service
 public class ContratoServiceImpl implements ContratoService  {
 
@@ -27,6 +29,7 @@ public class ContratoServiceImpl implements ContratoService  {
     }
 
     @Override
+    @Transactional
     public Contrato cadastrarContrato(Contrato contrato){
 
         if(

@@ -5,15 +5,20 @@ import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import com.sem2026_1.altave_backend.controller.View;
+import com.sem2026_1.altave_backend.entity.enums.StatusContrato;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
@@ -51,6 +56,18 @@ public class Contrato {
     @JsonView(View.Contrato.class)
     private String descricao;
 
+    @Column(name = "quantidade_supervisao")
+    private Integer quantidadeSupervisao;
+
+    @Column(name = "criador")
+    @JsonView(View.Contrato.class)
+    private String criador;
+
+    @Column(name = "status")
+    @JsonView(View.Contrato.class)
+    @Enumerated(EnumType.STRING)
+    private StatusContrato status;
+
     @ManyToMany
     @JoinTable(name = "contrato_usuario",
         joinColumns = {@JoinColumn(name = "id_contrato")},
@@ -58,6 +75,9 @@ public class Contrato {
     )
     @JsonView(View.Contrato.class)
     private Set<Usuario> usuarios;
+
+    @OneToMany(mappedBy = "contrato", fetch = FetchType.LAZY)
+    private Set<Ativo> ativos;
 
 
     public Long getId() {
@@ -124,6 +144,37 @@ public class Contrato {
         this.usuarios = usuarios;
     }
 
+    public Integer getQuantidadeSupervisao() {
+        return quantidadeSupervisao;
+    }
+
+    public void setQuantidadeSupervisao(Integer quantidadeSupervisao) {
+        this.quantidadeSupervisao = quantidadeSupervisao;
+    }
+
+    public String getCriador() {
+        return criador;
+    }
+
+    public void setCriador(String criador) {
+        this.criador = criador;
+    }
+
+    public StatusContrato getStatus() {
+        return status;
+    }
+
+    public void setStatus(StatusContrato status) {
+        this.status = status;
+    }
+
+    public Set<Ativo> getAtivos() {
+        return ativos;
+    }
+
+    public void setAtivos(Set<Ativo> ativos) {
+        this.ativos = ativos;
+    }
   
     
 }
