@@ -15,7 +15,10 @@ CREATE TABLE contrato (
     data_inicio DATE NOT NULL,
     data_fim DATE NOT NULL,
     quantidade_ativos NUMBER,
-    descricao VARCHAR2(255)
+    descricao VARCHAR2(255),
+    criador VARCHAR2(100) NOT NULL,
+    quantidade_supervisoes NUMBER NOT NULL,
+    status VARCHAR2(35) NOT NULL CHECK(status IN('ATIVO', 'INATIVO'))
 );
 
 CREATE TABLE contrato_usuario (
@@ -77,4 +80,6 @@ CREATE TABLE ordem_usuario (
     CONSTRAINT fk_ou_usuario
         FOREIGN KEY (id_usuario) REFERENCES usuario(usuario_id)
 );
+
+
 

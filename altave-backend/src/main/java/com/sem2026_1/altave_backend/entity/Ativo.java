@@ -154,9 +154,5 @@ public class Ativo {
     public void setPlanta(String planta) {
         this.planta = planta;
     }
-
-    
-
-
     
 }

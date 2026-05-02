@@ -55,7 +55,7 @@ public class Usuario {
     @ManyToMany
     @JoinTable(name = "ordem_usuario",
         joinColumns = {@JoinColumn(name="id_usuario")},
-        inverseJoinColumns = {@JoinColumn(name="id_ordem")}
+        inverseJoinColumns = {@JoinColumn(name=" id_ordem_manutencao")}
     )
     private Set<OrdemManutencao> ordens;
 

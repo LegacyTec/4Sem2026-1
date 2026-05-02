@@ -6,10 +6,6 @@ import java.util.Set;
 
 import org.hibernate.annotations.ManyToAny;
 import org.springframework.cglib.core.Local;
-
-import com.sem2026_1.altave_backend.entity.enums.StatusOrdem;
-import com.sem2026_1.altave_backend.entity.enums.TipoManutencao;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -45,12 +41,10 @@ public class OrdemManutencao {
     private LocalDate dataFim;
 
     @Column(name = "tipo_manutencao")
-    @Enumerated(EnumType.STRING)
-    private TipoManutencao tipoManutencao;
+    private String tipoManutencao;
 
     @Column(name="status")
-    @Enumerated(EnumType.STRING)
-    private StatusOrdem status;
+    private String status;
 
     @Column(name = "comentario")
     private String comentario;
@@ -102,19 +96,19 @@ public class OrdemManutencao {
         this.dataFim = dataFim;
     }
 
-    public TipoManutencao getTipoOrdem() {
+    public String getTipoOrdem() {
         return tipoManutencao;
     }
 
-    public void setTipoOrdem(TipoManutencao tipoManutencao) {
+    public void setTipoOrdem(String tipoManutencao) {
         this.tipoManutencao = tipoManutencao;
     }
 
-    public StatusOrdem getStatus() {
+    public String getStatus() {
         return status;
     }
 
-    public void setStatus(StatusOrdem status) {
+    public void setStatus(String status) {
         this.status = status;
     }
 
@@ -126,11 +120,11 @@ public class OrdemManutencao {
         this.comentario = comentario;
     }
 
-    public TipoManutencao getTipoManutencao() {
+    public String getTipoManutencao() {
         return tipoManutencao;
     }
 
-    public void setTipoManutencao(TipoManutencao tipoManutencao) {
+    public void setTipoManutencao(String tipoManutencao) {
         this.tipoManutencao = tipoManutencao;
     }
 

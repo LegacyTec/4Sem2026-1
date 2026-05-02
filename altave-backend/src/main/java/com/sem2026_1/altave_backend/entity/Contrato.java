@@ -5,8 +5,6 @@ import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import com.sem2026_1.altave_backend.controller.View;
-import com.sem2026_1.altave_backend.entity.enums.StatusContrato;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -56,7 +54,7 @@ public class Contrato {
     @JsonView(View.Contrato.class)
     private String descricao;
 
-    @Column(name = "quantidade_supervisao")
+    @Column(name = "quantidade_supervisoes")
     private Integer quantidadeSupervisao;
 
     @Column(name = "criador")
@@ -65,8 +63,7 @@ public class Contrato {
 
     @Column(name = "status")
     @JsonView(View.Contrato.class)
-    @Enumerated(EnumType.STRING)
-    private StatusContrato status;
+    private String status;
 
     @ManyToMany
     @JoinTable(name = "contrato_usuario",
@@ -160,11 +157,11 @@ public class Contrato {
         this.criador = criador;
     }
 
-    public StatusContrato getStatus() {
+    public String getStatus() {
         return status;
     }
 
-    public void setStatus(StatusContrato status) {
+    public void setStatus(String status) {
         this.status = status;
     }
 
