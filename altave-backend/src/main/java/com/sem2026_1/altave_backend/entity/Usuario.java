@@ -24,15 +24,15 @@ public class Usuario {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "usuario_id")
-    @JsonView(View.Contrato.class)
+    @JsonView({View.Contrato.class, View.Ordem.class})
     private Long id;
 
     @Column(name = "nome_completo")
-    @JsonView(View.Contrato.class)
+    @JsonView({View.Contrato.class, View.Ordem.class})
     private String nomeCompleto;
 
     @Column(name = "email")
-    @JsonView(View.Contrato.class)
+    @JsonView({View.Contrato.class, View.Ordem.class})
     private String email;
 
     @Column(name = "status")
@@ -43,7 +43,7 @@ public class Usuario {
     private LocalDate dataNascimento;
 
     @Column(name = "cargo")
-    @JsonView(View.Contrato.class)
+    @JsonView({View.Contrato.class, View.Ordem.class})
     private String cargo;
 
     @Column(name = "funcao")
@@ -55,7 +55,7 @@ public class Usuario {
     @ManyToMany
     @JoinTable(name = "ordem_usuario",
         joinColumns = {@JoinColumn(name="id_usuario")},
-        inverseJoinColumns = {@JoinColumn(name=" id_ordem_manutencao")}
+        inverseJoinColumns = {@JoinColumn(name="id_ordem_manutencao")}
     )
     private Set<OrdemManutencao> ordens;
 

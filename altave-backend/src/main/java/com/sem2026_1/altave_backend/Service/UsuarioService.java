@@ -5,4 +5,5 @@ import com.sem2026_1.altave_backend.entity.Usuario;
 public interface UsuarioService {
     
     public Usuario buscarPorId(Long id);
+
 }

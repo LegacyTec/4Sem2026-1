@@ -27,14 +27,14 @@ public class ContratoController {
         this.contratoService = contratoService;
     }
 
-    @GetMapping
     @JsonView(View.Contrato.class)
+    @GetMapping
     public ResponseEntity<List<Contrato>> listar(){
         return ResponseEntity.ok(contratoService.buscarTodos());
     } 
 
-    @PostMapping
     @JsonView(View.Contrato.class)
+    @PostMapping
     public ResponseEntity<Contrato> cadastrar(@RequestBody Contrato contrato){
         contrato =  contratoService.cadastrarContrato(contrato);
         return ResponseEntity.created(URI.create("/contrato/" + contrato.getId())).body(contrato);

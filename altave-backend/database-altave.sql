@@ -82,4 +82,44 @@ CREATE TABLE ordem_usuario (
 );
 
 
+--- Usuario
+INSERT INTO usuario (nome_completo, email, status, data_nascimento, cargo, funcao)
+VALUES ('João Silva', 'joao.silva@email.com', 'ATIVO', DATE '1995-03-10', 'Técnico', 'Manutenção');
+
+INSERT INTO usuario (nome_completo, email, status, data_nascimento, cargo, funcao)
+VALUES ('Maria Oliveira', 'maria.oliveira@email.com', 'ATIVO', DATE '1990-07-21', 'Supervisor', 'Gestão');
+
+INSERT INTO usuario (nome_completo, email, status, data_nascimento, cargo, funcao)
+VALUES ('Carlos Souza', 'carlos.souza@email.com', 'INATIVO', DATE '1988-11-05', 'Analista', 'Planejamento');
+
+-- Contratos
+INSERT INTO contrato (nome_empresa, quantidade_plantas, data_inicio, data_fim, quantidade_ativos, descricao, criador, quantidade_supervisoes, status)
+VALUES ('Empresa Alpha', 3, DATE '2024-01-01', DATE '2026-01-01', 10, 'Contrato de manutenção industrial', 'Maria Oliveira', 2, 'ATIVO');
+
+INSERT INTO contrato (nome_empresa, quantidade_plantas, data_inicio, data_fim, quantidade_ativos, descricao, criador, quantidade_supervisoes, status)
+VALUES ('Empresa Beta', 2, DATE '2023-06-01', DATE '2025-06-01', 5, 'Contrato de inspeção técnica', 'João Silva', 1, 'INATIVO');
+
+--- Contrato_Usuario
+-- João e Maria no contrato 1
+INSERT INTO contrato_usuario (id_contrato, id_usuario) VALUES (3, 4);
+INSERT INTO contrato_usuario (id_contrato, id_usuario) VALUES (3, 5);
+
+-- Carlos no contrato 2
+INSERT INTO contrato_usuario (id_contrato, id_usuario) VALUES (4, 5);
+
+--- Ativos
+INSERT INTO ativo (status, fabricante, tipo, periodicidade_manutencao, descricao, data_instalacao, predio, planta, id_contrato)
+VALUES ('OPERACIONAL', 'Intelbras', 'CAMERA', 30, 'Câmera de segurança - entrada principal', DATE '2024-02-10', 'Prédio A', 'Planta 1', 3);
+
+-- Ordem de manutenção
+INSERT INTO ordem_manutencao 
+(nome_ordem, data_inicio, tipo_manutencao, id_ativo, descricao, status)
+VALUES 
+('Inspeção câmera entrada', DATE '2025-01-10', 'PREVENTIVA', 4 , 
+ 'Verificação de lente, foco e conexão', 'PENDENTE');
+
+-- Ordem_usuario
+ INSERT INTO ordem_usuario (id_ordem_manutencao, id_usuario) VALUES (2, 1);
+
+SELECT *FROM ORDEM_MANUTENCAO;
 

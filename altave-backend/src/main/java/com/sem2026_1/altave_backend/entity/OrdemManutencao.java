@@ -1,11 +1,18 @@
 package com.sem2026_1.altave_backend.entity;
 
+import java.io.ObjectInputFilter.Status;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 
 import org.hibernate.annotations.ManyToAny;
 import org.springframework.cglib.core.Local;
+
+import com.fasterxml.jackson.annotation.JsonView;
+import com.sem2026_1.altave_backend.controller.View;
+import com.sem2026_1.altave_backend.entity.enums.StatusOrdem;
+import com.sem2026_1.altave_backend.entity.enums.TipoOrdem;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -26,34 +33,46 @@ public class OrdemManutencao {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_ordem")
+    @JsonView(View.Ordem.class)
     private Long id;
     
     @Column(name="nome_ordem")
+    @JsonView(View.Ordem.class)
     private String nome;
 
     @Column(name="descricao")
+    @JsonView(View.Ordem.class)
     private String descricao;
 
     @Column(name = "data_inicio")
+    @JsonView(View.Ordem.class)
     private LocalDate dataInicio;
 
     @Column(name="data_fim")
+    @JsonView(View.Ordem.class)
     private LocalDate dataFim;
 
     @Column(name = "tipo_manutencao")
-    private String tipoManutencao;
+    @Enumerated(EnumType.STRING)
+    @JsonView(View.Ordem.class)
+    private TipoOrdem tipoManutencao;
 
     @Column(name="status")
-    private String status;
+    @Enumerated(EnumType.STRING)
+    @JsonView(View.Ordem.class)
+    private StatusOrdem status;
 
     @Column(name = "comentario")
+    @JsonView(View.Ordem.class)
     private String comentario;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_ativo")
+    @JsonView(View.Ordem.class)
     private Ativo ativo;
 
     @ManyToMany(mappedBy = "ordens")
+    @JsonView(View.Ordem.class)
     private Set<Usuario> usuarios;
 
     public Long getId() {
@@ -96,19 +115,19 @@ public class OrdemManutencao {
         this.dataFim = dataFim;
     }
 
-    public String getTipoOrdem() {
+    public TipoOrdem getTipoOrdem() {
         return tipoManutencao;
     }
 
-    public void setTipoOrdem(String tipoManutencao) {
+    public void setTipoOrdem(TipoOrdem tipoManutencao) {
         this.tipoManutencao = tipoManutencao;
     }
 
-    public String getStatus() {
+    public StatusOrdem getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(StatusOrdem status) {
         this.status = status;
     }
 
@@ -120,20 +139,20 @@ public class OrdemManutencao {
         this.comentario = comentario;
     }
 
-    public String getTipoManutencao() {
-        return tipoManutencao;
-    }
-
-    public void setTipoManutencao(String tipoManutencao) {
-        this.tipoManutencao = tipoManutencao;
-    }
-
     public Ativo getAtivo() {
         return ativo;
     }
 
     public void setAtivo(Ativo ativo) {
         this.ativo = ativo;
+    }
+
+    public Set<Usuario> getUsuarios() {
+        return usuarios;
+    }
+
+    public void setUsuarios(Set<Usuario> usuarios) {
+        this.usuarios = usuarios;
     }
 
 
