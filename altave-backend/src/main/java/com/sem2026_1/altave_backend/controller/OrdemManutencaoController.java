@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.service.annotation.GetExchange;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import com.sem2026_1.altave_backend.entity.OrdemManutencao;
@@ -40,8 +41,18 @@ public class OrdemManutencaoController {
         return ResponseEntity.created(URI.create("/ordem/" + ordem.getId())).body(ordem);
     }
 
-    @GetMapping("/contar")
+    @GetMapping("/andamento")
     public Long contarPorStatus(){
         return ordemManutencaoService.contarPorStatus();
+    }
+
+    @GetMapping("/pendente")
+    public Long contarPorStatusPendente(){
+        return ordemManutencaoService.contarPorStatusPendente();
+    }
+
+    @GetMapping("/ordens-totais")
+    public Long contarOrdens(){
+        return ordemManutencaoService.contarOrdens();
     }
 }

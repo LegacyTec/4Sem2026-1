@@ -12,4 +12,7 @@ public interface OrdemManutencaoRepository extends JpaRepository<OrdemManutencao
 
         @Query("SELECT COUNT(o) FROM OrdemManutencao o WHERE o.status = :status")
         public Long countByStatus(@Param("status") StatusOrdem status);
+
+        @Query("SELECT COUNT(o) FROM OrdemManutencao o WHERE o.status = :status")
+        public Long contarPorStatusPendente(@Param("status") StatusOrdem status);
 }

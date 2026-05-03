@@ -9,5 +9,6 @@ public interface ContratoService {
     public List<Contrato> buscarTodos();
 
     public Contrato cadastrarContrato(Contrato contrato);
+
 }
 

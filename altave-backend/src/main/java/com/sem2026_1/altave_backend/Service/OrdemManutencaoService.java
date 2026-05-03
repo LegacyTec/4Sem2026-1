@@ -11,4 +11,8 @@ public interface OrdemManutencaoService {
     public OrdemManutencao cadastrarManutencao(OrdemManutencao ordem);
 
     public Long contarPorStatus();
+
+    public Long contarPorStatusPendente();
+
+    public Long contarOrdens();
 }
