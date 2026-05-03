@@ -24,32 +24,35 @@ public class Usuario {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "usuario_id")
-    @JsonView({View.Contrato.class, View.Ordem.class})
+    @JsonView({View.Contrato.class, View.Ordem.class, View.Usuario.class})
     private Long id;
 
     @Column(name = "nome_completo")
-    @JsonView({View.Contrato.class, View.Ordem.class})
+    @JsonView({View.Contrato.class, View.Ordem.class, View.Usuario.class })
     private String nomeCompleto;
 
     @Column(name = "email")
-    @JsonView({View.Contrato.class, View.Ordem.class})
+    @JsonView({View.Contrato.class, View.Ordem.class, View.Usuario.class})
     private String email;
 
     @Column(name = "status")
-    @JsonView(View.Contrato.class)
+    @JsonView({View.Contrato.class, View.Ordem.class, View.Usuario.class })
     private String status;
 
     @Column(name = "data_nascimento")
+    @JsonView(View.Usuario.class)
     private LocalDate dataNascimento;
 
     @Column(name = "cargo")
-    @JsonView({View.Contrato.class, View.Ordem.class})
+    @JsonView({View.Contrato.class, View.Ordem.class, View.Usuario.class})
     private String cargo;
 
     @Column(name = "funcao")
+    @JsonView(View.Usuario.class)
     private String funcao;
 
     @ManyToMany(mappedBy = "usuarios")
+    @JsonView(View.Usuario.class)
     private Set<Contrato> contratos;
 
     @ManyToMany
@@ -57,6 +60,7 @@ public class Usuario {
         joinColumns = {@JoinColumn(name="id_usuario")},
         inverseJoinColumns = {@JoinColumn(name="id_ordem_manutencao")}
     )
+    @JsonView(View.Usuario.class)
     private Set<OrdemManutencao> ordens;
 
     public Long getId() {

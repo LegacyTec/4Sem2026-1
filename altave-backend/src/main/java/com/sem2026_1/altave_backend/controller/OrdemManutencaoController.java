@@ -39,4 +39,9 @@ public class OrdemManutencaoController {
 
         return ResponseEntity.created(URI.create("/ordem/" + ordem.getId())).body(ordem);
     }
+
+    @GetMapping("/contar")
+    public Long contarPorStatus(){
+        return ordemManutencaoService.contarPorStatus();
+    }
 }

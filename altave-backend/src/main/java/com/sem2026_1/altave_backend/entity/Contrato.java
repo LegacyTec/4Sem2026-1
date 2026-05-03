@@ -26,11 +26,11 @@ public class Contrato {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="id_contrato")
-    @JsonView(View.Contrato.class)
+    @JsonView({View.Contrato.class, View.Usuario.class})
     private Long id;
 
     @Column(name = "nome_empresa")
-    @JsonView(View.Contrato.class)
+    @JsonView({View.Contrato.class, View.Ordem.class, View.Usuario.class})
     private String nomeEmpresa;
 
 

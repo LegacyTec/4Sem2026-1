@@ -5,8 +5,13 @@ import java.util.Set;
 
 import org.hibernate.query.common.FetchClauseType;
 
+import com.fasterxml.jackson.annotation.JsonView;
+import com.sem2026_1.altave_backend.controller.View;
+import com.sem2026_1.altave_backend.entity.enums.StatusAtivo;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -23,10 +28,17 @@ public class Ativo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_ativo")
+    @JsonView({View.Ordem.class, View.Usuario.class})
     private Long id;
 
+    @Column(name = "nome_ativo")
+    @JsonView({View.Ordem.class, View.Usuario.class})
+    private String nome;
+
     @Column(name = "status")
-    private String status;
+    @JsonView(View.Ordem.class)
+    @Enumerated(EnumType.STRING)
+    private StatusAtivo status;
 
     @Column(name = "fabricante")
     private String fabricante;
@@ -54,6 +66,7 @@ public class Ativo {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_contrato")
+    @JsonView(View.Ordem.class)
     private Contrato contrato;
 
     @OneToMany(mappedBy = "ativo", fetch = FetchType.LAZY)
@@ -83,11 +96,11 @@ public class Ativo {
         this.id = id;
     }
 
-    public String getStatus() {
+    public StatusAtivo getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(StatusAtivo status) {
         this.status = status;
     }
 

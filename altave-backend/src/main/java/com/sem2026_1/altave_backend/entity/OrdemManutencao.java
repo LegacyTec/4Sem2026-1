@@ -33,42 +33,42 @@ public class OrdemManutencao {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_ordem")
-    @JsonView(View.Ordem.class)
+    @JsonView({View.Ordem.class, View.Usuario.class})
     private Long id;
     
     @Column(name="nome_ordem")
-    @JsonView(View.Ordem.class)
+    @JsonView({View.Ordem.class, View.Usuario.class})
     private String nome;
 
     @Column(name="descricao")
-    @JsonView(View.Ordem.class)
+    @JsonView({View.Ordem.class, View.Usuario.class})
     private String descricao;
 
     @Column(name = "data_inicio")
-    @JsonView(View.Ordem.class)
+    @JsonView({View.Ordem.class, View.Usuario.class})
     private LocalDate dataInicio;
 
     @Column(name="data_fim")
-    @JsonView(View.Ordem.class)
+    @JsonView({View.Ordem.class, View.Usuario.class})
     private LocalDate dataFim;
 
     @Column(name = "tipo_manutencao")
     @Enumerated(EnumType.STRING)
-    @JsonView(View.Ordem.class)
+    @JsonView({View.Ordem.class, View.Usuario.class})
     private TipoOrdem tipoManutencao;
 
     @Column(name="status")
     @Enumerated(EnumType.STRING)
-    @JsonView(View.Ordem.class)
+    @JsonView({View.Ordem.class, View.Usuario.class})
     private StatusOrdem status;
 
     @Column(name = "comentario")
-    @JsonView(View.Ordem.class)
+    @JsonView({View.Ordem.class, View.Usuario.class})
     private String comentario;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_ativo")
-    @JsonView(View.Ordem.class)
+    @JsonView({View.Ordem.class, View.Usuario.class})
     private Ativo ativo;
 
     @ManyToMany(mappedBy = "ordens")

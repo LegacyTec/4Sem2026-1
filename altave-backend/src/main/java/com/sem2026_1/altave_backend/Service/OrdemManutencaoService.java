@@ -9,4 +9,6 @@ public interface OrdemManutencaoService {
     public List<OrdemManutencao> listar();
 
     public OrdemManutencao cadastrarManutencao(OrdemManutencao ordem);
+
+    public Long contarPorStatus();
 }

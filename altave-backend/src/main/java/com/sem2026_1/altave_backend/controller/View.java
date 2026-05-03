@@ -5,5 +5,7 @@ public class View {
 
      static public class Contrato { };
 
-     static public class Ordem {}
+     static public class Ordem {};
+
+     static public class Usuario{};
 }
