@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import SidebarAdm from '@/components/layout/SidebarAdm.vue'
+import SidebarAdm from '@/components/geral/layout/SidebarAdm.vue'
 import { computed, onMounted, reactive, ref } from 'vue'
 
 type ContractStatus = 'Ativo' | 'Expirando' | 'Inativo'
