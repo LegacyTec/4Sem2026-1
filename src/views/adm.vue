@@ -1,3 +1,7 @@
+<script setup lang="ts">
+import AdmDashboard from '@/components/adm/AdmDashboard.vue'
+</script>
+
 <template>
-  <div class="view-canvas" />
+  <AdmDashboard />
 </template>

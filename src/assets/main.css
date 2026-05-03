@@ -35,6 +35,8 @@
 
   --sidebar-w: 220px;
   --topbar-h:  60px;
+  /* Barra global de troca de perfil (protótipo ALTAVE — SGM) */
+  --app-header-roles-h: 48px;
 
   --font: 'DM Sans', sans-serif;
   --mono: 'DM Mono', monospace;
@@ -201,6 +203,17 @@ tbody tr:hover td { background: var(--gray-50); }
   gap: 14px;
   margin-bottom: 20px;
 }
+
+.metrics-grid--3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+@media (max-width: 860px) {
+  .metrics-grid--3 {
+    grid-template-columns: 1fr;
+  }
+}
+
 .metric-card {
   background: var(--white);
   border: 1px solid var(--gray-200);

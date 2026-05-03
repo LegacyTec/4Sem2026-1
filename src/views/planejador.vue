@@ -1,3 +1,7 @@
+<script setup lang="ts">
+import PlanejadorOrdensPage from '@/components/planejador/PlanejadorOrdensPage.vue'
+</script>
+
 <template>
-  <div class="view-canvas" />
+  <PlanejadorOrdensPage />
 </template>

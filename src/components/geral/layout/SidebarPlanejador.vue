@@ -1,5 +1,5 @@
 <template>
-  <aside class="adm-sidebar" aria-label="Navegação do administrador">
+  <aside class="plnj-sidebar" aria-label="Navegação do planejador">
     <div class="sidebar-logo">
       <div class="logo-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24">
@@ -8,30 +8,65 @@
       </div>
       <div>
         <div class="logo-text">Altave</div>
-        <div class="logo-sub">Gestão</div>
+        <div class="logo-sub">SGM · Planejamento</div>
       </div>
     </div>
 
     <nav class="sidebar-section">
       <div class="sidebar-section-label">Menu</div>
 
-      <RouterLink to="/adm/inicio" class="nav-item" active-class="active">
+      <RouterLink to="/planejador/inicio" class="nav-item" active-class="active">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="3" y="3" width="7" height="7" />
-          <rect x="14" y="3" width="7" height="7" />
-          <rect x="3" y="14" width="7" height="7" />
-          <rect x="14" y="14" width="7" height="7" />
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14,2 14,8 20,8" />
+          <line x1="16" y1="13" x2="8" y2="13" />
+          <line x1="16" y1="17" x2="8" y2="17" />
         </svg>
-        Dashboard
+        Ordens
       </RouterLink>
+
+      <span class="nav-item nav-item--disabled" title="Disponível após integração">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="5" r="3" />
+          <path d="M12 8v4M8 12H4a8 8 0 0 0 16 0h-4" />
+        </svg>
+        Ativos
+      </span>
+
+      <span class="nav-item nav-item--disabled" title="Disponível após integração">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+        </svg>
+        Minha Equipe
+      </span>
+
+      <span class="nav-item nav-item--disabled" title="Disponível após integração">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" />
+          <line x1="16" y1="2" x2="16" y2="6" />
+          <line x1="8" y1="2" x2="8" y2="6" />
+          <line x1="3" y1="10" x2="21" y2="10" />
+        </svg>
+        Calendário
+      </span>
+
+      <span class="nav-item nav-item--disabled" title="Disponível após integração">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="20" x2="18" y2="10" />
+          <line x1="12" y1="20" x2="12" y2="4" />
+          <line x1="6" y1="20" x2="6" y2="14" />
+        </svg>
+        Relatórios
+      </span>
     </nav>
 
     <div class="sidebar-footer">
       <div class="user-card">
-        <div class="avatar avatar-blue" aria-hidden="true">AD</div>
+        <div class="avatar avatar-blue" aria-hidden="true">PL</div>
         <div class="user-info">
           <div class="user-name">Usuário autenticado</div>
-          <div class="user-role">Administrador</div>
+          <div class="user-role">Planejador</div>
         </div>
         <div class="status-dot" title="Status da sessão" />
       </div>
@@ -40,7 +75,7 @@
 </template>
 
 <style scoped>
-.adm-sidebar {
+.plnj-sidebar {
   width: var(--sidebar-w);
   background: var(--blue-700);
   display: flex;
@@ -84,10 +119,11 @@
 }
 
 .logo-sub {
-  font-size: 10px;
+  font-size: 9px;
   color: rgba(255, 255, 255, 0.45);
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
+  line-height: 1.3;
 }
 
 .sidebar-section {
@@ -128,27 +164,16 @@
   font-weight: 500;
 }
 
+.nav-item--disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .nav-icon {
   width: 16px;
   height: 16px;
   opacity: 0.8;
   flex-shrink: 0;
-}
-
-.nav-badge {
-  margin-left: auto;
-  background: var(--blue-400);
-  color: white;
-  font-size: 10px;
-  font-weight: 600;
-  padding: 1px 6px;
-  border-radius: 20px;
-  min-width: 18px;
-  text-align: center;
-}
-
-.nav-badge.danger {
-  background: var(--red);
 }
 
 .sidebar-footer {
@@ -210,7 +235,7 @@
 }
 
 @media (max-width: 860px) {
-  .adm-sidebar {
+  .plnj-sidebar {
     width: 100%;
     min-height: auto;
   }

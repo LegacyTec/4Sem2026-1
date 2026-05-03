@@ -1,5 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import IndexAdm from '@/components/adm/IndexAdm.vue'
 import Adm from '@/views/adm.vue'
 import Planejador from '@/views/planejador.vue'
 import Supervisor from '@/views/supervisor.vue'
@@ -11,7 +10,7 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      redirect: '/adm/index'
+      redirect: '/adm/inicio'
     },
     {
       path: '/adm/inicio',
@@ -40,8 +39,7 @@ const router = createRouter({
     },
     {
       path: '/adm/index',
-      name: 'adm-index',
-      component: IndexAdm
+      redirect: '/adm/inicio'
     }
   ],
 })
