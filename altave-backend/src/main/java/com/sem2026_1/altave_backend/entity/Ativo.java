@@ -3,8 +3,6 @@ package com.sem2026_1.altave_backend.entity;
 import java.time.LocalDate;
 import java.util.Set;
 
-import org.hibernate.query.common.FetchClauseType;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
