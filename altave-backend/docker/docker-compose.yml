@@ -1,0 +1,19 @@
+version: "3.8"
+services:
+    # Name of the Docker Compose service
+    oracle:
+      # Docker Hub image (feel free to change the tag "latest" to any other available one)
+      image: gvenzl/oracle-free:23
+      # Forward Oracle port to localhost
+      ports:
+        - "1521:1521"
+      # Provide passwords and other environment variables to the container
+      environment:
+        ORACLE_PASSWORD: oracle
+      # Mount a local SQL file to initialize your schema at startup
+      volumes:
+      - oracle-data:/opt/oracle/oradata
+      restart: unless-stopped
+      
+volumes:
+  oracle-data:
