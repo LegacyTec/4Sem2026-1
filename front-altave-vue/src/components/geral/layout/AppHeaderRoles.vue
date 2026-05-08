@@ -2,10 +2,12 @@
 import { computed } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 
+
+
 const route = useRoute()
 
 const tabs = [
-  { id: 'adm' as const, label: 'ADM', to: '/adm/inicio' },
+  { id: 'adm' as const, label: 'ADM', to: '/adm/index' },
   { id: 'supervisor' as const, label: 'Supervisor', to: '/supervisor/inicio' },
   { id: 'planejador' as const, label: 'Planejador', to: '/planejador/inicio' },
   { id: 'tecnico' as const, label: 'Técnico', to: '/tecnico/inicio' },
@@ -59,9 +61,22 @@ const activeId = computed(() => {
 
 .app-header-brand {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 8px;
   flex-shrink: 0;
+}
+
+.app-header-logo-img {
+  height: 28px;
+  width: auto;
+  object-fit: contain;
+  /* Inverte para branco se a logo for escura */
+  filter: brightness(0) invert(1);
+}
+
+.app-header-logo-fallback {
+  align-items: baseline;
+  gap: 8px;
 }
 
 .app-header-logo {

@@ -12,7 +12,7 @@ public class UsuarioServiceImpl implements UsuarioService{
 
     private UsuarioRepository usuarioRepository;
 
-    public UsuarioServiceImpl(UsuarioRepository UsuarioRepository) {
+    public UsuarioServiceImpl(UsuarioRepository usuarioRepository) {
         this.usuarioRepository = usuarioRepository;
     }
 

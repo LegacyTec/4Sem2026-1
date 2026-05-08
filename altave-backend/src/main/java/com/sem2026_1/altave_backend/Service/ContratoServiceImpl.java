@@ -35,26 +35,29 @@ public class ContratoServiceImpl implements ContratoService  {
         if(
             contrato == null ||
             contrato.getId() != null ||
-            contrato.getNomeEmpresa().isBlank() ||
             contrato.getNomeEmpresa() == null ||
+            contrato.getNomeEmpresa().isBlank() ||
             contrato.getQuantidadePlanta() == null ||
-            contrato.getDataInicio() == null || 
-            contrato.getDataFim() == null || 
+            contrato.getDataInicio() == null ||
+            contrato.getDataFim() == null ||
             contrato.getDescricao() == null ||
-            contrato.getDescricao().isBlank() ||
-            contrato.getUsuarios().isEmpty() ||
-            contrato.getUsuarios() == null
+            contrato.getDescricao().isBlank()
         ){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Dados inválidos para cadastrar o contrato!");
         }
-        Set<Usuario> tecnicos = new HashSet<>();
 
-        for(Usuario tecnico: contrato.getUsuarios()){
-            tecnicos.add(usuarioService.buscarPorId(tecnico.getId()));
+        // Se houver usuários, processa-os; senão, deixa vazio
+        if(contrato.getUsuarios() != null && !contrato.getUsuarios().isEmpty()) {
+            Set<Usuario> tecnicos = new HashSet<>();
+            for(Usuario tecnico: contrato.getUsuarios()){
+                tecnicos.add(usuarioService.buscarPorId(tecnico.getId()));
+            }
+            contrato.setUsuarios(tecnicos);
+        } else {
+            contrato.setUsuarios(new HashSet<>());
         }
-        contrato.setUsuarios(tecnicos);
 
         return contratoRepository.save(contrato);
     }
-    
+
 }

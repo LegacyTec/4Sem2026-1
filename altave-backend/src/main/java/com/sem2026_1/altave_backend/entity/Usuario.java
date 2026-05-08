@@ -47,16 +47,13 @@ public class Usuario {
     private String cargo;
 
     @Column(name = "funcao")
+    @JsonView({View.Contrato.class, View.Ordem.class})
     private String funcao;
 
     @ManyToMany(mappedBy = "usuarios")
     private Set<Contrato> contratos;
 
-    @ManyToMany
-    @JoinTable(name = "ordem_usuario",
-        joinColumns = {@JoinColumn(name="id_usuario")},
-        inverseJoinColumns = {@JoinColumn(name="id_ordem_manutencao")}
-    )
+    @ManyToMany(mappedBy = "usuarios")
     private Set<OrdemManutencao> ordens;
 
     public Long getId() {
@@ -105,6 +102,14 @@ public class Usuario {
 
     public void setCargo(String cargo) {
         this.cargo = cargo;
+    }
+
+    public String getFuncao() {
+        return funcao;
+    }
+
+    public void setFuncao(String funcao) {
+        this.funcao = funcao;
     }
 
     public Set<Contrato> getContratos() {

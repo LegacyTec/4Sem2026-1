@@ -1,25 +1,35 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import MinhasOrdens from '@/views/tecnico/MinhasOrdens.vue'
-import IndexAdm from '@/views/adm/IndexAdm.vue'
+import { createRouter, createWebHistory } from "vue-router";
+import Adm from "@/views/adm.vue";
+import Planejador from "@/views/planejador.vue";
+import Tecnico from "@/views/tecnico.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path: '/',
-      redirect: '/tecnico/ordens'
+      path: "/",
+      redirect: "/adm/index",
     },
     {
-      path: '/tecnico/ordens',
-      name: 'tecnico-ordens',
-      component: MinhasOrdens
+      path: "/adm/index",
+      name: "adm-index",
+      component: Adm,
     },
     {
-      path: '/adm/index',
-      name: 'adm-index',
-      component: IndexAdm
-    }
+      path: "/planejador/inicio",
+      name: "planejador-inicio",
+      component: Planejador,
+    },
+    {
+      path: "/tecnico/inicio",
+      name: "tecnico-inicio",
+      component: Tecnico,
+    },
+    {
+      path: "/tecnico/ordens",
+      redirect: "/tecnico/inicio",
+    },
   ],
-})
+});
 
-export default router
+export default router;

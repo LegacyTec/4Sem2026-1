@@ -1,27 +1,27 @@
 <script setup lang="ts">
 import AppHeaderRoles from '@/components/geral/layout/AppHeaderRoles.vue'
 import SidebarAdm from '@/components/geral/layout/SidebarAdm.vue'
-import { computed, reactive, ref } from 'vue'
+import { buscarContratos, criarContrato, formatarData, resolverStatus } from '@/services/ContratoService'
+import { computed, onMounted, reactive, ref } from 'vue'
 
 type ContractStatus = 'Ativo' | 'Expirando' | 'Inativo'
 
 type Contract = {
   id: number
   nomeEmpresa: string
-  unidade: string
   dataInicio: string
   dataFim: string
   quantidadePlantas: number
   quantidadeAtivos: number
-  ordensAbertas: number
   status: ContractStatus
   descricao: string
 }
 
 const isPanelOpen = ref(false)
 const isSubmitting = ref(false)
+const isLoading = ref(false)
+const errorMessage = ref('')
 
-/** Formulário alinhado ao payload futuro da API (somente front por enquanto). */
 const novoContrato = reactive({
   nomeEmpresa: '',
   dataInicio: '',
@@ -30,14 +30,11 @@ const novoContrato = reactive({
   descricao: '',
 })
 
-/** Populado via GET /contratos (ou equivalente) quando integrar o backend. */
 const contratos = ref<Contract[]>([])
-
-/** Somente contratos; totais de usuários/ordens globais virão de outros endpoints. */
 const totalUsuarios = ref(0)
 
-const totalAtivos = computed(() => contratos.value.reduce((acc, c) => acc + c.quantidadeAtivos, 0))
-const ordensAbertasSum = computed(() => contratos.value.reduce((acc, c) => acc + c.ordensAbertas, 0))
+const totalAtivos = computed(() => contratos.value.reduce((acc, c) => acc + (c.quantidadeAtivos || 0), 0))
+const ordensAbertasSum = computed(() => 0)
 
 const metricas = computed(() => [
   { label: 'Total de Contratos', value: contratos.value.length, tone: 'blue' as const },
@@ -46,42 +43,70 @@ const metricas = computed(() => [
   { label: 'Ordens em Andamento', value: ordensAbertasSum.value, tone: 'red' as const },
 ])
 
+onMounted(async () => {
+  isLoading.value = true
+  try {
+    const dados = await buscarContratos()
+    contratos.value = dados.map(d => ({
+      id: d.id,
+      nomeEmpresa: d.nomeEmpresa,
+      dataInicio: d.dataInicio,
+      dataFim: d.dataFim,
+      quantidadePlantas: d.quantidadePlanta || 0,
+      quantidadeAtivos: d.quantidadeAtivos || 0,
+      status: resolverStatus(d.dataFim),
+      descricao: d.descricao,
+    }))
+  } catch (e: any) {
+    errorMessage.value = 'Erro ao carregar contratos. Verifique se o backend está rodando.'
+    console.error(e)
+  } finally {
+    isLoading.value = false
+  }
+})
+
 function abrirPainel() {
   isPanelOpen.value = true
 }
 
 function fecharPainel() {
   isPanelOpen.value = false
+  errorMessage.value = ''
 }
 
-/** TODO: substituir por POST ao backend; hoje só atualiza o estado local após validação. */
-function salvarContrato() {
+async function salvarContrato() {
+  if (!novoContrato.nomeEmpresa.trim() || !novoContrato.dataInicio || !novoContrato.dataFim || !novoContrato.descricao.trim()) {
+    errorMessage.value = 'Preencha todos os campos obrigatórios.'
+    return
+  }
   isSubmitting.value = true
-  contratos.value.unshift({
-    id: Date.now(),
-    nomeEmpresa: novoContrato.nomeEmpresa.trim(),
-    unidade: '',
-    dataInicio: novoContrato.dataInicio,
-    dataFim: novoContrato.dataFim,
-    quantidadePlantas: Number(novoContrato.quantidadePlantas),
-    quantidadeAtivos: 0,
-    ordensAbertas: 0,
-    status: resolverStatusContrato(novoContrato.dataFim),
-    descricao: novoContrato.descricao.trim(),
-  })
-  isSubmitting.value = false
-  limparFormulario()
-  fecharPainel()
-}
-
-function resolverStatusContrato(dataFim: string): ContractStatus {
-  if (!dataFim) return 'Ativo'
-  const hoje = new Date()
-  const fim = new Date(`${dataFim}T00:00:00`)
-  const dias = Math.ceil((fim.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24))
-  if (dias < 0) return 'Inativo'
-  if (dias <= 60) return 'Expirando'
-  return 'Ativo'
+  errorMessage.value = ''
+  try {
+    const criado = await criarContrato({
+      nomeEmpresa: novoContrato.nomeEmpresa.trim(),
+      quantidadePlanta: Number(novoContrato.quantidadePlantas),
+      dataInicio: novoContrato.dataInicio,
+      dataFim: novoContrato.dataFim,
+      descricao: novoContrato.descricao.trim(),
+    })
+    contratos.value.unshift({
+      id: criado.id,
+      nomeEmpresa: criado.nomeEmpresa,
+      dataInicio: criado.dataInicio,
+      dataFim: criado.dataFim,
+      quantidadePlantas: criado.quantidadePlanta || 0,
+      quantidadeAtivos: criado.quantidadeAtivos || 0,
+      status: resolverStatus(criado.dataFim),
+      descricao: criado.descricao,
+    })
+    limparFormulario()
+    fecharPainel()
+  } catch (e: any) {
+    errorMessage.value = 'Erro ao salvar contrato.'
+    console.error(e)
+  } finally {
+    isSubmitting.value = false
+  }
 }
 
 function limparFormulario() {
@@ -90,11 +115,6 @@ function limparFormulario() {
   novoContrato.dataFim = ''
   novoContrato.quantidadePlantas = 1
   novoContrato.descricao = ''
-}
-
-function formatarData(iso: string) {
-  if (!iso) return '—'
-  return new Intl.DateTimeFormat('pt-BR', { timeZone: 'UTC' }).format(new Date(`${iso}T00:00:00`))
 }
 </script>
 
@@ -165,22 +185,27 @@ function formatarData(iso: string) {
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-if="contratos.length === 0">
+                  <tr v-if="isLoading">
+                    <td colspan="8" class="table-empty">Carregando contratos...</td>
+                  </tr>
+                  <tr v-else-if="errorMessage">
+                    <td colspan="8" class="table-empty" style="color: red;">{{ errorMessage }}</td>
+                  </tr>
+                  <tr v-else-if="contratos.length === 0">
                     <td colspan="8" class="table-empty">
-                      Nenhum contrato ainda. Cadastre pelo botão <strong>Criar Contrato</strong> ou carregue os dados quando a API estiver disponível.
+                      Nenhum contrato ainda. Cadastre pelo botão <strong>Criar Contrato</strong>.
                     </td>
                   </tr>
                   <template v-else>
                     <tr v-for="c in contratos" :key="c.id">
                       <td>
                         <strong class="table-title">{{ c.nomeEmpresa }}</strong>
-                        <span class="table-subtitle">{{ c.unidade || '—' }}</span>
                       </td>
                       <td>{{ formatarData(c.dataInicio) }}</td>
                       <td>{{ formatarData(c.dataFim) }}</td>
                       <td>{{ c.quantidadePlantas }}</td>
                       <td>{{ c.quantidadeAtivos }}</td>
-                      <td>{{ c.ordensAbertas || '—' }}</td>
+                      <td>—</td>
                       <td>
                         <span
                           class="badge"

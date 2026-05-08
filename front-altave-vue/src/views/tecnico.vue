@@ -1,3 +1,7 @@
+<script setup lang="ts">
+import TecnicoKanban from '@/components/tecnico/TecnicoKanban.vue'
+</script>
+
 <template>
-    <div class="view-canvas" />
-  </template>
+  <TecnicoKanban />
+</template>

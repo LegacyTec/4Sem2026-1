@@ -3,6 +3,9 @@ package com.sem2026_1.altave_backend.entity;
 import java.time.LocalDate;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonView;
+import com.sem2026_1.altave_backend.controller.View;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -21,6 +24,7 @@ public class Ativo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_ativo")
+    @JsonView(View.Ordem.class)
     private Long id;
 
     @Column(name = "status")
@@ -30,6 +34,7 @@ public class Ativo {
     private String fabricante;
 
     @Column(name = "tipo")
+    @JsonView(View.Ordem.class)
     private String tipo;
 
     @Column(name = "periodicidade_manutencao")
@@ -45,16 +50,20 @@ public class Ativo {
     private LocalDate dataRemocao;
 
     @Column(name = "predio")
+    @JsonView(View.Ordem.class)
     private String predio;
 
     @Column(name = "planta")
+    @JsonView(View.Ordem.class)
     private String planta;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_contrato")
+    @JsonIgnore
     private Contrato contrato;
 
     @OneToMany(mappedBy = "ativo", fetch = FetchType.LAZY)
+    @JsonIgnore
     private Set<OrdemManutencao> ordens;
 
     public Contrato getContrato() {
@@ -152,5 +161,5 @@ public class Ativo {
     public void setPlanta(String planta) {
         this.planta = planta;
     }
-    
+
 }

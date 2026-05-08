@@ -22,6 +22,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -35,7 +36,7 @@ public class OrdemManutencao {
     @Column(name = "id_ordem")
     @JsonView(View.Ordem.class)
     private Long id;
-    
+
     @Column(name="nome_ordem")
     @JsonView(View.Ordem.class)
     private String nome;
@@ -66,12 +67,29 @@ public class OrdemManutencao {
     @JsonView(View.Ordem.class)
     private String comentario;
 
+    @Column(name = "planta")
+    @JsonView(View.Ordem.class)
+    private String planta;
+
+    @Column(name = "predio")
+    @JsonView(View.Ordem.class)
+    private String predio;
+
+    @Column(name = "requisito")
+    @JsonView(View.Ordem.class)
+    private String requisito;
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_ativo")
     @JsonView(View.Ordem.class)
     private Ativo ativo;
 
-    @ManyToMany(mappedBy = "ordens")
+    @ManyToMany
+    @JoinTable(
+        name = "ordem_usuario",
+        joinColumns = {@JoinColumn(name = "id_ordem_manutencao")},
+        inverseJoinColumns = {@JoinColumn(name = "id_usuario")}
+    )
     @JsonView(View.Ordem.class)
     private Set<Usuario> usuarios;
 
@@ -115,11 +133,11 @@ public class OrdemManutencao {
         this.dataFim = dataFim;
     }
 
-    public TipoOrdem getTipoOrdem() {
+    public TipoOrdem getTipoManutencao() {
         return tipoManutencao;
     }
 
-    public void setTipoOrdem(TipoOrdem tipoManutencao) {
+    public void setTipoManutencao(TipoOrdem tipoManutencao) {
         this.tipoManutencao = tipoManutencao;
     }
 
@@ -137,6 +155,30 @@ public class OrdemManutencao {
 
     public void setComentario(String comentario) {
         this.comentario = comentario;
+    }
+
+    public String getPlanta() {
+        return planta;
+    }
+
+    public void setPlanta(String planta) {
+        this.planta = planta;
+    }
+
+    public String getPredio() {
+        return predio;
+    }
+
+    public void setPredio(String predio) {
+        this.predio = predio;
+    }
+
+    public String getRequisito() {
+        return requisito;
+    }
+
+    public void setRequisito(String requisito) {
+        this.requisito = requisito;
     }
 
     public Ativo getAtivo() {

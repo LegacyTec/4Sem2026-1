@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import AppHeaderRoles from '@/components/geral/layout/AppHeaderRoles.vue'
 import SidebarAdm from '@/components/geral/layout/SidebarAdm.vue'
-import { computed, reactive, ref } from 'vue'
+import ContratoService, { type IContrato } from '@/services/ContratoService'
+import { computed, onMounted, reactive, ref } from 'vue'
 
 type ContractStatus = 'Ativo' | 'Expirando' | 'Inativo'
 
 type Contract = {
-  id: number
+  id: number | string
   nomeEmpresa: string
   unidade: string
   dataInicio: string
@@ -20,8 +21,10 @@ type Contract = {
 
 const isPanelOpen = ref(false)
 const isSubmitting = ref(false)
+const isLoading = ref(false)
+const errorMessage = ref('')
 
-/** Formulário alinhado ao payload futuro da API (somente front por enquanto). */
+/** Formulário alinhado ao payload da API. */
 const novoContrato = reactive({
   nomeEmpresa: '',
   dataInicio: '',
@@ -30,14 +33,14 @@ const novoContrato = reactive({
   descricao: '',
 })
 
-/** Populado via GET /contratos (ou equivalente) quando integrar o backend. */
+/** Contratos carregados da API. */
 const contratos = ref<Contract[]>([])
 
 /** Somente contratos; totais de usuários/ordens globais virão de outros endpoints. */
 const totalUsuarios = ref(0)
 
-const totalAtivos = computed(() => contratos.value.reduce((acc, c) => acc + c.quantidadeAtivos, 0))
-const ordensAbertasSum = computed(() => contratos.value.reduce((acc, c) => acc + c.ordensAbertas, 0))
+const totalAtivos = computed(() => contratos.value.reduce((acc, c) => acc + (c.quantidadeAtivos || 0), 0))
+const ordensAbertasSum = computed(() => contratos.value.reduce((acc, c) => acc + (c.ordensAbertas || 0), 0))
 
 const metricas = computed(() => [
   { label: 'Total de Contratos', value: contratos.value.length, tone: 'blue' as const },
@@ -45,6 +48,57 @@ const metricas = computed(() => [
   { label: 'Total de Usuários', value: totalUsuarios.value, tone: 'amber' as const },
   { label: 'Ordens em Andamento', value: ordensAbertasSum.value, tone: 'red' as const },
 ])
+
+/**
+ * Carrega os contratos da API ao montar o componente
+ */
+onMounted(async () => {
+  console.log('🔵 [AdmDashboard] Componente montado, carregando contratos...')
+  await carregarContratos()
+})
+
+/**
+ * Busca contratos do backend
+ */
+async function carregarContratos() {
+  console.log('📡 [AdmDashboard] Iniciando carregamento de contratos...')
+  isLoading.value = true
+  errorMessage.value = ''
+  try {
+    console.log('📡 [ContratoService] Chamando buscarTodos()')
+    const dados = await ContratoService.buscarTodos()
+    console.log('✅ [ContratoService] Dados recebidos:', dados)
+    console.log(`📊 Total de contratos: ${dados.length}`)
+    contratos.value = transformarDadosBackend(dados)
+    console.log('✅ [AdmDashboard] Contratos carregados e transformados')
+  } catch (error: any) {
+    console.error('❌ [AdmDashboard] Erro ao carregar:', error)
+    console.error('Status:', error?.response?.status)
+    console.error('Mensagem:', error?.message)
+    errorMessage.value =
+      error?.response?.data?.message || 'Erro ao carregar contratos. Verifique se o backend está rodando.'
+  } finally {
+    isLoading.value = false
+    console.log('}
+}
+
+/**
+ * Transforma dados do backend para o formato da UI
+ */
+function transformarDadosBackend(dados: IContrato[]): Contract[] {
+  return dados.map((d) => ({
+    id: d.id,
+    nomeEmpresa: d.nomeEmpresa,
+    unidade: '', // Backend não retorna este campo
+    dataInicio: d.dataInicio,
+    dataFim: d.dataFim,
+    quantidadePlantas: d.quantidadePlanta || 0,
+    quantidadeAtivos: d.quantidadeAtivos || 0,
+    ordensAbertas: 0, // Dados virão de outro endpoint no futuro
+    status: ContratoService.resolverStatus(d.dataFim),
+    descricao: d.descricao,
+  }))
+}
 
 function abrirPainel() {
   isPanelOpen.value = true
@@ -54,34 +108,54 @@ function fecharPainel() {
   isPanelOpen.value = false
 }
 
-/** TODO: substituir por POST ao backend; hoje só atualiza o estado local após validação. */
-function salvarContrato() {
-  isSubmitting.value = true
-  contratos.value.unshift({
-    id: Date.now(),
-    nomeEmpresa: novoContrato.nomeEmpresa.trim(),
-    unidade: '',
-    dataInicio: novoContrato.dataInicio,
-    dataFim: novoContrato.dataFim,
-    quantidadePlantas: Number(novoContrato.quantidadePlantas),
-    quantidadeAtivos: 0,
-    ordensAbertas: 0,
-    status: resolverStatusContrato(novoContrato.dataFim),
-    descricao: novoContrato.descricao.trim(),
-  })
-  isSubmitting.value = false
-  limparFormulario()
-  fecharPainel()
-}
+/**
+ * Salva um novo contrato via API
+ */
+async function salvarContrato() {
+  errorMessage.value = ''
+  // Validação básica
+  if (
+    !novoContrato.nomeEmpresa.trim() ||
+    !novoContrato.dataInicio ||
+    !novoContrato.dataFim ||
+    !novoContrato.descricao.trim()
+  ) {
+    errorMessage.value = 'Por favor, preencha todos os campos obrigatórios.'
+    return
+  }
 
-function resolverStatusContrato(dataFim: string): ContractStatus {
-  if (!dataFim) return 'Ativo'
-  const hoje = new Date()
-  const fim = new Date(`${dataFim}T00:00:00`)
-  const dias = Math.ceil((fim.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24))
-  if (dias < 0) return 'Inativo'
-  if (dias <= 60) return 'Expirando'
-  return 'Ativo'
+  isSubmitting.value = true
+  try {
+    const novoData = await ContratoService.criar({
+      nomeEmpresa: novoContrato.nomeEmpresa.trim(),
+      quantidadePlanta: Number(novoContrato.quantidadePlantas),
+      dataInicio: novoContrato.dataInicio,
+      dataFim: novoContrato.dataFim,
+      descricao: novoContrato.descricao.trim(),
+    })
+
+    // Adiciona o novo contrato à lista
+    contratos.value.unshift({
+      id: novoData.id,
+      nomeEmpresa: novoData.nomeEmpresa,
+      unidade: '',
+      dataInicio: novoData.dataInicio,
+      dataFim: novoData.dataFim,
+      quantidadePlantas: novoData.quantidadePlanta || 0,
+      quantidadeAtivos: novoData.quantidadeAtivos || 0,
+      ordensAbertas: 0,
+      status: ContratoService.resolverStatus(novoData.dataFim),
+      descricao: novoData.descricao,
+    })
+
+    limparFormulario()
+    fecharPainel()
+  } catch (error: any) {
+    console.error('Erro ao salvar contrato:', error)
+    errorMessage.value = error?.response?.data?.message || 'Erro ao salvar contrato.'
+  } finally {
+    isSubmitting.value = false
+  }
 }
 
 function limparFormulario() {
@@ -90,11 +164,11 @@ function limparFormulario() {
   novoContrato.dataFim = ''
   novoContrato.quantidadePlantas = 1
   novoContrato.descricao = ''
+  errorMessage.value = ''
 }
 
 function formatarData(iso: string) {
-  if (!iso) return '—'
-  return new Intl.DateTimeFormat('pt-BR', { timeZone: 'UTC' }).format(new Date(`${iso}T00:00:00`))
+  return ContratoService.formatarData(iso)
 }
 </script>
 
@@ -132,74 +206,95 @@ function formatarData(iso: string) {
         </header>
 
         <section class="content-area adm-content">
-          <section class="metrics-grid" aria-label="Indicadores principais">
-            <article v-for="m in metricas" :key="m.label" class="metric-card" :class="m.tone">
-              <div class="metric-label">{{ m.label }}</div>
-              <div class="metric-value">{{ m.value }}</div>
-            </article>
-          </section>
+          <!-- Estado de carregamento -->
+          <div v-if="isLoading" class="loading-container">
+            <div class="loading-spinner"></div>
+            <p class="loading-text">Carregando contratos...</p>
+          </div>
 
-          <section id="contratos" class="card contracts-card">
-            <div class="card-header">
-              <div>
-                <div class="card-title">Contratos Ativos</div>
-                <div class="card-sub">
-                  {{ contratos.length === 0 ? 'Nenhum contrato carregado' : `${contratos.length} contrato(s)` }}
+          <!-- Mensagem de erro -->
+          <div v-if="errorMessage" class="error-banner">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <span>{{ errorMessage }}</span>
+            <button class="error-close" type="button" @click="errorMessage = ''" title="Fechar">
+              ✕
+            </button>
+          </div>
+
+          <template v-if="!isLoading">
+            <section class="metrics-grid" aria-label="Indicadores principais">
+              <article v-for="m in metricas" :key="m.label" class="metric-card" :class="m.tone">
+                <div class="metric-label">{{ m.label }}</div>
+                <div class="metric-value">{{ m.value }}</div>
+              </article>
+            </section>
+
+            <section id="contratos" class="card contracts-card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">Contratos Ativos</div>
+                  <div class="card-sub">
+                    {{ contratos.length === 0 ? 'Nenhum contrato carregado' : `${contratos.length} contrato(s)` }}
+                  </div>
                 </div>
+                <button class="btn btn-secondary btn-sm" type="button">Exportar</button>
               </div>
-              <button class="btn btn-secondary btn-sm" type="button">Exportar</button>
-            </div>
 
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Empresa</th>
-                    <th>Início</th>
-                    <th>Término</th>
-                    <th>Plantas</th>
-                    <th>Ativos</th>
-                    <th>Ordens abertas</th>
-                    <th>Status</th>
-                    <th />
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-if="contratos.length === 0">
-                    <td colspan="8" class="table-empty">
-                      Nenhum contrato ainda. Cadastre pelo botão <strong>Criar Contrato</strong> ou carregue os dados quando a API estiver disponível.
-                    </td>
-                  </tr>
-                  <template v-else>
-                    <tr v-for="c in contratos" :key="c.id">
-                      <td>
-                        <strong class="table-title">{{ c.nomeEmpresa }}</strong>
-                        <span class="table-subtitle">{{ c.unidade || '—' }}</span>
-                      </td>
-                      <td>{{ formatarData(c.dataInicio) }}</td>
-                      <td>{{ formatarData(c.dataFim) }}</td>
-                      <td>{{ c.quantidadePlantas }}</td>
-                      <td>{{ c.quantidadeAtivos }}</td>
-                      <td>{{ c.ordensAbertas || '—' }}</td>
-                      <td>
-                        <span
-                          class="badge"
-                          :class="{
-                            'badge-active': c.status === 'Ativo',
-                            'badge-pending': c.status === 'Expirando',
-                            'badge-done': c.status === 'Inativo',
-                          }"
-                        >
-                          {{ c.status }}
-                        </span>
-                      </td>
-                      <td><button class="link-button" type="button">Ver →</button></td>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Empresa</th>
+                      <th>Início</th>
+                      <th>Término</th>
+                      <th>Plantas</th>
+                      <th>Ativos</th>
+                      <th>Ordens abertas</th>
+                      <th>Status</th>
+                      <th />
                     </tr>
-                  </template>
-                </tbody>
-              </table>
-            </div>
-          </section>
+                  </thead>
+                  <tbody>
+                    <tr v-if="contratos.length === 0">
+                      <td colspan="8" class="table-empty">
+                        Nenhum contrato ainda. Cadastre pelo botão <strong>Criar Contrato</strong> para começar.
+                      </td>
+                    </tr>
+                    <template v-else>
+                      <tr v-for="c in contratos" :key="c.id">
+                        <td>
+                          <strong class="table-title">{{ c.nomeEmpresa }}</strong>
+                          <span class="table-subtitle">{{ c.unidade || '—' }}</span>
+                        </td>
+                        <td>{{ formatarData(c.dataInicio) }}</td>
+                        <td>{{ formatarData(c.dataFim) }}</td>
+                        <td>{{ c.quantidadePlantas }}</td>
+                        <td>{{ c.quantidadeAtivos }}</td>
+                        <td>{{ c.ordensAbertas || '—' }}</td>
+                        <td>
+                          <span
+                            class="badge"
+                            :class="{
+                              'badge-active': c.status === 'Ativo',
+                              'badge-pending': c.status === 'Expirando',
+                              'badge-done': c.status === 'Inativo',
+                            }"
+                          >
+                            {{ c.status }}
+                          </span>
+                        </td>
+                        <td><button class="link-button" type="button">Ver →</button></td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </template>
         </section>
       </main>
     </div>
@@ -214,6 +309,16 @@ function formatarData(iso: string) {
       </div>
 
       <form class="detail-body contract-form" @submit.prevent="salvarContrato">
+        <!-- Mensagem de erro no formulário -->
+        <div v-if="errorMessage" class="form-error-banner">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          <span>{{ errorMessage }}</span>
+        </div>
+
         <label>
           Empresa *
           <input v-model="novoContrato.nomeEmpresa" type="text" placeholder="Nome da empresa" required />
@@ -241,7 +346,9 @@ function formatarData(iso: string) {
         </label>
 
         <div class="drawer-actions">
-          <button class="btn btn-secondary" type="button" @click="fecharPainel">Cancelar</button>
+          <button class="btn btn-secondary" type="button" @click="fecharPainel" :disabled="isSubmitting">
+            Cancelar
+          </button>
           <button class="btn btn-primary" type="submit" :disabled="isSubmitting">
             {{ isSubmitting ? 'Salvando...' : 'Salvar contrato' }}
           </button>
@@ -431,6 +538,92 @@ function formatarData(iso: string) {
 .drawer-actions .btn:disabled {
   opacity: 0.65;
   cursor: not-allowed;
+}
+
+/* Estados de carregamento e erro */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 24px;
+  min-height: 400px;
+  color: var(--gray-500);
+}
+
+.loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--gray-200);
+  border-top-color: var(--blue-500);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-text {
+  font-size: 14px;
+  margin: 0;
+}
+
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--red-50);
+  border: 1px solid var(--red-200);
+  border-radius: var(--radius-md);
+  color: var(--red-700);
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.error-banner svg {
+  color: var(--red-500);
+  flex-shrink: 0;
+}
+
+.error-banner span {
+  flex: 1;
+}
+
+.error-close {
+  border: none;
+  background: transparent;
+  color: var(--red-600);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0 4px;
+  font-weight: bold;
+}
+
+.error-close:hover {
+  color: var(--red-800);
+}
+
+.form-error-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--red-50);
+  border: 1px solid var(--red-200);
+  border-radius: var(--radius-md);
+  color: var(--red-700);
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.form-error-banner svg {
+  color: var(--red-500);
+  flex-shrink: 0;
 }
 
 @media (max-width: 1024px) {
