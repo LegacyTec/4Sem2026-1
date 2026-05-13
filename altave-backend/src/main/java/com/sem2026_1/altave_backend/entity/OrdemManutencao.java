@@ -41,10 +41,6 @@ public class OrdemManutencao {
     @JsonView(View.Ordem.class)
     private String nome;
 
-    @Column(name="descricao")
-    @JsonView(View.Ordem.class)
-    private String descricao;
-
     @Column(name = "data_inicio")
     @JsonView(View.Ordem.class)
     private LocalDate dataInicio;
@@ -58,6 +54,10 @@ public class OrdemManutencao {
     @JsonView(View.Ordem.class)
     private TipoOrdem tipoManutencao;
 
+    @Column(name="descricao")
+    @JsonView(View.Ordem.class)
+    private String descricao;
+
     @Column(name="status")
     @Enumerated(EnumType.STRING)
     @JsonView(View.Ordem.class)
@@ -66,18 +66,6 @@ public class OrdemManutencao {
     @Column(name = "comentario")
     @JsonView(View.Ordem.class)
     private String comentario;
-
-    @Column(name = "planta")
-    @JsonView(View.Ordem.class)
-    private String planta;
-
-    @Column(name = "predio")
-    @JsonView(View.Ordem.class)
-    private String predio;
-
-    @Column(name = "requisito")
-    @JsonView(View.Ordem.class)
-    private String requisito;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_ativo")
@@ -155,30 +143,6 @@ public class OrdemManutencao {
 
     public void setComentario(String comentario) {
         this.comentario = comentario;
-    }
-
-    public String getPlanta() {
-        return planta;
-    }
-
-    public void setPlanta(String planta) {
-        this.planta = planta;
-    }
-
-    public String getPredio() {
-        return predio;
-    }
-
-    public void setPredio(String predio) {
-        this.predio = predio;
-    }
-
-    public String getRequisito() {
-        return requisito;
-    }
-
-    public void setRequisito(String requisito) {
-        this.requisito = requisito;
     }
 
     public Ativo getAtivo() {
