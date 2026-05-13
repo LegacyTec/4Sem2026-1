@@ -9,5 +9,7 @@ public interface ContratoService {
     public List<Contrato> buscarTodos();
 
     public Contrato cadastrarContrato(Contrato contrato);
+
+    public Contrato editarContrato(Long id, Contrato contrato);
 }
 

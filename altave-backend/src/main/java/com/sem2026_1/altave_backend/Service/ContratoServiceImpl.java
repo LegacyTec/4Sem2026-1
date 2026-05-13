@@ -60,4 +60,20 @@ public class ContratoServiceImpl implements ContratoService  {
         return contratoRepository.save(contrato);
     }
 
+    @Override
+    @Transactional
+    public Contrato editarContrato(Long id, Contrato contrato) {
+        Contrato existente = contratoRepository.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Contrato não encontrado!"));
+
+        existente.setNomeEmpresa(contrato.getNomeEmpresa());
+        existente.setQuantidadePlanta(contrato.getQuantidadePlanta());
+        existente.setDataInicio(contrato.getDataInicio());
+        existente.setDataFim(contrato.getDataFim());
+        existente.setQuantidadeAtivos(contrato.getQuantidadeAtivos());
+        existente.setDescricao(contrato.getDescricao());
+        existente.setQuantidadeSupervisao(contrato.getQuantidadeSupervisao());
+
+        return contratoRepository.save(existente);
+    }
 }
