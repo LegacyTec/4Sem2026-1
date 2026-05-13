@@ -102,8 +102,8 @@ VALUES ('Empresa Beta', 2, DATE '2023-06-01', DATE '2025-06-01', 5, 'Contrato de
 
 --- Contrato_Usuario
 -- João e Maria no contrato 1
-INSERT INTO contrato_usuario (id_contrato, id_usuario) VALUES (1, 1);
-INSERT INTO contrato_usuario (id_contrato, id_usuario) VALUES (1, 2);
+INSERT INTO contrato_usuario (id_contrato, id_usuario) VALUES (5, 4);
+INSERT INTO contrato_usuario (id_contrato, id_usuario) VALUES (5, 5);
 SELECT * FROM usuario;
 SELECT * FROM contrato;
 SELECT * FROM contrato_usuario;
@@ -111,21 +111,22 @@ SELECT * FROM contrato;
 
 
 -- Carlos no contrato 2
-INSERT INTO contrato_usuario (id_contrato, id_usuario) VALUES (2, 3);
+INSERT INTO contrato_usuario (id_contrato, id_usuario) VALUES (6, 6);
 
 --- Ativos
 INSERT INTO ativo (nome_ativo, status, fabricante, tipo, periodicidade_manutencao, descricao, data_instalacao, predio, planta, id_contrato)
-VALUES ('Câmera de segurança - entrada principal', 'OPERACIONAL', 'Intelbras', 'CAMERA', 30, 'Câmera de segurança - entrada principal', DATE '2024-02-10', 'Prédio A', 'Planta 1', 1);
+VALUES ('Câmera de segurança', 'OPERACIONAL', 'Intelbras', 'CAMERA', 30, 'Câmera de segurança - entrada principal', DATE '2024-02-10', 'Prédio A', 'Planta 1', 6);
 
+SELECT *FROM ORDEM_MANUTENCAO;
 -- Ordem de manutenção
 INSERT INTO ordem_manutencao 
 (nome_ordem, data_inicio, tipo_manutencao, id_ativo, descricao, status)
 VALUES 
-('Inspeção câmera entrada', DATE '2025-01-10', 'PREVENTIVA', 1, 
+('Inspeção câmera entrada', DATE '2025-01-10', 'PREVENTIVA', 17, 
  'Verificação de lente, foco e conexão', 'PENDENTE');
 
 -- Ordem_usuario
- INSERT INTO ordem_usuario (id_ordem_manutencao, id_usuario) VALUES (2, 1);
+ INSERT INTO ordem_usuario (id_ordem_manutencao, id_usuario) VALUES (10, 5);
 
 SELECT * FROM ordem_manutencao;
 

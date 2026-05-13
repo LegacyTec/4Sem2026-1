@@ -6,8 +6,12 @@ import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.sem2026_1.altave_backend.controller.View;
+import com.sem2026_1.altave_backend.entity.enums.TipoAtivo;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -26,6 +30,9 @@ public class Ativo {
     @Column(name = "id_ativo")
     @JsonView(View.Ordem.class)
     private Long id;
+
+    @Column(name = "nome_ativo")
+    private String nome;
 
     @Column(name = "status")
     private String status;
@@ -162,4 +169,13 @@ public class Ativo {
         this.planta = planta;
     }
 
+    public String getNome() {
+        return nome;
+    }
+
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
+
+    
 }
