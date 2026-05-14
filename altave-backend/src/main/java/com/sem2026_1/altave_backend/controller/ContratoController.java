@@ -21,6 +21,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import org.springframework.web.bind.annotation.PatchMapping;
 
+import com.sem2026_1.altave_backend.dto.ContratoResumoDTO;
+
 @RestController
 @CrossOrigin
 @RequestMapping("/contrato")
@@ -57,4 +59,10 @@ public class ContratoController {
     public ResponseEntity<Contrato> desabilitar(@PathVariable Long id) {
         return ResponseEntity.ok(contratoService.desabilitarContrato(id));
     }
+
+    @GetMapping("/resumo")
+    public ResponseEntity<List<ContratoResumoDTO>> listarResumo() {
+        return ResponseEntity.ok(contratoService.buscarContratosComTotalOrdens());
+    }
 }
+

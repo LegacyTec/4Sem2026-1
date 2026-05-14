@@ -4,6 +4,8 @@ import java.util.List;
 
 import com.sem2026_1.altave_backend.entity.Contrato;
 
+import com.sem2026_1.altave_backend.dto.ContratoResumoDTO;
+
 public interface ContratoService {
 
     public List<Contrato> buscarTodos();
@@ -13,5 +15,7 @@ public interface ContratoService {
     public Contrato editarContrato(Long id, Contrato contrato);
 
     public Contrato desabilitarContrato(Long id);
+
+    public List<ContratoResumoDTO> buscarContratosComTotalOrdens();
 }
 

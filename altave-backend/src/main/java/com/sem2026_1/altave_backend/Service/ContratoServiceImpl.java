@@ -12,6 +12,8 @@ import com.sem2026_1.altave_backend.repository.ContratoRepository;
 
 import jakarta.transaction.Transactional;
 
+import com.sem2026_1.altave_backend.dto.ContratoResumoDTO;
+
 @Service
 public class ContratoServiceImpl implements ContratoService  {
 
@@ -68,7 +70,6 @@ public class ContratoServiceImpl implements ContratoService  {
 
         existente.setNomeEmpresa(contrato.getNomeEmpresa());
         existente.setQuantidadePlanta(contrato.getQuantidadePlanta());
-        existente.setDataInicio(contrato.getDataInicio());
         existente.setDataFim(contrato.getDataFim());
         existente.setQuantidadeAtivos(contrato.getQuantidadeAtivos());
         existente.setDescricao(contrato.getDescricao());
@@ -86,5 +87,11 @@ public class ContratoServiceImpl implements ContratoService  {
         existente.setStatus("INATIVO");
         
         return contratoRepository.save(existente);
+    }
+
+    @Override
+    public List<ContratoResumoDTO> buscarContratosComTotalOrdens() {
+        return contratoRepository.buscarContratosComTotalOrdens();
+
     }
 }
