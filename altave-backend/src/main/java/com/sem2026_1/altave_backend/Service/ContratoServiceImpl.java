@@ -76,4 +76,15 @@ public class ContratoServiceImpl implements ContratoService  {
 
         return contratoRepository.save(existente);
     }
+
+    @Override
+    @Transactional
+    public Contrato desabilitarContrato(Long id) {
+        Contrato existente = contratoRepository.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Contrato não encontrado!"));
+        
+        existente.setStatus("INATIVO");
+        
+        return contratoRepository.save(existente);
+    }
 }

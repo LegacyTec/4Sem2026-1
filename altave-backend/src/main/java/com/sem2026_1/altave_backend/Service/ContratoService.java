@@ -11,5 +11,7 @@ public interface ContratoService {
     public Contrato cadastrarContrato(Contrato contrato);
 
     public Contrato editarContrato(Long id, Contrato contrato);
+
+    public Contrato desabilitarContrato(Long id);
 }
 
