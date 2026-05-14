@@ -16,6 +16,13 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.sem2026_1.altave_backend.entity.Contrato;
 import com.sem2026_1.altave_backend.service.ContratoService;
 
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+
+import org.springframework.web.bind.annotation.PatchMapping;
+
+import com.sem2026_1.altave_backend.dto.ContratoResumoDTO;
+
 @RestController
 @CrossOrigin
 @RequestMapping("/contrato")
@@ -38,5 +45,24 @@ public class ContratoController {
     public ResponseEntity<Contrato> cadastrar(@RequestBody Contrato contrato){
         contrato =  contratoService.cadastrarContrato(contrato);
         return ResponseEntity.created(URI.create("/contrato/" + contrato.getId())).body(contrato);
-    }   
+    }
+    
+    @JsonView(View.Contrato.class)
+    @PutMapping("/{id}")
+    public ResponseEntity<Contrato> editar(@PathVariable Long id, @RequestBody Contrato contrato){
+        contrato =  contratoService.editarContrato(id, contrato);
+        return ResponseEntity.ok(contratoService.editarContrato(id, contrato));
+    }
+
+    @JsonView(View.Contrato.class)
+    @PatchMapping("/{id}/desabilitar")
+    public ResponseEntity<Contrato> desabilitar(@PathVariable Long id) {
+        return ResponseEntity.ok(contratoService.desabilitarContrato(id));
+    }
+
+    @GetMapping("/resumo")
+    public ResponseEntity<List<ContratoResumoDTO>> listarResumo() {
+        return ResponseEntity.ok(contratoService.buscarContratosComTotalOrdens());
+    }
 }
+

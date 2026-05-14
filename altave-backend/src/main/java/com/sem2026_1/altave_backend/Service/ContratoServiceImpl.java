@@ -12,6 +12,8 @@ import com.sem2026_1.altave_backend.repository.ContratoRepository;
 
 import jakarta.transaction.Transactional;
 
+import com.sem2026_1.altave_backend.dto.ContratoResumoDTO;
+
 @Service
 public class ContratoServiceImpl implements ContratoService  {
 
@@ -60,4 +62,36 @@ public class ContratoServiceImpl implements ContratoService  {
         return contratoRepository.save(contrato);
     }
 
+    @Override
+    @Transactional
+    public Contrato editarContrato(Long id, Contrato contrato) {
+        Contrato existente = contratoRepository.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Contrato não encontrado!"));
+
+        existente.setNomeEmpresa(contrato.getNomeEmpresa());
+        existente.setQuantidadePlanta(contrato.getQuantidadePlanta());
+        existente.setDataFim(contrato.getDataFim());
+        existente.setQuantidadeAtivos(contrato.getQuantidadeAtivos());
+        existente.setDescricao(contrato.getDescricao());
+        existente.setQuantidadeSupervisao(contrato.getQuantidadeSupervisao());
+
+        return contratoRepository.save(existente);
+    }
+
+    @Override
+    @Transactional
+    public Contrato desabilitarContrato(Long id) {
+        Contrato existente = contratoRepository.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Contrato não encontrado!"));
+        
+        existente.setStatus("INATIVO");
+        
+        return contratoRepository.save(existente);
+    }
+
+    @Override
+    public List<ContratoResumoDTO> buscarContratosComTotalOrdens() {
+        return contratoRepository.buscarContratosComTotalOrdens();
+
+    }
 }

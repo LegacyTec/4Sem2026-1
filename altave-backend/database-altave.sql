@@ -82,6 +82,12 @@ CREATE TABLE ordem_usuario (
         FOREIGN KEY (id_usuario) REFERENCES usuario(usuario_id)
 );
 
+select * from usuario;
+select * from contrato;
+select * from contrato_usuario;
+select * from ativo;
+select * from ordem_manutencao;
+select * from ordem_usuario;
 
 --- Usuario
 INSERT INTO usuario (nome_completo, email, status, data_nascimento, cargo, funcao)
