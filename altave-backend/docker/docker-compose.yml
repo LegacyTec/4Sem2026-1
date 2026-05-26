@@ -1,19 +1,23 @@
 version: "3.8"
-services:
-    # Name of the Docker Compose service
-    oracle:
-      # Docker Hub image (feel free to change the tag "latest" to any other available one)
-      image: gvenzl/oracle-free:23
-      # Forward Oracle port to localhost
-      ports:
-        - "1521:1521"
-      # Provide passwords and other environment variables to the container
-      environment:
-        ORACLE_PASSWORD: oracle
-      # Mount a local SQL file to initialize your schema at startup
-      volumes:
-      - oracle-data:/opt/oracle/oradata
-      restart: unless-stopped
-      
+
 volumes:
-  oracle-data:
+    postgres-data:
+
+services:
+    db:
+        container_name: postgresdb
+        image: postgres:17
+        restart: unless-stopped
+
+        ports:
+            - "5432:5432"
+
+        environment:
+            POSTGRES_PASSWORD: postgres
+            POSTGRES_USER: postgres
+            POSTGRES_DB: postgres
+            POSTGRES_HOSTNAME: postgresdb
+
+        volumes:
+            - postgres-data:/var/lib/postgresql/data
+            - ./database-altave.sql:/docker-entrypoint-initdb.d/database-altave.sql
