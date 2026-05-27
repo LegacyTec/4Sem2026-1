@@ -94,7 +94,7 @@ export function iniciaisNome(nome: string): string {
     .split(" ")
     .filter(Boolean)
     .slice(0, 2)
-    .map((p) => p[0].toUpperCase())
+    .map((p) => p.charAt(0).toUpperCase())
     .join("");
 }
 
@@ -109,5 +109,5 @@ const AVATAR_COLORS = [
   "#f97316",
 ];
 export function avatarColor(id: number): string {
-  return AVATAR_COLORS[id % AVATAR_COLORS.length];
+  return AVATAR_COLORS[id % AVATAR_COLORS.length] ?? "#3b82f6";
 }

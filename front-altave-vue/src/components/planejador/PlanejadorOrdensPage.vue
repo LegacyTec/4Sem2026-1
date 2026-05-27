@@ -85,7 +85,7 @@ async function salvar() {
       descricao: form.descricao.trim(),
       planta: form.planta.trim(),
       predio: form.predio.trim(),
-      dataInicio: form.dataInicio || new Date().toISOString().split('T')[0],
+      dataInicio: form.dataInicio || new Date().toISOString().slice(0, 10),
       dataFim: form.dataFim || undefined,
       tipoManutencao: form.tipoManutencao,
       status: 'PENDENTE',
