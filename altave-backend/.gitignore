@@ -31,3 +31,8 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Credenciais - nao commitar ###
+application-prod.properties
+application-local.properties
+.env

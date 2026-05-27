@@ -42,5 +42,10 @@
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
+  },
+  "overrides": {
+    "vite-plugin-inspect": {
+      "vite": "^8.0.0"
+    }
   }
 }
