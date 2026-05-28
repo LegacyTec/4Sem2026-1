@@ -1,3 +1,7 @@
+<script setup lang="ts">
+import SupervisorDashboard from '@/components/supervisor/SupervisorDashboard.vue'
+</script>
+
 <template>
-    <div class="view-canvas" />
-  </template>
+  <SupervisorDashboard />
+</template>

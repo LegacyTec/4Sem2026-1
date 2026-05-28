@@ -1,43 +1,112 @@
+<script setup lang="ts">
+import { onMounted, ref } from 'vue'
+import { buscarContratos } from '@/services/ContratoService'
+
+const totalContratos = ref<number | null>(null)
+
+onMounted(async () => {
+  try {
+    const lista = await buscarContratos()
+    totalContratos.value = lista.length
+  } catch {
+    totalContratos.value = null
+  }
+})
+</script>
+
 <template>
-    <aside class="adm-sidebar" aria-label="Navegação do administrador">
-      <div class="sidebar-logo">
-        <div class="logo-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-          </svg>
-        </div>
-        <div>
-          <div class="logo-text">Altave</div>
-          <div class="logo-sub">SGM · Gestão</div>
-        </div>
+  <aside class="adm-sidebar" aria-label="Navegação do administrador">
+    <div class="sidebar-logo">
+      <div class="logo-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+        </svg>
       </div>
-
-      <nav class="sidebar-section">
-        <div class="sidebar-section-label">Menu</div>
-
-        <RouterLink to="/adm/inicio" class="nav-item" active-class="active">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="3" width="7" height="7" />
-            <rect x="14" y="3" width="7" height="7" />
-            <rect x="3" y="14" width="7" height="7" />
-            <rect x="14" y="14" width="7" height="7" />
-          </svg>
-          Dashboard
-        </RouterLink>
-      </nav>
-
-      <div class="sidebar-footer">
-        <div class="user-card">
-          <div class="avatar avatar-blue" aria-hidden="true">AD</div>
-          <div class="user-info">
-            <div class="user-name">Usuário autenticado</div>
-            <div class="user-role">Administrador</div>
-          </div>
-          <div class="status-dot" title="Status da sessão" />
-        </div>
+      <div>
+        <div class="logo-text">Altave</div>
+        <div class="logo-sub">SGM · Gestão</div>
       </div>
-    </aside>
-  </template>
+    </div>
+
+    <nav class="sidebar-section">
+      <div class="sidebar-section-label">Menu</div>
+
+      <RouterLink to="/adm/index" class="nav-item" active-class="active">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7" />
+          <rect x="14" y="3" width="7" height="7" />
+          <rect x="3" y="14" width="7" height="7" />
+          <rect x="14" y="14" width="7" height="7" />
+        </svg>
+        Dashboard
+      </RouterLink>
+
+      <RouterLink to="/adm/contratos" class="nav-item" active-class="active">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+          <line x1="16" y1="13" x2="8" y2="13" />
+          <line x1="16" y1="17" x2="8" y2="17" />
+        </svg>
+        Contratos
+        <span v-if="totalContratos !== null" class="nav-badge">{{ totalContratos }}</span>
+      </RouterLink>
+
+      <RouterLink to="/adm/index" class="nav-item" active-class="active">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+        </svg>
+        Supervisões
+        <span class="nav-badge nav-badge-soon">em breve</span>
+      </RouterLink>
+
+      <RouterLink to="/adm/index" class="nav-item" active-class="active">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="7" width="20" height="14" rx="2" />
+          <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+        </svg>
+        Ativos
+        <span class="nav-badge nav-badge-soon">em breve</span>
+      </RouterLink>
+
+      <RouterLink to="/adm/usuarios" class="nav-item" active-class="active">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="8" r="5" />
+          <path d="M3 21v-1a9 9 0 0 1 18 0v1" />
+        </svg>
+        Usuários
+      </RouterLink>
+    </nav>
+
+    <nav class="sidebar-section">
+      <div class="sidebar-section-label">Relatórios</div>
+
+      <span class="nav-item nav-item-disabled" aria-disabled="true">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="20" x2="18" y2="10" />
+          <line x1="12" y1="20" x2="12" y2="4" />
+          <line x1="6" y1="20" x2="6" y2="14" />
+        </svg>
+        Relatórios
+        <span class="nav-badge nav-badge-soon">em breve</span>
+      </span>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="avatar avatar-blue" aria-hidden="true">AD</div>
+        <div class="user-info">
+          <div class="user-name">Usuário autenticado</div>
+          <div class="user-role">Administrador</div>
+        </div>
+        <div class="status-dot" title="Status da sessão" />
+      </div>
+    </div>
+  </aside>
+</template>
 
   <style scoped>
   .adm-sidebar {
@@ -215,6 +284,19 @@
     border-radius: 50%;
     flex-shrink: 0;
     background: #22c55e;
+  }
+
+  .nav-item-disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+    pointer-events: none;
+  }
+
+  .nav-badge-soon {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 9px;
+    letter-spacing: 0.02em;
   }
 
   @media (max-width: 860px) {
