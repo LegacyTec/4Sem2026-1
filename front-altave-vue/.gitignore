@@ -37,3 +37,8 @@ __screenshots__/
 
 # Vite
 *.timestamp-*-*.mjs
+
+# Variaveis de ambiente (nao commitar credenciais)
+.env
+.env.local
+.env.production
