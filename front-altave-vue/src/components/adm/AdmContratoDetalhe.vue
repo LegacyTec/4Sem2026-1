@@ -3,8 +3,12 @@ import AppHeaderRoles from '@/components/geral/layout/AppHeaderRoles.vue'
 import SidebarAdm from '@/components/geral/layout/SidebarAdm.vue'
 import { buscarContratos, formatarData, resolverStatus } from '@/services/ContratoService'
 import type { IContrato } from '@/services/ContratoService'
-import { buscarOrdens, labelStatus, labelTipo } from '@/services/OrdemService'
-import type { IOrdem } from '@/services/OrdemService'
+import { buscarOrdens, buscarUsuarios, labelStatus, labelTipo } from '@/services/OrdemService'
+import type { IOrdem, IUsuario } from '@/services/OrdemService'
+import { buscarPlantasPorContrato } from '@/services/PlantaService'
+import type { IPlanta } from '@/services/PlantaService'
+import { buscarSupervisoesPorContrato, criarSupervisao } from '@/services/SupervisaoService'
+import type { ISupervisao } from '@/services/SupervisaoService'
 import api from '@/config/axios'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -37,59 +41,72 @@ const tabs: { id: TabId; label: string }[] = [
 ]
 
 // ─── Aba Supervisões ───────────────────────────────────────────────────────────
-type Supervisao = {
-  id: number
-  nome: string
-  planta: string
-  responsavel: string
-  criacao: string
-}
+const supervisoes        = ref<ISupervisao[]>([])
+const plantasContrato    = ref<IPlanta[]>([])
+const usuariosDisponiveis = ref<IUsuario[]>([])
+const isLoadingSuperv    = ref(false)
 
-const supervisoes = ref<Supervisao[]>([
-  { id: 1, nome: 'Supervisão Norte', planta: 'Planta 1', responsavel: 'Carlos Menezes', criacao: '2024-03-10' },
-  { id: 2, nome: 'Supervisão Sul', planta: 'Planta 2', responsavel: 'Ana Beatriz', criacao: '2024-05-22' },
-])
-
-const isSupervDrawerOpen = ref(false)
+const isSupervDrawerOpen   = ref(false)
 const novaSupervIsSubmitting = ref(false)
-const novaSupervError = ref('')
-const novaSupervProximoId = ref(3)
+const novaSupervError      = ref('')
+const plantasSelecionadas  = ref<number[]>([])
 
 const novaSupervForm = reactive({
   nome: '',
-  planta: '',
-  responsavel: '',
+  descricao: '',
+  idSupervisor: '' as number | '',
 })
+
+function togglePlanta(id: number) {
+  const idx = plantasSelecionadas.value.indexOf(id)
+  if (idx === -1) plantasSelecionadas.value.push(id)
+  else plantasSelecionadas.value.splice(idx, 1)
+}
 
 function abrirSupervDrawer() {
   isSupervDrawerOpen.value = true
+  novaSupervError.value = ''
 }
 
 function fecharSupervDrawer() {
   isSupervDrawerOpen.value = false
   novaSupervError.value = ''
   novaSupervForm.nome = ''
-  novaSupervForm.planta = ''
-  novaSupervForm.responsavel = ''
+  novaSupervForm.descricao = ''
+  novaSupervForm.idSupervisor = ''
+  plantasSelecionadas.value = []
 }
 
 async function salvarSupervisao() {
-  if (!novaSupervForm.nome.trim() || !novaSupervForm.planta.trim() || !novaSupervForm.responsavel.trim()) {
-    novaSupervError.value = 'Preencha todos os campos.'
+  novaSupervError.value = ''
+  if (!novaSupervForm.nome.trim()) {
+    novaSupervError.value = 'Informe o nome da supervisão.'
+    return
+  }
+  if (plantasSelecionadas.value.length === 0) {
+    novaSupervError.value = 'Selecione ao menos uma planta.'
+    return
+  }
+  if (!novaSupervForm.idSupervisor) {
+    novaSupervError.value = 'Selecione um supervisor.'
     return
   }
   novaSupervIsSubmitting.value = true
-  // Simulação de delay de rede (mock — sem endpoint)
-  await new Promise((r) => setTimeout(r, 400))
-  supervisoes.value.unshift({
-    id: novaSupervProximoId.value++,
-    nome: novaSupervForm.nome.trim(),
-    planta: novaSupervForm.planta.trim(),
-    responsavel: novaSupervForm.responsavel.trim(),
-    criacao: new Date().toISOString().slice(0, 10),
-  })
-  novaSupervIsSubmitting.value = false
-  fecharSupervDrawer()
+  try {
+    const criada = await criarSupervisao({
+      nome: novaSupervForm.nome.trim(),
+      descricao: novaSupervForm.descricao.trim() || undefined,
+      idContrato: contratoId,
+      idSupervisor: Number(novaSupervForm.idSupervisor),
+      idPlantas: [...plantasSelecionadas.value],
+    })
+    supervisoes.value.unshift(criada)
+    fecharSupervDrawer()
+  } catch {
+    novaSupervError.value = 'Erro ao salvar supervisão. Tente novamente.'
+  } finally {
+    novaSupervIsSubmitting.value = false
+  }
 }
 
 // ─── Aba Ativos (mock) ─────────────────────────────────────────────────────────
@@ -138,21 +155,24 @@ onMounted(async () => {
   isLoadingOrdens.value = true
 
   try {
-    const lista = await buscarContratos()
+    const [lista, ords, usuarios, plantas, supervs] = await Promise.all([
+      buscarContratos(),
+      buscarOrdens(),
+      buscarUsuarios(),
+      buscarPlantasPorContrato(contratoId),
+      buscarSupervisoesPorContrato(contratoId),
+    ])
     contrato.value = lista.find((c) => c.id === contratoId) ?? null
     if (!contrato.value) erroContrato.value = 'Contrato não encontrado.'
+    ordens.value = ords
+    usuariosDisponiveis.value = usuarios
+    plantasContrato.value = plantas
+    supervisoes.value = supervs
   } catch (e: unknown) {
     console.error(e)
     erroContrato.value = 'Erro ao carregar contrato.'
   } finally {
     isLoadingContrato.value = false
-  }
-
-  try {
-    ordens.value = await buscarOrdens()
-  } catch (e: unknown) {
-    console.error('Erro ao carregar ordens:', e)
-  } finally {
     isLoadingOrdens.value = false
   }
 })
@@ -169,7 +189,7 @@ onMounted(async () => {
         <!-- Topbar -->
         <header class="topbar">
           <div class="topbar-left">
-            <button class="btn btn-ghost btn-sm" type="button" @click="router.push('/adm/contratos')">
+            <button class="btn btn-ghost btn-sm" type="button" @click="router.push('/adm/index')">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="19" y1="12" x2="5" y2="12" />
                 <polyline points="12 19 5 12 12 5" />
@@ -293,13 +313,13 @@ onMounted(async () => {
               </div>
             </div>
 
-            <!-- ── Aba Supervisões ──────────────────────────────────────────── -->
+            <!-- ── Aba Supervisões ────────────────────────────────────────────────────── -->
             <div v-show="activeTab === 'supervisoes'">
               <div class="card">
                 <div class="card-header">
                   <div>
                     <div class="card-title">Supervisões</div>
-                    <div class="card-sub">{{ supervisoes.length }} supervisão(ões)</div>
+                    <div class="card-sub">{{ supervisoes.length }} supervisão(ões) neste contrato</div>
                   </div>
                   <button class="btn btn-primary btn-sm" type="button" @click="abrirSupervDrawer">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -315,20 +335,33 @@ onMounted(async () => {
                     <thead>
                       <tr>
                         <th>Nome</th>
-                        <th>Planta</th>
-                        <th>Responsável</th>
-                        <th>Criado em</th>
+                        <th>Plantas atendidas</th>
+                        <th>Supervisor responsável</th>
+                        <th>Descrição</th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr v-if="supervisoes.length === 0">
-                        <td colspan="4" class="table-empty">Nenhuma supervisão cadastrada.</td>
+                        <td colspan="4" class="table-empty">
+                          Nenhuma supervisão cadastrada. Clique em <strong>Nova Supervisão</strong>.
+                        </td>
                       </tr>
                       <tr v-for="s in supervisoes" :key="s.id">
                         <td><strong>{{ s.nome }}</strong></td>
-                        <td>{{ s.planta }}</td>
-                        <td>{{ s.responsavel }}</td>
-                        <td>{{ formatarData(s.criacao) }}</td>
+                        <td>
+                          <div class="chips-inline">
+                            <span v-if="!s.plantas || s.plantas.length === 0" class="muted">—</span>
+                            <span v-for="p in s.plantas" :key="p.id" class="chip-planta">{{ p.nome }}</span>
+                          </div>
+                        </td>
+                        <td>
+                          <div v-if="s.supervisor" class="supervisor-cell">
+                            <div class="avatar-xs">{{ s.supervisor.nomeCompleto.charAt(0).toUpperCase() }}</div>
+                            <span>{{ s.supervisor.nomeCompleto }}</span>
+                          </div>
+                          <span v-else class="muted">—</span>
+                        </td>
+                        <td class="muted">{{ s.descricao || '—' }}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -462,22 +495,50 @@ onMounted(async () => {
       </div>
 
       <form class="detail-body contract-form" @submit.prevent="salvarSupervisao">
+        <label>
+          Nome da supervisão *
+          <input v-model="novaSupervForm.nome" type="text" placeholder="Ex: Supervisão Norte" />
+        </label>
+
+        <label>
+          Descrição
+          <textarea v-model="novaSupervForm.descricao" rows="3" placeholder="Detalhes sobre esta supervisão..." />
+        </label>
+
+        <div class="field-group">
+          <span class="field-label">Plantas atendidas *</span>
+          <div v-if="plantasContrato.length === 0" class="plants-hint">
+            Este contrato ainda não possui plantas cadastradas.
+          </div>
+          <div v-else class="plantas-check-list">
+            <label
+              v-for="p in plantasContrato"
+              :key="p.id"
+              class="planta-check-item"
+              :class="{ selected: plantasSelecionadas.includes(p.id) }"
+              @click.prevent="togglePlanta(p.id)"
+            >
+              <span class="check-box">
+                <svg v-if="plantasSelecionadas.includes(p.id)" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </span>
+              {{ p.nome }}
+            </label>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <span class="field-label">Supervisor responsável *</span>
+          <select v-model="novaSupervForm.idSupervisor" class="select-input">
+            <option value="" disabled>Selecione um usuário...</option>
+            <option v-for="u in usuariosDisponiveis" :key="u.id" :value="u.id">
+              {{ u.nomeCompleto }} {{ u.cargo ? `— ${u.cargo}` : '' }}
+            </option>
+          </select>
+        </div>
+
         <p v-if="novaSupervError" class="form-error">{{ novaSupervError }}</p>
-
-        <label>
-          Nome *
-          <input v-model="novaSupervForm.nome" type="text" placeholder="Ex: Supervisão Norte" required />
-        </label>
-
-        <label>
-          Planta *
-          <input v-model="novaSupervForm.planta" type="text" placeholder="Ex: Planta 1" required />
-        </label>
-
-        <label>
-          Responsável *
-          <input v-model="novaSupervForm.responsavel" type="text" placeholder="Nome do responsável" required />
-        </label>
 
         <div class="drawer-actions">
           <button class="btn btn-secondary" type="button" @click="fecharSupervDrawer">Cancelar</button>
@@ -757,6 +818,53 @@ onMounted(async () => {
   opacity: 0.65;
   cursor: not-allowed;
 }
+
+/* Supervisões - extras */
+.chips-inline { display: flex; flex-wrap: wrap; gap: 4px; }
+.chip-planta {
+  display: inline-block; padding: 2px 8px;
+  background: #eff6ff; color: #1d4ed8;
+  border: 1px solid #bfdbfe; border-radius: 20px;
+  font-size: 11px; font-weight: 600;
+}
+.supervisor-cell { display: flex; align-items: center; gap: 8px; }
+.avatar-xs {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--blue-400, #60a5fa); color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; flex-shrink: 0;
+}
+.muted { color: var(--gray-400); }
+
+/* Form de supervisão */
+.field-group { display: flex; flex-direction: column; gap: 8px; }
+.field-label { font-size: 12px; font-weight: 600; color: var(--gray-700); }
+.plants-hint { font-size: 12px; color: var(--gray-400); padding: 6px 0; }
+.plantas-check-list { display: flex; flex-direction: column; gap: 4px; }
+.planta-check-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: var(--radius-md);
+  border: 1px solid var(--gray-200); background: var(--white);
+  cursor: pointer; font-size: 13px; font-weight: 500;
+  color: var(--gray-700); transition: all .15s; user-select: none;
+}
+.planta-check-item:hover { border-color: var(--blue-400); background: #f0f9ff; }
+.planta-check-item.selected { border-color: var(--blue-400); background: #eff6ff; color: #1d4ed8; }
+.check-box {
+  width: 18px; height: 18px; border-radius: 4px; flex-shrink: 0;
+  border: 2px solid var(--gray-300); display: flex; align-items: center; justify-content: center;
+  transition: all .15s;
+}
+.planta-check-item.selected .check-box {
+  background: #2563eb; border-color: #2563eb; color: white;
+}
+.select-input {
+  padding: 10px 12px; border: 1px solid var(--gray-300);
+  border-radius: var(--radius-md); font: inherit; font-size: 13px;
+  color: var(--gray-900); outline: none; background: var(--white);
+  width: 100%; cursor: pointer;
+}
+.select-input:focus { border-color: var(--blue-400); box-shadow: 0 0 0 3px var(--blue-50); }
 
 @media (max-width: 860px) {
   .adm-workspace {

@@ -3,7 +3,7 @@ import Adm from "@/views/adm.vue";
 import Planejador from "@/views/planejador.vue";
 import Tecnico from "@/views/tecnico.vue";
 import Supervisor from "@/views/supervisor.vue";
-import AdmContratosPage from "@/components/adm/AdmContratosPage.vue";
+
 import AdmContratoDetalhe from "@/components/adm/AdmContratoDetalhe.vue";
 import AdmUsuariosPage from "@/components/adm/AdmUsuariosPage.vue";
 import AdmAtivosPage from "@/components/adm/AdmAtivosPage.vue";
@@ -21,11 +21,7 @@ const router = createRouter({
       name: "adm-dashboard",
       component: Adm,
     },
-    {
-      path: "/adm/contratos",
-      name: "adm-contratos",
-      component: AdmContratosPage,
-    },
+
     {
       path: "/adm/contratos/:id",
       name: "adm-contrato-detalhe",
