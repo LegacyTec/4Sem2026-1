@@ -145,7 +145,7 @@ async function salvarAtivo() {
   }
   ativoIsSubmitting.value = true
   try {
-    const criado = await criarAtivo({
+    const criado = await criarAtivo(contratoId, {
       nome: ativoForm.nome.trim(),
       tipo: ativoForm.tipo.trim().toUpperCase(),
       status: ativoForm.status,
@@ -155,7 +155,6 @@ async function salvarAtivo() {
       dataInstalacao: ativoForm.dataInstalacao,
       predio: ativoForm.predio.trim() || undefined,
       planta: ativoForm.plantaNome,
-      contrato: { id: contratoId },
     })
     ativos.value.unshift(criado)
     fecharAtivoDrawer()

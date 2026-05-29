@@ -23,7 +23,7 @@ export interface IAtivoPayload {
   dataInstalacao: string;
   predio?: string;
   planta?: string;
-  contrato: { id: number };
+  // contrato vem pelo id na URL — não deve ser enviado no body (campo @JsonIgnore na entidade)
 }
 
 export async function buscarAtivosPorContrato(idContrato: number): Promise<IAtivo[]> {
@@ -31,7 +31,7 @@ export async function buscarAtivosPorContrato(idContrato: number): Promise<IAtiv
   return response.data;
 }
 
-export async function criarAtivo(payload: IAtivoPayload): Promise<IAtivo> {
-  const response = await api.post<IAtivo>("/ativo", payload);
+export async function criarAtivo(idContrato: number, payload: IAtivoPayload): Promise<IAtivo> {
+  const response = await api.post<IAtivo>(`/contrato/${idContrato}/ativos`, payload);
   return response.data;
 }
