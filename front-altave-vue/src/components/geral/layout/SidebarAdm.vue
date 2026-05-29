@@ -52,24 +52,12 @@ onMounted(async () => {
         <span v-if="totalContratos !== null" class="nav-badge">{{ totalContratos }}</span>
       </RouterLink>
 
-      <RouterLink to="/adm/index" class="nav-item" active-class="active">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-          <circle cx="9" cy="7" r="4" />
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-        </svg>
-        Supervisões
-        <span class="nav-badge nav-badge-soon">em breve</span>
-      </RouterLink>
-
-      <RouterLink to="/adm/index" class="nav-item" active-class="active">
+      <RouterLink to="/adm/ativos" class="nav-item" active-class="active">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <rect x="2" y="7" width="20" height="14" rx="2" />
           <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
         </svg>
         Ativos
-        <span class="nav-badge nav-badge-soon">em breve</span>
       </RouterLink>
 
       <RouterLink to="/adm/usuarios" class="nav-item" active-class="active">
@@ -79,20 +67,6 @@ onMounted(async () => {
         </svg>
         Usuários
       </RouterLink>
-    </nav>
-
-    <nav class="sidebar-section">
-      <div class="sidebar-section-label">Relatórios</div>
-
-      <span class="nav-item nav-item-disabled" aria-disabled="true">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="18" y1="20" x2="18" y2="10" />
-          <line x1="12" y1="20" x2="12" y2="4" />
-          <line x1="6" y1="20" x2="6" y2="14" />
-        </svg>
-        Relatórios
-        <span class="nav-badge nav-badge-soon">em breve</span>
-      </span>
     </nav>
 
     <div class="sidebar-footer">

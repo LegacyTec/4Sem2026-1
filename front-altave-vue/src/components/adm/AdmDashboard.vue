@@ -2,10 +2,13 @@
 import AppHeaderRoles from '@/components/geral/layout/AppHeaderRoles.vue'
 import SidebarAdm from '@/components/geral/layout/SidebarAdm.vue'
 import { buscarContratos, criarContrato, formatarData, resolverStatus } from '@/services/ContratoService'
+import { buscarOrdens, buscarUsuarios } from '@/services/OrdemService'
 import { computed, onMounted, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 type ContractStatus = 'Ativo' | 'Expirando' | 'Inativo'
-
 type Contract = {
   id: number
   nomeEmpresa: string
@@ -15,13 +18,20 @@ type Contract = {
   quantidadeAtivos: number
   status: ContractStatus
   descricao: string
+  usuarios?: { id: number; nomeCompleto: string; cargo?: string; email?: string }[]
 }
 
-const isPanelOpen = ref(false)
-const isSubmitting = ref(false)
-const isLoading = ref(false)
+/* ─── estado ─── */
+const isLoading    = ref(false)
 const errorMessage = ref('')
+const contratos    = ref<Contract[]>([])
+const totalUsuarios = ref(0)
+const totalOrdens   = ref(0)
 
+/* ─── drawer criar contrato ─── */
+const isPanelOpen  = ref(false)
+const isSubmitting = ref(false)
+const formError    = ref('')
 const novoContrato = reactive({
   nomeEmpresa: '',
   dataInicio: '',
@@ -30,24 +40,59 @@ const novoContrato = reactive({
   descricao: '',
 })
 
-const contratos = ref<Contract[]>([])
-const totalUsuarios = ref(0)
+/* ─── drawer detalhe contrato ─── */
+const detalheAberto      = ref(false)
+const contratoSelecionado = ref<Contract | null>(null)
 
+function abrirDetalhe(c: Contract) {
+  contratoSelecionado.value = c
+  detalheAberto.value = true
+}
+function fecharDetalhe() {
+  detalheAberto.value = false
+}
+
+/* ─── KPIs computados ─── */
 const totalAtivos = computed(() => contratos.value.reduce((acc, c) => acc + (c.quantidadeAtivos || 0), 0))
-const ordensAbertasSum = computed(() => 0)
 
 const metricas = computed(() => [
-  { label: 'Total de Contratos', value: contratos.value.length, tone: 'blue' as const },
-  { label: 'Total de Ativos', value: totalAtivos.value, tone: 'green' as const },
-  { label: 'Total de Usuários', value: totalUsuarios.value, tone: 'amber' as const },
-  { label: 'Ordens em Andamento', value: ordensAbertasSum.value, tone: 'red' as const },
+  {
+    label: 'Total de Contratos',
+    value: contratos.value.length,
+    tone: 'blue' as const,
+    icon: 'doc',
+  },
+  {
+    label: 'Total de Ativos',
+    value: totalAtivos.value,
+    tone: 'green' as const,
+    icon: 'box',
+  },
+  {
+    label: 'Total de Usuários',
+    value: totalUsuarios.value,
+    tone: 'amber' as const,
+    icon: 'users',
+  },
+  {
+    label: 'Ordens em Andamento',
+    value: totalOrdens.value,
+    tone: 'red' as const,
+    icon: 'clock',
+  },
 ])
 
+/* ─── carga ─── */
 onMounted(async () => {
   isLoading.value = true
   try {
-    const dados = await buscarContratos()
-    contratos.value = dados.map(d => ({
+    const [dadosContratos, dadosUsuarios, dadosOrdens] = await Promise.all([
+      buscarContratos(),
+      buscarUsuarios(),
+      buscarOrdens(),
+    ])
+
+    contratos.value = dadosContratos.map(d => ({
       id: d.id,
       nomeEmpresa: d.nomeEmpresa,
       dataInicio: d.dataInicio,
@@ -55,32 +100,36 @@ onMounted(async () => {
       quantidadePlantas: d.quantidadePlanta || 0,
       quantidadeAtivos: d.quantidadeAtivos || 0,
       status: resolverStatus(d.dataFim),
-      descricao: d.descricao,
+      descricao: d.descricao || '',
+      usuarios: (d as any).usuarios || [],
     }))
+
+    totalUsuarios.value = dadosUsuarios.length
+
+    totalOrdens.value = dadosOrdens.filter(o => o.status === 'EM_ANDAMENTO').length
   } catch (e: any) {
-    errorMessage.value = 'Erro ao carregar contratos. Verifique se o backend está rodando.'
+    errorMessage.value = 'Erro ao carregar dados. Verifique se o backend está rodando.'
     console.error(e)
   } finally {
     isLoading.value = false
   }
 })
 
-function abrirPainel() {
-  isPanelOpen.value = true
-}
-
+/* ─── criar contrato ─── */
+function abrirPainel() { isPanelOpen.value = true }
 function fecharPainel() {
   isPanelOpen.value = false
-  errorMessage.value = ''
+  formError.value = ''
+  limparFormulario()
 }
 
 async function salvarContrato() {
+  formError.value = ''
   if (!novoContrato.nomeEmpresa.trim() || !novoContrato.dataInicio || !novoContrato.dataFim || !novoContrato.descricao.trim()) {
-    errorMessage.value = 'Preencha todos os campos obrigatórios.'
+    formError.value = 'Preencha todos os campos obrigatórios.'
     return
   }
   isSubmitting.value = true
-  errorMessage.value = ''
   try {
     const criado = await criarContrato({
       nomeEmpresa: novoContrato.nomeEmpresa.trim(),
@@ -97,13 +146,12 @@ async function salvarContrato() {
       quantidadePlantas: criado.quantidadePlanta || 0,
       quantidadeAtivos: criado.quantidadeAtivos || 0,
       status: resolverStatus(criado.dataFim),
-      descricao: criado.descricao,
+      descricao: criado.descricao || '',
+      usuarios: [],
     })
-    limparFormulario()
     fecharPainel()
-  } catch (e: any) {
-    errorMessage.value = 'Erro ao salvar contrato.'
-    console.error(e)
+  } catch {
+    formError.value = 'Erro ao salvar contrato.'
   } finally {
     isSubmitting.value = false
   }
@@ -111,10 +159,14 @@ async function salvarContrato() {
 
 function limparFormulario() {
   novoContrato.nomeEmpresa = ''
-  novoContrato.dataInicio = ''
-  novoContrato.dataFim = ''
+  novoContrato.dataInicio  = ''
+  novoContrato.dataFim     = ''
   novoContrato.quantidadePlantas = 1
-  novoContrato.descricao = ''
+  novoContrato.descricao   = ''
+}
+
+function irParaContratos() {
+  router.push('/adm/contratos')
 }
 </script>
 
@@ -126,48 +178,65 @@ function limparFormulario() {
       <SidebarAdm />
 
       <main class="adm-main">
+        <!-- topbar -->
         <header class="topbar">
           <div>
             <span class="topbar-title">Dashboard</span>
             <span class="topbar-sub">Visão geral do sistema</span>
           </div>
           <div class="topbar-actions">
-            <button class="btn btn-secondary btn-sm" type="button" disabled title="Período — integração com API">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="4" width="18" height="18" rx="2" />
-                <line x1="16" y1="2" x2="16" y2="6" />
-                <line x1="8" y1="2" x2="8" y2="6" />
-                <line x1="3" y1="10" x2="21" y2="10" />
-              </svg>
-              Período
-            </button>
             <button class="btn btn-primary btn-sm" type="button" @click="abrirPainel">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5" y1="12" x2="19" y2="12" />
+                <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
               </svg>
               Criar Contrato
             </button>
           </div>
         </header>
 
-        <section class="content-area adm-content">
+        <section class="content-area">
+
+          <!-- KPIs -->
           <section class="metrics-grid" aria-label="Indicadores principais">
             <article v-for="m in metricas" :key="m.label" class="metric-card" :class="m.tone">
-              <div class="metric-label">{{ m.label }}</div>
-              <div class="metric-value">{{ m.value }}</div>
+              <div class="metric-icon-wrap" :class="m.tone">
+                <!-- doc -->
+                <svg v-if="m.icon === 'doc'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+                </svg>
+                <!-- box -->
+                <svg v-else-if="m.icon === 'box'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                </svg>
+                <!-- users -->
+                <svg v-else-if="m.icon === 'users'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                <!-- clock -->
+                <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                </svg>
+              </div>
+              <div class="metric-body">
+                <div class="metric-label">{{ m.label }}</div>
+                <div class="metric-value">{{ isLoading ? '—' : m.value }}</div>
+              </div>
             </article>
           </section>
 
-          <section id="contratos" class="card contracts-card">
+          <!-- tabela contratos -->
+          <section class="card contracts-card">
             <div class="card-header">
               <div>
-                <div class="card-title">Contratos Ativos</div>
+                <div class="card-title">Contratos</div>
                 <div class="card-sub">
-                  {{ contratos.length === 0 ? 'Nenhum contrato carregado' : `${contratos.length} contrato(s)` }}
+                  {{ isLoading ? 'Carregando...' : contratos.length === 0 ? 'Nenhum contrato' : `${contratos.length} contrato(s) cadastrado(s)` }}
                 </div>
               </div>
-              <button class="btn btn-secondary btn-sm" type="button">Exportar</button>
+              <button class="btn btn-secondary btn-sm" type="button" @click="irParaContratos">
+                Ver todos →
+              </button>
             </div>
 
             <div class="table-wrap">
@@ -179,25 +248,24 @@ function limparFormulario() {
                     <th>Término</th>
                     <th>Plantas</th>
                     <th>Ativos</th>
-                    <th>Ordens abertas</th>
                     <th>Status</th>
                     <th />
                   </tr>
                 </thead>
                 <tbody>
                   <tr v-if="isLoading">
-                    <td colspan="8" class="table-empty">Carregando contratos...</td>
+                    <td colspan="7" class="table-empty">Carregando contratos...</td>
                   </tr>
                   <tr v-else-if="errorMessage">
-                    <td colspan="8" class="table-empty" style="color: red;">{{ errorMessage }}</td>
+                    <td colspan="7" class="table-empty error-text">{{ errorMessage }}</td>
                   </tr>
                   <tr v-else-if="contratos.length === 0">
-                    <td colspan="8" class="table-empty">
-                      Nenhum contrato ainda. Cadastre pelo botão <strong>Criar Contrato</strong>.
+                    <td colspan="7" class="table-empty">
+                      Nenhum contrato ainda. Clique em <strong>Criar Contrato</strong>.
                     </td>
                   </tr>
                   <template v-else>
-                    <tr v-for="c in contratos" :key="c.id">
+                    <tr v-for="c in contratos" :key="c.id" class="table-row-hover">
                       <td>
                         <strong class="table-title">{{ c.nomeEmpresa }}</strong>
                       </td>
@@ -205,20 +273,18 @@ function limparFormulario() {
                       <td>{{ formatarData(c.dataFim) }}</td>
                       <td>{{ c.quantidadePlantas }}</td>
                       <td>{{ c.quantidadeAtivos }}</td>
-                      <td>—</td>
                       <td>
-                        <span
-                          class="badge"
-                          :class="{
-                            'badge-active': c.status === 'Ativo',
-                            'badge-pending': c.status === 'Expirando',
-                            'badge-done': c.status === 'Inativo',
-                          }"
-                        >
-                          {{ c.status }}
-                        </span>
+                        <span class="badge" :class="{
+                          'badge-active':  c.status === 'Ativo',
+                          'badge-pending': c.status === 'Expirando',
+                          'badge-done':    c.status === 'Inativo',
+                        }">{{ c.status }}</span>
                       </td>
-                      <td><button class="link-button" type="button">Ver →</button></td>
+                      <td>
+                        <button class="link-button" type="button" @click="abrirDetalhe(c)">
+                          Ver →
+                        </button>
+                      </td>
                     </tr>
                   </template>
                 </tbody>
@@ -229,34 +295,40 @@ function limparFormulario() {
       </main>
     </div>
 
-    <div class="drawer-backdrop" :class="{ open: isPanelOpen }" @click="fecharPainel" />
+    <!-- backdrop -->
+    <div
+      class="drawer-backdrop"
+      :class="{ open: isPanelOpen || detalheAberto }"
+      @click="isPanelOpen ? fecharPainel() : fecharDetalhe()"
+    />
 
-    <aside class="detail-overlay contract-drawer" :class="{ open: isPanelOpen }" aria-label="Criar contrato">
+    <!-- drawer: CRIAR CONTRATO -->
+    <aside class="detail-overlay contract-drawer" :class="{ open: isPanelOpen }">
       <div class="detail-header">
         <button class="detail-close" type="button" @click="fecharPainel">✕</button>
         <strong>Criar Contrato</strong>
-        <p>Preencha os dados. Ao integrar o backend, este formulário enviará para a API de contratos.</p>
+        <p>Preencha os dados do novo contrato.</p>
       </div>
 
       <form class="detail-body contract-form" @submit.prevent="salvarContrato">
         <label>
-          Empresa *
-          <input v-model="novoContrato.nomeEmpresa" type="text" placeholder="Nome da empresa" required />
+          Nome da empresa *
+          <input v-model="novoContrato.nomeEmpresa" type="text" placeholder="Ex: Petrobras S.A." required />
         </label>
 
         <div class="form-grid">
           <label>
-            Data início *
+            Data de início *
             <input v-model="novoContrato.dataInicio" type="date" required />
           </label>
           <label>
-            Data término *
+            Data de término *
             <input v-model="novoContrato.dataFim" type="date" required />
           </label>
         </div>
 
         <label>
-          Plantas *
+          Número de plantas *
           <input v-model.number="novoContrato.quantidadePlantas" type="number" min="1" required />
         </label>
 
@@ -265,6 +337,8 @@ function limparFormulario() {
           <textarea v-model="novoContrato.descricao" rows="4" placeholder="Escopo e observações do contrato" required />
         </label>
 
+        <p v-if="formError" class="form-error">{{ formError }}</p>
+
         <div class="drawer-actions">
           <button class="btn btn-secondary" type="button" @click="fecharPainel">Cancelar</button>
           <button class="btn btn-primary" type="submit" :disabled="isSubmitting">
@@ -272,6 +346,69 @@ function limparFormulario() {
           </button>
         </div>
       </form>
+    </aside>
+
+    <!-- drawer: DETALHE CONTRATO -->
+    <aside class="detail-overlay contract-drawer" :class="{ open: detalheAberto }">
+      <div class="detail-header">
+        <button class="detail-close" type="button" @click="fecharDetalhe">✕</button>
+        <strong>{{ contratoSelecionado?.nomeEmpresa }}</strong>
+        <span v-if="contratoSelecionado" class="badge mt-4" :class="{
+          'badge-active':  contratoSelecionado.status === 'Ativo',
+          'badge-pending': contratoSelecionado.status === 'Expirando',
+          'badge-done':    contratoSelecionado.status === 'Inativo',
+        }">{{ contratoSelecionado.status }}</span>
+      </div>
+
+      <div v-if="contratoSelecionado" class="detail-body detail-info">
+        <div class="info-group">
+          <div class="info-row">
+            <span class="info-label">Início</span>
+            <span class="info-value">{{ formatarData(contratoSelecionado.dataInicio) }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Término</span>
+            <span class="info-value">{{ formatarData(contratoSelecionado.dataFim) }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Plantas</span>
+            <span class="info-value">{{ contratoSelecionado.quantidadePlantas }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Ativos</span>
+            <span class="info-value">{{ contratoSelecionado.quantidadeAtivos }}</span>
+          </div>
+        </div>
+
+        <div class="info-group">
+          <div class="info-label mb-6">Descrição</div>
+          <p class="info-desc">{{ contratoSelecionado.descricao || 'Sem descrição.' }}</p>
+        </div>
+
+        <div v-if="contratoSelecionado.usuarios && contratoSelecionado.usuarios.length > 0" class="info-group">
+          <div class="info-label mb-6">Usuários vinculados</div>
+          <div class="user-list">
+            <div v-for="u in contratoSelecionado.usuarios" :key="u.id" class="user-chip">
+              <div class="chip-avatar">{{ u.nomeCompleto.charAt(0).toUpperCase() }}</div>
+              <div>
+                <div class="chip-name">{{ u.nomeCompleto }}</div>
+                <div class="chip-role">{{ u.cargo || 'Sem cargo' }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div v-else class="info-group">
+          <div class="info-label mb-6">Usuários vinculados</div>
+          <p class="info-desc muted">Nenhum usuário vinculado.</p>
+        </div>
+
+        <div class="drawer-actions">
+          <button class="btn btn-secondary" type="button" @click="fecharDetalhe">Fechar</button>
+          <button class="btn btn-primary" type="button" @click="router.push(`/adm/contratos/${contratoSelecionado.id}`)">
+            Ver detalhes completos →
+          </button>
+        </div>
+      </div>
     </aside>
   </div>
 </template>
@@ -283,22 +420,17 @@ function limparFormulario() {
   flex-direction: column;
   background: var(--gray-50);
 }
-
 .adm-workspace {
   display: flex;
   flex: 1;
-  min-height: 0;
   min-height: calc(100vh - var(--app-header-roles-h));
 }
-
 .adm-main {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  min-height: 0;
 }
-
 .topbar {
   height: var(--topbar-h);
   background: var(--white);
@@ -313,185 +445,161 @@ function limparFormulario() {
   top: 0;
   z-index: 10;
 }
-
 .topbar-title {
   font-size: 16px;
   font-weight: 600;
   color: var(--gray-900);
 }
-
 .topbar-sub {
   font-size: 12px;
   color: var(--gray-500);
-  font-weight: 400;
   margin-left: 8px;
 }
+.topbar-actions { display: flex; gap: 10px; }
 
-.topbar-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
+/* content */
+.content-area { padding: 24px; display: flex; flex-direction: column; gap: 20px; }
 
-.adm-content {
-  padding: 24px;
-}
-
-.contracts-card {
-  margin-bottom: 16px;
-}
-
-.table-title,
-.table-subtitle {
-  display: block;
-}
-
-.table-title {
-  color: var(--gray-900);
-  font-weight: 600;
-}
-
-.table-subtitle {
-  color: var(--gray-500);
-  font-size: 12px;
-  margin-top: 2px;
-}
-
-.table-empty {
-  padding: 28px 20px !important;
-  text-align: center;
-  color: var(--gray-500);
-  font-size: 14px;
-  line-height: 1.5;
-}
-
-.link-button {
-  border: 0;
-  background: transparent;
-  color: var(--blue-600);
-  font-weight: 600;
-  cursor: pointer;
-  font-family: var(--font);
-}
-
-.link-button:hover {
-  color: var(--blue-700);
-  text-decoration: underline;
-}
-
-.drawer-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(11, 31, 51, 0.3);
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.2s ease;
-  z-index: 90;
-}
-
-.drawer-backdrop.open {
-  opacity: 1;
-  visibility: visible;
-}
-
-.contract-drawer {
-  display: block;
-}
-
-.detail-header p {
-  margin-top: 6px;
-  color: var(--gray-500);
-  font-size: 13px;
-  max-width: 330px;
-}
-
-.contract-form {
-  display: flex;
-  flex-direction: column;
+/* KPIs */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
   gap: 14px;
 }
-
-.contract-form label {
+.metric-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  padding: 18px 20px;
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  color: var(--gray-700);
-  font-size: 12px;
-  font-weight: 600;
+  align-items: center;
+  gap: 16px;
+  border-top: 3px solid transparent;
 }
+.metric-card.blue  { border-top-color: var(--blue-500, #3b82f6); }
+.metric-card.green { border-top-color: #22c55e; }
+.metric-card.amber { border-top-color: #f59e0b; }
+.metric-card.red   { border-top-color: #ef4444; }
 
+.metric-icon-wrap {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.metric-icon-wrap.blue  { background: #eff6ff; color: #3b82f6; }
+.metric-icon-wrap.green { background: #f0fdf4; color: #22c55e; }
+.metric-icon-wrap.amber { background: #fffbeb; color: #f59e0b; }
+.metric-icon-wrap.red   { background: #fef2f2; color: #ef4444; }
+
+.metric-label { font-size: 12px; color: var(--gray-500); margin-bottom: 4px; }
+.metric-value { font-size: 26px; font-weight: 700; color: var(--gray-900); }
+
+/* tabela */
+.contracts-card { margin-bottom: 0; }
+.table-title { font-weight: 600; color: var(--gray-900); }
+.table-empty { padding: 32px 20px; text-align: center; color: var(--gray-500); font-size: 14px; }
+.error-text  { color: #ef4444 !important; }
+.table-row-hover:hover { background: var(--gray-50); }
+
+.link-button {
+  border: 0; background: transparent;
+  color: var(--blue-600, #2563eb);
+  font-weight: 600; cursor: pointer;
+  font-family: var(--font);
+}
+.link-button:hover { text-decoration: underline; }
+
+/* drawer backdrop */
+.drawer-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(11,31,51,.3);
+  opacity: 0; visibility: hidden;
+  transition: all .2s ease;
+  z-index: 90;
+}
+.drawer-backdrop.open { opacity: 1; visibility: visible; }
+
+/* drawer detalhe info */
+.detail-info { display: flex; flex-direction: column; gap: 20px; }
+.info-group {
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+}
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--gray-100);
+}
+.info-row:last-child { border-bottom: none; }
+.info-label { font-size: 11px; font-weight: 600; color: var(--gray-500); text-transform: uppercase; letter-spacing: .05em; }
+.info-value { font-size: 13px; font-weight: 500; color: var(--gray-900); }
+.info-desc  { font-size: 13px; color: var(--gray-700); line-height: 1.6; margin: 0; }
+.info-desc.muted { color: var(--gray-400); }
+.mb-6 { margin-bottom: 6px; }
+.mt-4 { margin-top: 4px; }
+
+.user-list { display: flex; flex-direction: column; gap: 8px; }
+.user-chip {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--white); border: 1px solid var(--gray-200);
+  border-radius: 8px; padding: 8px 12px;
+}
+.chip-avatar {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--blue-400, #60a5fa); color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 600; flex-shrink: 0;
+}
+.chip-name { font-size: 13px; font-weight: 500; color: var(--gray-900); }
+.chip-role { font-size: 11px; color: var(--gray-500); }
+
+/* form drawer */
+.contract-form { display: flex; flex-direction: column; gap: 14px; }
+.contract-form label {
+  display: flex; flex-direction: column; gap: 6px;
+  color: var(--gray-700); font-size: 12px; font-weight: 600;
+}
 .contract-form input,
 .contract-form textarea {
-  padding: 11px 12px;
+  padding: 10px 12px;
   border: 1px solid var(--gray-300);
   border-radius: var(--radius-md);
-  font: inherit;
-  font-size: 13px;
-  color: var(--gray-900);
-  outline: none;
+  font: inherit; font-size: 13px;
+  color: var(--gray-900); outline: none;
   background: var(--white);
 }
-
 .contract-form input:focus,
 .contract-form textarea:focus {
   border-color: var(--blue-400);
   box-shadow: 0 0 0 3px var(--blue-50);
 }
-
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-error { color: #ef4444; font-size: 12px; margin: 0; }
 
 .drawer-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 6px;
+  display: flex; justify-content: flex-end;
+  gap: 10px; margin-top: 6px;
   padding-top: 16px;
   border-top: 1px solid var(--gray-200);
 }
+.drawer-actions .btn:disabled { opacity: .65; cursor: not-allowed; }
 
-.drawer-actions .btn:disabled {
-  opacity: 0.65;
-  cursor: not-allowed;
-}
+/* detalhe overlay (herdado global) */
+.detail-header p { margin-top: 6px; color: var(--gray-500); font-size: 13px; }
 
-@media (max-width: 1024px) {
-  .metrics-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
+@media (max-width: 1100px) { .metrics-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 860px) {
-  .adm-workspace {
-    flex-direction: column;
-  }
-
-  .topbar {
-    position: static;
-    flex-direction: column;
-    align-items: flex-start;
-    height: auto;
-    padding: 16px;
-  }
-
-  .topbar-actions {
-    width: 100%;
-    flex-wrap: wrap;
-  }
-
-  .metrics-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .contract-drawer {
-    width: min(420px, 100vw);
-  }
-
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
+  .adm-workspace { flex-direction: column; }
+  .metrics-grid  { grid-template-columns: 1fr 1fr; }
+  .form-grid     { grid-template-columns: 1fr; }
 }
+@media (max-width: 540px) { .metrics-grid { grid-template-columns: 1fr; } }
 </style>
