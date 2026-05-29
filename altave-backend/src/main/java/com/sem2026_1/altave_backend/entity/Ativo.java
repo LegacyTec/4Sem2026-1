@@ -32,12 +32,15 @@ public class Ativo {
     private Long id;
 
     @Column(name = "nome_ativo")
+    @JsonView(View.Ordem.class)
     private String nome;
 
     @Column(name = "status")
+    @JsonView(View.Ordem.class)
     private String status;
 
     @Column(name = "fabricante")
+    @JsonView(View.Ordem.class)
     private String fabricante;
 
     @Column(name = "tipo")
@@ -177,5 +180,5 @@ public class Ativo {
         this.nome = nome;
     }
 
-    
+
 }

@@ -58,7 +58,7 @@ function fecharDrawer() {
 
 async function salvarUsuario() {
   salvarErro.value = ''
-  if (!novoUsuario.nomeCompleto.trim() || !novoUsuario.email.trim() || !novoUsuario.cargo.trim() || !novoUsuario.funcao.trim() || !novoUsuario.dataNascimento) {
+  if (!novoUsuario.nomeCompleto.trim() || !novoUsuario.email.trim() || !novoUsuario.cargo || !novoUsuario.dataNascimento) {
     salvarErro.value = 'Preencha todos os campos obrigatórios.'
     return
   }
@@ -154,20 +154,29 @@ async function salvarUsuario() {
         <p>Preencha os dados do novo usuário.</p>
       </div>
       <form class="drawer-form" @submit.prevent="salvarUsuario">
+
         <label>Nome completo *
           <input v-model="novoUsuario.nomeCompleto" type="text" placeholder="Ex: João Silva" />
         </label>
+
         <label>E-mail *
           <input v-model="novoUsuario.email" type="email" placeholder="joao@email.com" />
         </label>
-        <div class="form-grid-2">
-          <label>Cargo *
-            <input v-model="novoUsuario.cargo" type="text" placeholder="Ex: Técnico" />
-          </label>
-          <label>Função *
-            <input v-model="novoUsuario.funcao" type="text" placeholder="Ex: Manutenção" />
-          </label>
-        </div>
+
+        <label>Cargo *
+          <select v-model="novoUsuario.cargo" class="select-field">
+            <option value="" disabled>Selecione o cargo...</option>
+            <option value="ADM">ADM</option>
+            <option value="Supervisor">Supervisor</option>
+            <option value="Planejador">Planejador</option>
+            <option value="Técnico">Técnico</option>
+          </select>
+        </label>
+
+        <label>Função
+          <input v-model="novoUsuario.funcao" type="text" placeholder="Ex: Inspeção, Manutenção..." />
+        </label>
+
         <div class="form-grid-2">
           <label>Data de nascimento *
             <input v-model="novoUsuario.dataNascimento" type="date" />
@@ -179,7 +188,9 @@ async function salvarUsuario() {
             </select>
           </label>
         </div>
+
         <p v-if="salvarErro" class="form-error">{{ salvarErro }}</p>
+
         <div class="drawer-actions">
           <button class="btn btn-secondary" type="button" @click="fecharDrawer">Cancelar</button>
           <button class="btn btn-primary" type="submit" :disabled="isSaving">
