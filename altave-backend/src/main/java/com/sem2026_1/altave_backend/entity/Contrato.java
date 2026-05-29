@@ -1,6 +1,7 @@
 package com.sem2026_1.altave_backend.entity;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonView;
@@ -16,13 +17,14 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
 @Table(name="contrato")
 public class Contrato {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="id_contrato")
@@ -75,6 +77,10 @@ public class Contrato {
 
     @OneToMany(mappedBy = "contrato", fetch = FetchType.LAZY)
     private Set<Ativo> ativos;
+
+    @OneToMany(mappedBy = "contrato", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JsonView(View.Contrato.class)
+    private List<Planta> plantas;
 
 
     public Long getId() {
@@ -172,6 +178,12 @@ public class Contrato {
     public void setAtivos(Set<Ativo> ativos) {
         this.ativos = ativos;
     }
-  
-    
+
+    public List<Planta> getPlantas() {
+        return plantas;
+    }
+
+    public void setPlantas(List<Planta> plantas) {
+        this.plantas = plantas;
+    }
 }

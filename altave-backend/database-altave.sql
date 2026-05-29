@@ -74,6 +74,13 @@ CREATE TABLE ordem_manutencao (
         FOREIGN KEY (id_ativo) REFERENCES ativo (id_ativo)
 );
 
+CREATE TABLE planta (
+    id_planta   BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    nome        VARCHAR(100) NOT NULL,
+    id_contrato BIGINT NOT NULL,
+    CONSTRAINT fk_planta_contrato FOREIGN KEY (id_contrato) REFERENCES contrato (id_contrato)
+);
+
 CREATE TABLE ordem_usuario (
     id_ordem_manutencao BIGINT NOT NULL,
     id_usuario          BIGINT NOT NULL,

@@ -3,6 +3,7 @@ import AppHeaderRoles from '@/components/geral/layout/AppHeaderRoles.vue'
 import SidebarAdm from '@/components/geral/layout/SidebarAdm.vue'
 import { buscarContratos, criarContrato, formatarData, resolverStatus } from '@/services/ContratoService'
 import { buscarOrdens, buscarUsuarios } from '@/services/OrdemService'
+import { criarPlanta } from '@/services/PlantaService'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -32,13 +33,26 @@ const totalOrdens   = ref(0)
 const isPanelOpen  = ref(false)
 const isSubmitting = ref(false)
 const formError    = ref('')
+const novaPlantaNome = ref('')
 const novoContrato = reactive({
   nomeEmpresa: '',
   dataInicio: '',
   dataFim: '',
-  quantidadePlantas: 1,
+  plantas: [] as string[],
   descricao: '',
 })
+
+function adicionarPlanta() {
+  const nome = novaPlantaNome.value.trim().toUpperCase()
+  if (!nome) return
+  if (novoContrato.plantas.includes(nome)) return
+  novoContrato.plantas.push(nome)
+  novaPlantaNome.value = ''
+}
+
+function removerPlanta(index: number) {
+  novoContrato.plantas.splice(index, 1)
+}
 
 /* ─── drawer detalhe contrato ─── */
 const detalheAberto      = ref(false)
@@ -129,21 +143,28 @@ async function salvarContrato() {
     formError.value = 'Preencha todos os campos obrigatórios.'
     return
   }
+  if (novoContrato.plantas.length === 0) {
+    formError.value = 'Adicione pelo menos uma planta.'
+    return
+  }
   isSubmitting.value = true
   try {
     const criado = await criarContrato({
       nomeEmpresa: novoContrato.nomeEmpresa.trim(),
-      quantidadePlanta: Number(novoContrato.quantidadePlantas),
+      quantidadePlanta: novoContrato.plantas.length,
       dataInicio: novoContrato.dataInicio,
       dataFim: novoContrato.dataFim,
       descricao: novoContrato.descricao.trim(),
     })
+    // cria cada planta vinculada ao contrato
+    await Promise.all(novoContrato.plantas.map(nome => criarPlanta(nome, criado.id)))
+
     contratos.value.unshift({
       id: criado.id,
       nomeEmpresa: criado.nomeEmpresa,
       dataInicio: criado.dataInicio,
       dataFim: criado.dataFim,
-      quantidadePlantas: criado.quantidadePlanta || 0,
+      quantidadePlantas: novoContrato.plantas.length,
       quantidadeAtivos: criado.quantidadeAtivos || 0,
       status: resolverStatus(criado.dataFim),
       descricao: criado.descricao || '',
@@ -161,8 +182,9 @@ function limparFormulario() {
   novoContrato.nomeEmpresa = ''
   novoContrato.dataInicio  = ''
   novoContrato.dataFim     = ''
-  novoContrato.quantidadePlantas = 1
+  novoContrato.plantas     = []
   novoContrato.descricao   = ''
+  novaPlantaNome.value     = ''
 }
 
 function irParaContratos() {
@@ -327,10 +349,29 @@ function irParaContratos() {
           </label>
         </div>
 
-        <label>
-          Número de plantas *
-          <input v-model.number="novoContrato.quantidadePlantas" type="number" min="1" required />
-        </label>
+        <div class="field-group">
+          <span class="field-label">Plantas * <small>(mínimo 1)</small></span>
+          <div class="plant-input-row">
+            <input
+              v-model="novaPlantaNome"
+              type="text"
+              class="plant-input"
+              placeholder="Nome da planta (ex: SJK, BOT)"
+              maxlength="50"
+              @keyup.enter="adicionarPlanta"
+            />
+            <button type="button" class="btn btn-secondary btn-sm" @click="adicionarPlanta">+ Adicionar</button>
+          </div>
+          <div v-if="novoContrato.plantas.length === 0" class="plants-empty">
+            Nenhuma planta adicionada ainda.
+          </div>
+          <div v-else class="plants-chips">
+            <span v-for="(p, i) in novoContrato.plantas" :key="i" class="plant-chip">
+              {{ p }}
+              <button type="button" class="chip-remove" @click="removerPlanta(i)">×</button>
+            </span>
+          </div>
+        </div>
 
         <label>
           Descrição *
@@ -583,6 +624,33 @@ function irParaContratos() {
 }
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .form-error { color: #ef4444; font-size: 12px; margin: 0; }
+
+/* plantas */
+.field-group { display: flex; flex-direction: column; gap: 8px; }
+.field-label { font-size: 12px; font-weight: 600; color: var(--gray-700); }
+.field-label small { font-weight: 400; color: var(--gray-400); margin-left: 4px; }
+.plant-input-row { display: flex; gap: 8px; }
+.plant-input {
+  flex: 1; padding: 10px 12px;
+  border: 1px solid var(--gray-300); border-radius: var(--radius-md);
+  font: inherit; font-size: 13px; color: var(--gray-900); outline: none;
+  background: var(--white);
+}
+.plant-input:focus { border-color: var(--blue-400); box-shadow: 0 0 0 3px var(--blue-50); }
+.plants-empty { font-size: 12px; color: var(--gray-400); padding: 6px 0; }
+.plants-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.plant-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #eff6ff; color: #1d4ed8;
+  border: 1px solid #bfdbfe; border-radius: 20px;
+  padding: 4px 10px 4px 12px; font-size: 12px; font-weight: 600;
+}
+.chip-remove {
+  border: none; background: none; cursor: pointer;
+  color: #60a5fa; font-size: 14px; line-height: 1;
+  padding: 0; display: flex; align-items: center;
+}
+.chip-remove:hover { color: #1d4ed8; }
 
 .drawer-actions {
   display: flex; justify-content: flex-end;
