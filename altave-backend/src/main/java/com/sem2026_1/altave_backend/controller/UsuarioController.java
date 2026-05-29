@@ -23,4 +23,11 @@ public class UsuarioController {
     public ResponseEntity<List<Usuario>> listar() {
         return ResponseEntity.ok(usuarioRepository.findAll());
     }
+
+    @PostMapping
+    @JsonView(View.Contrato.class)
+    public ResponseEntity<Usuario> criar(@RequestBody Usuario usuario) {
+        usuario.setId(null); // garante criação
+        return ResponseEntity.ok(usuarioRepository.save(usuario));
+    }
 }

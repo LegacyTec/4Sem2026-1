@@ -17,5 +17,6 @@ public interface ContratoService {
     public Contrato desabilitarContrato(Long id);
 
     public List<ContratoResumoDTO> buscarContratosComTotalOrdens();
-}
 
+    Contrato vincularUsuario(Long contratoId, Long usuarioId);
+}

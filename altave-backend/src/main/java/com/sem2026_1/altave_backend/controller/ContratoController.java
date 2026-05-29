@@ -27,9 +27,9 @@ import com.sem2026_1.altave_backend.dto.ContratoResumoDTO;
 @CrossOrigin
 @RequestMapping("/contrato")
 public class ContratoController {
-    
+
     private ContratoService contratoService;
-    
+
     public ContratoController(ContratoService contratoService) {
         this.contratoService = contratoService;
     }
@@ -38,7 +38,7 @@ public class ContratoController {
     @GetMapping
     public ResponseEntity<List<Contrato>> listar(){
         return ResponseEntity.ok(contratoService.buscarTodos());
-    } 
+    }
 
     @JsonView(View.Contrato.class)
     @PostMapping
@@ -46,7 +46,7 @@ public class ContratoController {
         contrato =  contratoService.cadastrarContrato(contrato);
         return ResponseEntity.created(URI.create("/contrato/" + contrato.getId())).body(contrato);
     }
-    
+
     @JsonView(View.Contrato.class)
     @PutMapping("/{id}")
     public ResponseEntity<Contrato> editar(@PathVariable Long id, @RequestBody Contrato contrato){
@@ -64,5 +64,13 @@ public class ContratoController {
     public ResponseEntity<List<ContratoResumoDTO>> listarResumo() {
         return ResponseEntity.ok(contratoService.buscarContratosComTotalOrdens());
     }
-}
 
+    @JsonView(View.Contrato.class)
+    @PostMapping("/{id}/vincular-usuario/{usuarioId}")
+    public ResponseEntity<Contrato> vincularUsuario(
+            @PathVariable Long id,
+            @PathVariable Long usuarioId) {
+        Contrato contrato = contratoService.vincularUsuario(id, usuarioId);
+        return ResponseEntity.ok(contrato);
+    }
+}

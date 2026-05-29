@@ -13,6 +13,11 @@ import {
   type IOrdem,
   type IUsuario,
 } from '@/services/OrdemService'
+import { buscarContratos, type IContrato } from '@/services/ContratoService'
+import { buscarPlantasPorContrato } from '@/services/PlantaService'
+import type { IPlanta } from '@/services/PlantaService'
+import { buscarAtivosPorContrato } from '@/services/AtivoService'
+import type { IAtivo } from '@/services/AtivoService'
 import { computed, onMounted, reactive, ref } from 'vue'
 
 /* ─── estado principal ─── */
@@ -20,6 +25,13 @@ const ordens = ref<IOrdem[]>([])
 const usuarios = ref<IUsuario[]>([])
 const isLoading = ref(false)
 const errorMessage = ref('')
+
+/* ─── estado dinâmico de contrato ─── */
+const contratos = ref<IContrato[]>([])
+const plantasContrato = ref<IPlanta[]>([])
+const ativosContrato = ref<IAtivo[]>([])
+const usuariosContrato = ref<typeof usuarios.value>([])
+const isLoadingContratoDados = ref(false)
 
 /* ─── drawer de DETALHES ─── */
 const detalheAberto = ref(false)
@@ -40,6 +52,7 @@ const formError = ref('')
 const tecnicosSelecionados = ref<number[]>([])
 
 const form = reactive({
+  contratoId: '' as number | '',
   nome: '',
   descricao: '',
   planta: '',
@@ -59,7 +72,11 @@ function fecharCriar() {
   criarAberto.value = false
   formError.value = ''
   tecnicosSelecionados.value = []
+  plantasContrato.value = []
+  ativosContrato.value = []
+  usuariosContrato.value = []
   Object.assign(form, {
+    contratoId: '',
     nome: '', descricao: '', planta: '', predio: '',
     dataInicio: '', dataFim: '', ativoId: '',
     tipoManutencao: 'PREVENTIVA', requisito: '',
@@ -72,8 +89,52 @@ function toggleTecnico(id: number) {
   else tecnicosSelecionados.value.splice(idx, 1)
 }
 
+async function onContratoChange() {
+  const cid = form.contratoId
+  if (!cid) {
+    plantasContrato.value = []
+    ativosContrato.value = []
+    usuariosContrato.value = []
+    form.planta = ''
+    form.predio = ''
+    form.ativoId = ''
+    tecnicosSelecionados.value = []
+    return
+  }
+  isLoadingContratoDados.value = true
+  try {
+    const [plantas, ativos] = await Promise.all([
+      buscarPlantasPorContrato(Number(cid)),
+      buscarAtivosPorContrato(Number(cid)),
+    ])
+    plantasContrato.value = plantas
+    ativosContrato.value = ativos
+    usuariosContrato.value = usuarios.value
+  } catch (e) {
+    console.error('Erro ao carregar dados do contrato:', e)
+  } finally {
+    isLoadingContratoDados.value = false
+  }
+  form.planta = ''
+  form.predio = ''
+  form.ativoId = ''
+  tecnicosSelecionados.value = []
+}
+
+function onAtivoChange() {
+  const ativo = ativosContrato.value.find(a => a.id === Number(form.ativoId))
+  if (ativo) {
+    form.planta = ativo.planta || ''
+    form.predio = ativo.predio || ''
+  }
+}
+
 async function salvar() {
   formError.value = ''
+  if (!form.contratoId) {
+    formError.value = 'Selecione um contrato.'
+    return
+  }
   if (!form.nome.trim() || !form.descricao.trim() || !form.planta.trim() || !form.predio.trim() || !form.ativoId) {
     formError.value = 'Preencha os campos obrigatórios: Nome, Descrição, Planta, Prédio e Ativo.'
     return
@@ -157,9 +218,10 @@ function labelAtivo(o: IOrdem) {
 onMounted(async () => {
   isLoading.value = true
   try {
-    const [ordsData, usrsData] = await Promise.all([buscarOrdens(), buscarUsuarios()])
+    const [ordsData, usrsData, contratosData] = await Promise.all([buscarOrdens(), buscarUsuarios(), buscarContratos()])
     ordens.value = ordsData
     usuarios.value = usrsData
+    contratos.value = contratosData
   } catch (e: any) {
     errorMessage.value = 'Não foi possível carregar os dados. Verifique o backend.'
     console.error(e)
@@ -431,72 +493,21 @@ onMounted(async () => {
       <form class="detail-body order-form" @submit.prevent="salvar">
         <div v-if="formError" class="form-error-banner">{{ formError }}</div>
 
-        <label>
-          Nome da ordem *
-          <input v-model="form.nome" type="text" placeholder="Ex: PM mensal — Câmera P-63" />
+        <!-- 1. Contrato -->
+        <label class="form-label">Contrato *
+          <select v-model="form.contratoId" class="form-select" @change="onContratoChange">
+            <option value="" disabled>Selecione o contrato...</option>
+            <option v-for="c in contratos" :key="c.id" :value="c.id">{{ c.nomeEmpresa }}</option>
+          </select>
         </label>
 
-        <label>
-          Descrição *
-          <textarea v-model="form.descricao" rows="3" placeholder="Descreva o escopo da manutenção..." />
+        <!-- 2. Nome e Tipo -->
+        <label class="form-label">Nome da ordem *
+          <input v-model="form.nome" type="text" class="form-input" placeholder="Ex: Inspeção câmera entrada" />
         </label>
 
-        <div class="form-grid">
-          <label>
-            Planta *
-            <input v-model="form.planta" type="text" placeholder="Ex: Planta 1" />
-          </label>
-          <label>
-            Prédio *
-            <input v-model="form.predio" type="text" placeholder="Ex: Prédio A" />
-          </label>
-        </div>
-
-        <div class="form-grid">
-          <label>
-            Data prevista de início
-            <input v-model="form.dataInicio" type="date" />
-          </label>
-          <label>
-            Data prevista de final
-            <input v-model="form.dataFim" type="date" />
-          </label>
-        </div>
-
-        <label>
-          Ativo *
-          <input v-model.number="form.ativoId" type="number" min="1" placeholder="ID do ativo (ex: 1)" />
-          <span class="field-hint">Informe o ID do ativo registrado no sistema.</span>
-        </label>
-
-        <label class="label-block">
-          Técnicos Responsáveis
-          <div class="tecnicos-picker">
-            <div
-              v-for="u in usuarios"
-              :key="u.id"
-              class="tecnico-option"
-              :class="{ selected: tecnicosSelecionados.includes(u.id) }"
-              @click="toggleTecnico(u.id)"
-            >
-              <div class="avatar-sm" :style="{ background: avatarColor(u.id) }">
-                {{ iniciaisNome(u.nomeCompleto) }}
-              </div>
-              <div class="tecnico-option-info">
-                <span class="tecnico-nome">{{ u.nomeCompleto }}</span>
-                <span class="tecnico-cargo">{{ u.funcao || u.cargo || 'Técnico' }}</span>
-              </div>
-              <svg v-if="tecnicosSelecionados.includes(u.id)" class="check-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-            </div>
-            <p v-if="usuarios.length === 0" class="detail-empty">Nenhum usuário encontrado.</p>
-          </div>
-        </label>
-
-        <label>
-          Tipo de manutenção
-          <select v-model="form.tipoManutencao">
+        <label class="form-label">Tipo de manutenção *
+          <select v-model="form.tipoManutencao" class="form-select">
             <option value="PREVENTIVA">Preventiva</option>
             <option value="CORRETIVA">Corretiva</option>
             <option value="INSTALACAO">Instalação</option>
@@ -504,10 +515,58 @@ onMounted(async () => {
           </select>
         </label>
 
-        <label>
-          Requisito
-          <input v-model="form.requisito" type="text" placeholder="Ex: NR12, NR10..." />
+        <!-- 3. Ativo (dropdown do contrato selecionado) -->
+        <label class="form-label">Ativo *
+          <select v-model="form.ativoId" class="form-select" :disabled="!form.contratoId || isLoadingContratoDados" @change="onAtivoChange">
+            <option value="" disabled>{{ form.contratoId ? 'Selecione o ativo...' : 'Selecione um contrato primeiro' }}</option>
+            <option v-for="a in ativosContrato" :key="a.id" :value="a.id">
+              {{ a.nome }} — {{ a.tipo }}{{ a.planta ? ` (${a.planta})` : '' }}
+            </option>
+          </select>
         </label>
+
+        <!-- 4. Planta e Prédio (auto-preenchidos, mas editáveis) -->
+        <div class="form-row-2">
+          <label class="form-label">Planta
+            <input v-model="form.planta" type="text" class="form-input" placeholder="Planta" readonly />
+          </label>
+          <label class="form-label">Prédio
+            <input v-model="form.predio" type="text" class="form-input" placeholder="Prédio" />
+          </label>
+        </div>
+
+        <!-- 5. Datas -->
+        <div class="form-row-2">
+          <label class="form-label">Data início *
+            <input v-model="form.dataInicio" type="date" class="form-input" />
+          </label>
+          <label class="form-label">Data fim
+            <input v-model="form.dataFim" type="date" class="form-input" />
+          </label>
+        </div>
+
+        <!-- 6. Descrição -->
+        <label class="form-label">Descrição *
+          <textarea v-model="form.descricao" class="form-input" rows="3" placeholder="Descreva a ordem..." />
+        </label>
+
+        <!-- 7. Técnicos responsáveis -->
+        <div class="form-group">
+          <span class="form-label">Técnicos responsáveis</span>
+          <div v-if="!form.contratoId" class="form-hint">Selecione um contrato para ver os usuários.</div>
+          <div v-else class="tecnicos-grid">
+            <label
+              v-for="u in usuarios"
+              :key="u.id"
+              class="tecnico-item"
+              :class="{ selected: tecnicosSelecionados.includes(u.id) }"
+              @click.prevent="toggleTecnico(u.id)"
+            >
+              <div class="tec-avatar" :style="{ background: avatarColor(u.id) }">{{ iniciaisNome(u.nomeCompleto) }}</div>
+              <span class="tec-name">{{ u.nomeCompleto }}</span>
+            </label>
+          </div>
+        </div>
 
         <div class="drawer-actions">
           <button class="btn btn-secondary" type="button" :disabled="isSubmitting" @click="fecharCriar">
@@ -920,16 +979,21 @@ tbody tr:hover td { background: var(--gray-50); }
   font-weight: 600;
 }
 
-/* ── técnicos ── */
+/* ── técnicos (detalhe view) ── */
 .tecnicos-list {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
-.tecnico-item {
+.tecnicos-list .tecnico-item {
   display: flex;
   align-items: center;
   gap: 10px;
+  border: none;
+  padding: 0;
+  border-radius: 0;
+  cursor: default;
+  user-select: text;
 }
 .avatar-sm {
   width: 32px;
@@ -953,35 +1017,60 @@ tbody tr:hover td { background: var(--gray-50); }
   color: var(--gray-400);
 }
 
-/* ── picker de técnicos no form ── */
+/* ── form novo (criar ordem) ── */
+.form-label {
+  display: flex; flex-direction: column; gap: 6px;
+  font-size: 12px; font-weight: 600; color: var(--gray-700);
+}
+.form-input {
+  padding: 10px 12px; border: 1px solid var(--gray-300);
+  border-radius: var(--radius-md); font: inherit; font-size: 13px;
+  color: var(--gray-900); outline: none; background: var(--white);
+  width: 100%;
+}
+.form-input:focus { border-color: var(--blue-400); box-shadow: 0 0 0 3px var(--blue-50); }
+.form-input[readonly] { background: var(--gray-50); color: var(--gray-500); cursor: default; }
+.form-select {
+  padding: 10px 12px; border: 1px solid var(--gray-300);
+  border-radius: var(--radius-md); font: inherit; font-size: 13px;
+  color: var(--gray-900); outline: none; background: var(--white);
+  width: 100%; cursor: pointer;
+}
+.form-select:focus { border-color: var(--blue-400); box-shadow: 0 0 0 3px var(--blue-50); }
+.form-select:disabled { background: var(--gray-50); color: var(--gray-400); cursor: not-allowed; }
+.form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-group { display: flex; flex-direction: column; gap: 8px; }
+.form-hint { font-size: 12px; color: var(--gray-400); }
+.tecnicos-grid { display: flex; flex-direction: column; gap: 4px; max-height: 180px; overflow-y: auto; }
+.tecnico-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px; border-radius: 8px;
+  border: 1px solid var(--gray-200); cursor: pointer;
+  transition: all .15s; user-select: none;
+}
+.tecnico-item:hover { border-color: var(--blue-400); background: #f0f9ff; }
+.tecnico-item.selected { border-color: var(--blue-400); background: #eff6ff; }
+.tec-avatar {
+  width: 28px; height: 28px; border-radius: 50%; color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; flex-shrink: 0;
+}
+.tec-name { font-size: 13px; color: var(--gray-800); }
+
+/* ── picker de técnicos legado (removido do form novo) ── */
 .label-block { display: flex; flex-direction: column; gap: 6px; }
 .tecnicos-picker {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  max-height: 200px;
-  overflow-y: auto;
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius-md);
-  padding: 6px;
+  display: flex; flex-direction: column; gap: 6px;
+  max-height: 200px; overflow-y: auto;
+  border: 1px solid var(--gray-200); border-radius: var(--radius-md); padding: 6px;
 }
 .tecnico-option {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background .12s;
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border-radius: 6px; cursor: pointer; transition: background .12s;
 }
 .tecnico-option:hover { background: var(--gray-50); }
 .tecnico-option.selected { background: var(--blue-50); }
-.tecnico-option-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
+.tecnico-option-info { flex: 1; display: flex; flex-direction: column; gap: 1px; }
 .check-icon { color: var(--blue-600); flex-shrink: 0; }
 
 /* ── responsivo ── */
@@ -993,5 +1082,6 @@ tbody tr:hover td { background: var(--gray-50); }
   .summary-grid { grid-template-columns: 1fr 1fr; }
   .detail-overlay { width: 100vw; }
   .form-grid { grid-template-columns: 1fr; }
+  .form-row-2 { grid-template-columns: 1fr; }
 }
 </style>

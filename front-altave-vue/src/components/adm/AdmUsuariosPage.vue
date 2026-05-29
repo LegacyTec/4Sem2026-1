@@ -2,7 +2,8 @@
 import AppHeaderRoles from '@/components/geral/layout/AppHeaderRoles.vue'
 import SidebarAdm from '@/components/geral/layout/SidebarAdm.vue'
 import { buscarUsuarios, type IUsuario } from '@/services/OrdemService'
-import { computed, onMounted, ref } from 'vue'
+import api from '@/config/axios'
+import { computed, onMounted, reactive, ref } from 'vue'
 
 const usuarios   = ref<IUsuario[]>([])
 const isLoading  = ref(false)
@@ -35,6 +36,50 @@ function iniciais(nome: string) {
 
 const CORES = ['#3b82f6','#8b5cf6','#ec4899','#f59e0b','#10b981','#ef4444','#06b6d4']
 function cor(id: number) { return CORES[id % CORES.length] ?? '#3b82f6' }
+
+const drawerAberto  = ref(false)
+const isSaving      = ref(false)
+const salvarErro    = ref('')
+const novoUsuario   = reactive({
+  nomeCompleto: '',
+  email: '',
+  status: 'ATIVO',
+  dataNascimento: '',
+  cargo: '',
+  funcao: '',
+})
+
+function abrirDrawer() { drawerAberto.value = true; salvarErro.value = '' }
+function fecharDrawer() {
+  drawerAberto.value = false
+  salvarErro.value = ''
+  Object.assign(novoUsuario, { nomeCompleto:'', email:'', status:'ATIVO', dataNascimento:'', cargo:'', funcao:'' })
+}
+
+async function salvarUsuario() {
+  salvarErro.value = ''
+  if (!novoUsuario.nomeCompleto.trim() || !novoUsuario.email.trim() || !novoUsuario.cargo.trim() || !novoUsuario.funcao.trim() || !novoUsuario.dataNascimento) {
+    salvarErro.value = 'Preencha todos os campos obrigatórios.'
+    return
+  }
+  isSaving.value = true
+  try {
+    const response = await api.post('/usuario', {
+      nomeCompleto: novoUsuario.nomeCompleto.trim(),
+      email: novoUsuario.email.trim(),
+      status: novoUsuario.status,
+      dataNascimento: novoUsuario.dataNascimento,
+      cargo: novoUsuario.cargo.trim(),
+      funcao: novoUsuario.funcao.trim(),
+    })
+    usuarios.value.unshift(response.data)
+    fecharDrawer()
+  } catch {
+    salvarErro.value = 'Erro ao cadastrar usuário. Verifique os dados.'
+  } finally {
+    isSaving.value = false
+  }
+}
 </script>
 
 <template>
@@ -51,6 +96,12 @@ function cor(id: number) { return CORES[id % CORES.length] ?? '#3b82f6' }
           </div>
           <div class="topbar-actions">
             <input v-model="busca" class="search-input" type="search" placeholder="Buscar por nome, e-mail ou cargo..." />
+            <button class="btn btn-primary btn-sm" type="button" @click="abrirDrawer">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Cadastrar Usuário
+            </button>
           </div>
         </header>
 
@@ -91,6 +142,52 @@ function cor(id: number) { return CORES[id % CORES.length] ?? '#3b82f6' }
         </section>
       </main>
     </div>
+
+    <!-- backdrop -->
+    <div class="drawer-backdrop" :class="{ open: drawerAberto }" @click="fecharDrawer" />
+
+    <!-- drawer -->
+    <aside class="detail-overlay" :class="{ open: drawerAberto }">
+      <div class="detail-header">
+        <button class="detail-close" type="button" @click="fecharDrawer">✕</button>
+        <strong>Cadastrar Usuário</strong>
+        <p>Preencha os dados do novo usuário.</p>
+      </div>
+      <form class="drawer-form" @submit.prevent="salvarUsuario">
+        <label>Nome completo *
+          <input v-model="novoUsuario.nomeCompleto" type="text" placeholder="Ex: João Silva" />
+        </label>
+        <label>E-mail *
+          <input v-model="novoUsuario.email" type="email" placeholder="joao@email.com" />
+        </label>
+        <div class="form-grid-2">
+          <label>Cargo *
+            <input v-model="novoUsuario.cargo" type="text" placeholder="Ex: Técnico" />
+          </label>
+          <label>Função *
+            <input v-model="novoUsuario.funcao" type="text" placeholder="Ex: Manutenção" />
+          </label>
+        </div>
+        <div class="form-grid-2">
+          <label>Data de nascimento *
+            <input v-model="novoUsuario.dataNascimento" type="date" />
+          </label>
+          <label>Status *
+            <select v-model="novoUsuario.status" class="select-field">
+              <option value="ATIVO">Ativo</option>
+              <option value="INATIVO">Inativo</option>
+            </select>
+          </label>
+        </div>
+        <p v-if="salvarErro" class="form-error">{{ salvarErro }}</p>
+        <div class="drawer-actions">
+          <button class="btn btn-secondary" type="button" @click="fecharDrawer">Cancelar</button>
+          <button class="btn btn-primary" type="submit" :disabled="isSaving">
+            {{ isSaving ? 'Salvando...' : 'Cadastrar' }}
+          </button>
+        </div>
+      </form>
+    </aside>
   </div>
 </template>
 
@@ -133,4 +230,41 @@ function cor(id: number) { return CORES[id % CORES.length] ?? '#3b82f6' }
 .user-name { font-weight:500; color:var(--gray-900); }
 .muted { color:var(--gray-500); }
 .row-hover:hover { background:var(--gray-50); }
+
+/* drawer */
+.drawer-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(11,31,51,.3);
+  opacity: 0; visibility: hidden;
+  transition: all .2s ease; z-index: 90;
+}
+.drawer-backdrop.open { opacity:1; visibility:visible; }
+
+.drawer-form {
+  display: flex; flex-direction: column; gap: 14px;
+}
+.drawer-form label {
+  display: flex; flex-direction: column; gap: 6px;
+  font-size: 12px; font-weight: 600; color: var(--gray-700);
+}
+.drawer-form input, .drawer-form select {
+  padding: 10px 12px;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-md);
+  font: inherit; font-size: 13px;
+  color: var(--gray-900); outline: none;
+  background: var(--white);
+}
+.drawer-form input:focus, .drawer-form select:focus {
+  border-color: var(--blue-400);
+  box-shadow: 0 0 0 3px var(--blue-50);
+}
+.form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.select-field { width: 100%; cursor: pointer; }
+.form-error { color: #ef4444; font-size: 12px; margin: 0; }
+.drawer-actions {
+  display: flex; justify-content: flex-end; gap: 10px;
+  padding-top: 16px; border-top: 1px solid var(--gray-200);
+}
+.drawer-actions .btn:disabled { opacity: .65; cursor: not-allowed; }
 </style>

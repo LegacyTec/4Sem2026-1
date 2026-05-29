@@ -9,6 +9,8 @@ import { buscarPlantasPorContrato } from '@/services/PlantaService'
 import type { IPlanta } from '@/services/PlantaService'
 import { buscarSupervisoesPorContrato, criarSupervisao } from '@/services/SupervisaoService'
 import type { ISupervisao } from '@/services/SupervisaoService'
+import { buscarAtivosPorContrato, criarAtivo } from '@/services/AtivoService'
+import type { IAtivo } from '@/services/AtivoService'
 import api from '@/config/axios'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -109,20 +111,83 @@ async function salvarSupervisao() {
   }
 }
 
-// ─── Aba Ativos (mock) ─────────────────────────────────────────────────────────
-type AtivoLocal = {
-  id: number
-  tipo: string
-  planta: string
-  predio: string
-  status: string
+// ─── Aba Ativos ────────────────────────────────────────────────────────────────
+const ativos = ref<IAtivo[]>([])
+const isLoadingAtivos = ref(false)
+
+const isAtivoDrawerOpen = ref(false)
+const ativoIsSubmitting = ref(false)
+const ativoError = ref('')
+const ativoForm = reactive({
+  nome: '',
+  tipo: '',
+  status: 'OPERACIONAL' as string,
+  fabricante: '',
+  periodicidadeManutencao: 30,
+  descricao: '',
+  dataInstalacao: '',
+  predio: '',
+  plantaNome: '',
+})
+
+function abrirAtivoDrawer() { isAtivoDrawerOpen.value = true; ativoError.value = '' }
+function fecharAtivoDrawer() {
+  isAtivoDrawerOpen.value = false
+  ativoError.value = ''
+  Object.assign(ativoForm, { nome: '', tipo: '', status: 'OPERACIONAL', fabricante: '', periodicidadeManutencao: 30, descricao: '', dataInstalacao: '', predio: '', plantaNome: '' })
 }
 
-const ativos = ref<AtivoLocal[]>([
-  { id: 1, tipo: 'Elevador', planta: 'Planta 1', predio: 'Bloco A', status: 'Operacional' },
-  { id: 2, tipo: 'Gerador', planta: 'Planta 1', predio: 'Bloco B', status: 'Manutenção' },
-  { id: 3, tipo: 'HVAC', planta: 'Planta 2', predio: 'Bloco C', status: 'Operacional' },
-])
+async function salvarAtivo() {
+  ativoError.value = ''
+  if (!ativoForm.nome.trim() || !ativoForm.tipo.trim() || !ativoForm.dataInstalacao || !ativoForm.plantaNome) {
+    ativoError.value = 'Preencha: Nome, Tipo, Planta e Data de instalação.'
+    return
+  }
+  ativoIsSubmitting.value = true
+  try {
+    const criado = await criarAtivo({
+      nome: ativoForm.nome.trim(),
+      tipo: ativoForm.tipo.trim().toUpperCase(),
+      status: ativoForm.status,
+      fabricante: ativoForm.fabricante.trim() || undefined,
+      periodicidadeManutencao: Number(ativoForm.periodicidadeManutencao),
+      descricao: ativoForm.descricao.trim() || undefined,
+      dataInstalacao: ativoForm.dataInstalacao,
+      predio: ativoForm.predio.trim() || undefined,
+      planta: ativoForm.plantaNome,
+      contrato: { id: contratoId },
+    })
+    ativos.value.unshift(criado)
+    fecharAtivoDrawer()
+  } catch {
+    ativoError.value = 'Erro ao salvar ativo.'
+  } finally {
+    ativoIsSubmitting.value = false
+  }
+}
+
+// ─── Vincular Usuário ─────────────────────────────────────────────────────────
+const vincularUsuarioAberto = ref(false)
+const usuarioParaVincular = ref<number | ''>('')
+const vincularError = ref('')
+const vincularIsSubmitting = ref(false)
+
+async function confirmarVincular() {
+  if (!usuarioParaVincular.value) { vincularError.value = 'Selecione um usuário.'; return }
+  vincularIsSubmitting.value = true
+  vincularError.value = ''
+  try {
+    await api.post(`/contrato/${contratoId}/vincular-usuario/${usuarioParaVincular.value}`)
+    const lista = await buscarContratos()
+    contrato.value = lista.find(c => c.id === contratoId) ?? contrato.value
+    vincularUsuarioAberto.value = false
+    usuarioParaVincular.value = ''
+  } catch {
+    vincularError.value = 'Erro ao vincular usuário.'
+  } finally {
+    vincularIsSubmitting.value = false
+  }
+}
 
 // ─── Aba Ordens ────────────────────────────────────────────────────────────────
 const ordens = ref<IOrdem[]>([])
@@ -155,12 +220,14 @@ onMounted(async () => {
   isLoadingOrdens.value = true
 
   try {
-    const [lista, ords, usuarios, plantas, supervs] = await Promise.all([
+    isLoadingAtivos.value = true
+    const [lista, ords, usuarios, plantas, supervs, ativosData] = await Promise.all([
       buscarContratos(),
       buscarOrdens(),
       buscarUsuarios(),
       buscarPlantasPorContrato(contratoId),
       buscarSupervisoesPorContrato(contratoId),
+      buscarAtivosPorContrato(contratoId),
     ])
     contrato.value = lista.find((c) => c.id === contratoId) ?? null
     if (!contrato.value) erroContrato.value = 'Contrato não encontrado.'
@@ -168,12 +235,14 @@ onMounted(async () => {
     usuariosDisponiveis.value = usuarios
     plantasContrato.value = plantas
     supervisoes.value = supervs
+    ativos.value = ativosData
   } catch (e: unknown) {
     console.error(e)
     erroContrato.value = 'Erro ao carregar contrato.'
   } finally {
     isLoadingContrato.value = false
     isLoadingOrdens.value = false
+    isLoadingAtivos.value = false
   }
 })
 </script>
@@ -310,6 +379,27 @@ onMounted(async () => {
                     </div>
                   </li>
                 </ul>
+                <button class="btn btn-secondary btn-sm" style="margin-top:8px" type="button"
+                  @click="vincularUsuarioAberto = true">
+                  + Vincular Usuário
+                </button>
+                <div v-if="vincularUsuarioAberto" class="vincular-panel">
+                  <select v-model="usuarioParaVincular" class="select-input">
+                    <option value="" disabled>Selecione o usuário...</option>
+                    <option v-for="u in usuariosDisponiveis" :key="u.id" :value="u.id">
+                      {{ u.nomeCompleto }} {{ u.cargo ? `— ${u.cargo}` : '' }}
+                    </option>
+                  </select>
+                  <p v-if="vincularError" class="form-error" style="margin:4px 0 0">{{ vincularError }}</p>
+                  <div style="display:flex;gap:8px;margin-top:8px">
+                    <button class="btn btn-secondary btn-sm" type="button" @click="vincularUsuarioAberto=false;vincularError=''">
+                      Cancelar
+                    </button>
+                    <button class="btn btn-primary btn-sm" type="button" :disabled="vincularIsSubmitting" @click="confirmarVincular">
+                      {{ vincularIsSubmitting ? 'Vinculando...' : 'Confirmar' }}
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -369,7 +459,7 @@ onMounted(async () => {
               </div>
             </div>
 
-            <!-- ── Aba Ativos ───────────────────────────────────────────────── -->
+            <!-- ── Aba Ativos ─────────────────────────────────────────────── -->
             <div v-show="activeTab === 'ativos'">
               <div class="card">
                 <div class="card-header">
@@ -377,19 +467,18 @@ onMounted(async () => {
                     <div class="card-title">Ativos do Contrato</div>
                     <div class="card-sub">{{ ativos.length }} ativo(s)</div>
                   </div>
-                  <button class="btn btn-primary btn-sm" type="button" disabled title="Em breve">
+                  <button class="btn btn-primary btn-sm" type="button" @click="abrirAtivoDrawer">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <line x1="12" y1="5" x2="12" y2="19" />
-                      <line x1="5" y1="12" x2="19" y2="12" />
+                      <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
                     </svg>
                     Novo Ativo
                   </button>
                 </div>
-
                 <div class="table-wrap">
                   <table>
                     <thead>
                       <tr>
+                        <th>Nome</th>
                         <th>Tipo</th>
                         <th>Planta</th>
                         <th>Prédio</th>
@@ -397,19 +486,24 @@ onMounted(async () => {
                       </tr>
                     </thead>
                     <tbody>
-                      <tr v-if="ativos.length === 0">
-                        <td colspan="4" class="table-empty">Nenhum ativo cadastrado.</td>
+                      <tr v-if="isLoadingAtivos">
+                        <td colspan="5" class="table-empty">Carregando ativos...</td>
+                      </tr>
+                      <tr v-else-if="ativos.length === 0">
+                        <td colspan="5" class="table-empty">Nenhum ativo cadastrado. Clique em <strong>Novo Ativo</strong>.</td>
                       </tr>
                       <tr v-for="a in ativos" :key="a.id">
-                        <td><strong>{{ a.tipo }}</strong></td>
-                        <td>{{ a.planta }}</td>
-                        <td>{{ a.predio }}</td>
+                        <td><strong>{{ a.nome }}</strong></td>
+                        <td>{{ a.tipo }}</td>
+                        <td>{{ a.planta || '—' }}</td>
+                        <td>{{ a.predio || '—' }}</td>
                         <td>
-                          <span
-                            class="badge"
-                            :class="a.status === 'Operacional' ? 'badge-active' : 'badge-pending'"
-                          >
-                            {{ a.status }}
+                          <span class="badge" :class="{
+                            'badge-active': a.status === 'OPERACIONAL',
+                            'badge-pending': a.status === 'EM_MANUTENCAO',
+                            'badge-done': a.status === 'INATIVO' || a.status === 'REMOVIDO',
+                          }">
+                            {{ a.status === 'OPERACIONAL' ? 'Operacional' : a.status === 'EM_MANUTENCAO' ? 'Em manutenção' : a.status }}
                           </span>
                         </td>
                       </tr>
@@ -483,8 +577,69 @@ onMounted(async () => {
       </main>
     </div>
 
-    <!-- ── Backdrop ──────────────────────────────────────────────────────────── -->
+    <!-- ── Backdrop Supervisão ────────────────────────────────────────────────── -->
     <div class="drawer-backdrop" :class="{ open: isSupervDrawerOpen }" @click="fecharSupervDrawer" />
+
+    <!-- ── Backdrop Ativo ─────────────────────────────────────────────────────── -->
+    <div class="drawer-backdrop" :class="{ open: isAtivoDrawerOpen }" @click="fecharAtivoDrawer" />
+
+    <!-- ── Drawer Novo Ativo ───────────────────────────────────────────────── -->
+    <aside class="detail-overlay" :class="{ open: isAtivoDrawerOpen }">
+      <div class="detail-header">
+        <button class="detail-close" type="button" @click="fecharAtivoDrawer">✕</button>
+        <strong>Novo Ativo</strong>
+        <p>Cadastre um ativo vinculado a este contrato.</p>
+      </div>
+      <form class="detail-body contract-form" @submit.prevent="salvarAtivo">
+        <label>Nome do ativo *
+          <input v-model="ativoForm.nome" type="text" placeholder="Ex: Câmera Sony 031" />
+        </label>
+        <div class="form-grid">
+          <label>Tipo *
+            <input v-model="ativoForm.tipo" type="text" placeholder="Ex: CAMERA, GERADOR" />
+          </label>
+          <label>Status *
+            <select v-model="ativoForm.status" class="select-input">
+              <option value="OPERACIONAL">Operacional</option>
+              <option value="EM_MANUTENCAO">Em manutenção</option>
+              <option value="INATIVO">Inativo</option>
+            </select>
+          </label>
+        </div>
+        <label>Planta *
+          <select v-model="ativoForm.plantaNome" class="select-input">
+            <option value="" disabled>Selecione a planta...</option>
+            <option v-for="p in plantasContrato" :key="p.id" :value="p.nome">{{ p.nome }}</option>
+          </select>
+        </label>
+        <div class="form-grid">
+          <label>Prédio
+            <input v-model="ativoForm.predio" type="text" placeholder="Ex: Bloco A" />
+          </label>
+          <label>Fabricante
+            <input v-model="ativoForm.fabricante" type="text" placeholder="Ex: Intelbras" />
+          </label>
+        </div>
+        <div class="form-grid">
+          <label>Data de instalação *
+            <input v-model="ativoForm.dataInstalacao" type="date" />
+          </label>
+          <label>Periodicidade (dias) *
+            <input v-model.number="ativoForm.periodicidadeManutencao" type="number" min="1" />
+          </label>
+        </div>
+        <label>Descrição
+          <textarea v-model="ativoForm.descricao" rows="2" placeholder="Observações..." />
+        </label>
+        <p v-if="ativoError" class="form-error">{{ ativoError }}</p>
+        <div class="drawer-actions">
+          <button class="btn btn-secondary" type="button" @click="fecharAtivoDrawer">Cancelar</button>
+          <button class="btn btn-primary" type="submit" :disabled="ativoIsSubmitting">
+            {{ ativoIsSubmitting ? 'Salvando...' : 'Salvar ativo' }}
+          </button>
+        </div>
+      </form>
+    </aside>
 
     <!-- ── Drawer Nova Supervisão ────────────────────────────────────────────── -->
     <aside class="detail-overlay" :class="{ open: isSupervDrawerOpen }" aria-label="Nova supervisão">
@@ -865,6 +1020,20 @@ onMounted(async () => {
   width: 100%; cursor: pointer;
 }
 .select-input:focus { border-color: var(--blue-400); box-shadow: 0 0 0 3px var(--blue-50); }
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.vincular-panel {
+  margin-top: 12px;
+  padding: 14px;
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+}
 
 @media (max-width: 860px) {
   .adm-workspace {
