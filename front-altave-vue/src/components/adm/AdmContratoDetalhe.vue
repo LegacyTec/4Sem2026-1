@@ -158,8 +158,8 @@ async function salvarAtivo() {
     })
     ativos.value.unshift(criado)
     fecharAtivoDrawer()
-  } catch {
-    ativoError.value = 'Erro ao salvar ativo.'
+  } catch (e: any) {
+    ativoError.value = e?.response?.data?.message ?? e?.message ?? 'Erro ao salvar ativo. Verifique os dados.'
   } finally {
     ativoIsSubmitting.value = false
   }

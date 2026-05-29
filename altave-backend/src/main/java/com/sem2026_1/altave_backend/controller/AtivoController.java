@@ -32,9 +32,13 @@ public class AtivoController {
 
     /**
      * POST /contrato/{id}/ativos
-     * Cria um ativo vinculado ao contrato e incrementa quantidade_ativos no contrato.
-     * O contrato é carregado do banco pelo id da URL — @JsonIgnore no campo contrato
-     * da entidade Ativo impede passá-lo no body.
+     *
+     * Cria o ativo vinculando-o ao contrato pelo id da URL.
+     * O campo `contrato` na entidade Ativo é @JsonIgnore, por isso não pode
+     * ser enviado no body — o contrato é carregado diretamente do banco aqui.
+     *
+     * O contador quantidade_ativos é atualizado via JPQL direto para evitar
+     * que o CascadeType.ALL das plantas (lazy) cause LazyInitializationException.
      */
     @PostMapping("/contrato/{id}/ativos")
     @JsonView(View.Ordem.class)
@@ -48,10 +52,8 @@ public class AtivoController {
 
         Ativo salvo = ativoRepository.save(ativo);
 
-        // mantém o contador quantidade_ativos sincronizado
-        int qtdAtual = contrato.getQuantidadeAtivos() == null ? 0 : contrato.getQuantidadeAtivos();
-        contrato.setQuantidadeAtivos(qtdAtual + 1);
-        contratoRepository.save(contrato);
+        // Incrementa o contador via query direta — não faz merge da entidade completa
+        contratoRepository.incrementarQuantidadeAtivos(id);
 
         return ResponseEntity.ok(salvo);
     }
