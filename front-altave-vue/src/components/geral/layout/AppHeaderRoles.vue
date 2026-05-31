@@ -1,26 +1,26 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { RouterLink, useRoute } from 'vue-router'
+import { useRouter } from 'vue-router'
+import { getCurrentUser, logout } from '@/services/AuthService'
 
+const router = useRouter()
 
+const user = computed(() => getCurrentUser())
 
-const route = useRoute()
-
-const tabs = [
-  { id: 'adm' as const, label: 'ADM', to: '/adm/index' },
-  { id: 'supervisor' as const, label: 'Supervisor', to: '/supervisor/inicio' },
-  { id: 'planejador' as const, label: 'Planejador', to: '/planejador/inicio' },
-  { id: 'tecnico' as const, label: 'Técnico', to: '/tecnico/inicio' },
-]
-
-const activeId = computed(() => {
-  const p = route.path
-  if (p.startsWith('/adm')) return 'adm'
-  if (p.startsWith('/supervisor')) return 'supervisor'
-  if (p.startsWith('/planejador')) return 'planejador'
-  if (p.startsWith('/tecnico')) return 'tecnico'
-  return 'adm'
+const iniciais = computed(() => {
+  const nome = user.value?.nomeCompleto ?? ''
+  return nome
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p.charAt(0).toUpperCase())
+    .join('')
 })
+
+function sair() {
+  logout()
+  router.push('/login')
+}
 </script>
 
 <template>
@@ -31,17 +31,21 @@ const activeId = computed(() => {
       <span class="app-header-product">SGM</span>
     </div>
 
-    <nav class="app-header-tabs" aria-label="Perfis do sistema">
-      <RouterLink
-        v-for="tab in tabs"
-        :key="tab.id"
-        :to="tab.to"
-        class="app-header-tab"
-        :class="{ active: activeId === tab.id }"
-      >
-        {{ tab.label }}
-      </RouterLink>
-    </nav>
+    <div v-if="user" class="app-header-user">
+      <div class="app-header-avatar" aria-hidden="true">{{ iniciais }}</div>
+      <div class="app-header-user-info">
+        <span class="app-header-user-name">{{ user.nomeCompleto }}</span>
+        <span class="app-header-user-role">{{ user.cargo }}</span>
+      </div>
+      <button class="app-header-logout" type="button" @click="sair">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+          <polyline points="16 17 21 12 16 7" />
+          <line x1="21" y1="12" x2="9" y2="12" />
+        </svg>
+        Sair
+      </button>
+    </div>
   </header>
 </template>
 
@@ -66,19 +70,6 @@ const activeId = computed(() => {
   flex-shrink: 0;
 }
 
-.app-header-logo-img {
-  height: 28px;
-  width: auto;
-  object-fit: contain;
-  /* Inverte para branco se a logo for escura */
-  filter: brightness(0) invert(1);
-}
-
-.app-header-logo-fallback {
-  align-items: baseline;
-  gap: 8px;
-}
-
 .app-header-logo {
   font-size: 14px;
   font-weight: 700;
@@ -99,46 +90,73 @@ const activeId = computed(() => {
   letter-spacing: 0.04em;
 }
 
-.app-header-tabs {
+.app-header-user {
   display: flex;
   align-items: center;
-  gap: 4px;
-  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.app-header-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--blue-400, #60a5fa);
+  color: white;
+  display: flex;
+  align-items: center;
   justify-content: center;
-}
-
-.app-header-tab {
-  padding: 8px 14px;
-  border-radius: var(--radius-sm);
-  font-size: 13px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.55);
-  text-decoration: none;
-  transition: background 0.15s, color 0.15s;
-}
-
-.app-header-tab:hover {
-  color: var(--white);
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.app-header-tab.active {
-  color: var(--white);
-  background: rgba(255, 255, 255, 0.18);
+  font-size: 12px;
   font-weight: 600;
+  flex-shrink: 0;
+}
+
+.app-header-user-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.app-header-user-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--white);
+}
+
+.app-header-user-role {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.app-header-logout {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 8px;
+  padding: 7px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: var(--radius-sm, 6px);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.75);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.app-header-logout:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--white);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 @media (max-width: 720px) {
   .app-header-roles {
-    flex-direction: column;
-    height: auto;
     padding: 10px 12px;
-    gap: 10px;
   }
 
-  .app-header-tabs {
-    width: 100%;
-    justify-content: flex-start;
+  .app-header-user-info {
+    display: none;
   }
 }
 </style>

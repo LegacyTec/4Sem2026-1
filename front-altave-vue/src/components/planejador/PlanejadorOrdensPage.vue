@@ -20,19 +20,9 @@ import { buscarAtivosPorContrato } from '@/services/AtivoService'
 import type { IAtivo } from '@/services/AtivoService'
 import { computed, onMounted, reactive, ref } from 'vue'
 
-/* ─── identidade do planejador (localStorage) ─── */
-const STORAGE_KEY = 'sgm_planejador_id'
-const planejadorId = ref<number | null>(
-  localStorage.getItem(STORAGE_KEY) ? Number(localStorage.getItem(STORAGE_KEY)) : null,
-)
-function selecionarPlanejador(id: number) {
-  planejadorId.value = id
-  localStorage.setItem(STORAGE_KEY, String(id))
-}
-function trocarPlanejador() {
-  planejadorId.value = null
-  localStorage.removeItem(STORAGE_KEY)
-}
+/* ─── identidade do planejador (usuário logado) ─── */
+import { getCurrentUser } from '@/services/AuthService'
+const planejadorId = ref<number | null>(getCurrentUser()?.id ?? null)
 
 /* ─── estado principal ─── */
 const ordens = ref<IOrdem[]>([])
@@ -233,9 +223,7 @@ function labelAtivo(o: IOrdem) {
   return [o.ativo.tipo, o.ativo.predio, o.ativo.planta].filter(Boolean).join(' · ') || `Ativo #${o.ativo.id}`
 }
 
-/* ─── planejadores e contratos filtrados ─── */
-const planejadores = computed(() => usuarios.value.filter(u => u.cargo === 'Planejador'))
-const planejadorAtual = computed(() => usuarios.value.find(u => u.id === planejadorId.value) ?? null)
+/* ─── contratos filtrados pelo planejador logado ─── */
 const contratosDoPlanejador = computed(() => {
   if (!planejadorId.value) return []
   return contratos.value.filter(c =>
@@ -274,58 +262,16 @@ onMounted(async () => {
             <h1 class="topbar-title">Ordens de Manutenção</h1>
           </div>
           <div class="topbar-actions">
-            <div class="planejador-identity">
-                <span v-if="planejadorAtual" class="planejador-name">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="8" r="5"/><path d="M3 21v-1a9 9 0 0 1 18 0v1"/>
-                  </svg>
-                  {{ planejadorAtual.nomeCompleto }}
-                </span>
-                <button v-if="planejadorAtual" class="btn btn-ghost btn-sm" type="button" @click="trocarPlanejador">
-                  Trocar
-                </button>
-              </div>
-              <button class="btn btn-primary btn-sm" type="button" @click="abrirCriar" :disabled="!planejadorId">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-                </svg>
-                Criar Ordem
-              </button>
+            <button class="btn btn-primary btn-sm" type="button" @click="abrirCriar" :disabled="!planejadorId">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              Criar Ordem
+            </button>
           </div>
         </header>
 
         <div class="pl-content">
-
-        <!-- painel de identificação — exibido se nenhum planejador foi selecionado -->
-        <div v-if="!isLoading && !planejadorId" class="identity-panel">
-          <div class="identity-card">
-            <div class="identity-icon">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <circle cx="12" cy="8" r="5"/><path d="M3 21v-1a9 9 0 0 1 18 0v1"/>
-              </svg>
-            </div>
-            <h2 class="identity-title">Quem é você?</h2>
-            <p class="identity-sub">Selecione seu usuário para ver apenas as ordens e contratos do seu escopo.</p>
-            <div v-if="planejadores.length === 0" class="identity-empty">
-              Nenhum usuário com cargo <strong>Planejador</strong> cadastrado.
-            </div>
-            <div v-else class="identity-list">
-              <button
-                v-for="p in planejadores"
-                :key="p.id"
-                class="identity-btn"
-                type="button"
-                @click="selecionarPlanejador(p.id)"
-              >
-                <div class="identity-avatar">{{ p.nomeCompleto.charAt(0).toUpperCase() }}</div>
-                <div>
-                  <div class="identity-btn-name">{{ p.nomeCompleto }}</div>
-                  <div class="identity-btn-role">Planejador</div>
-                </div>
-              </button>
-            </div>
-          </div>
-        </div>
 
           <!-- ── cards de resumo ── -->
           <section class="summary-grid">

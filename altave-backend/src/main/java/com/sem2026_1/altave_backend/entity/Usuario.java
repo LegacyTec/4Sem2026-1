@@ -50,6 +50,10 @@ public class Usuario {
     @JsonView({View.Contrato.class, View.Ordem.class})
     private String funcao;
 
+    @Column(name = "senha")
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    private String senha;
+
     @ManyToMany(mappedBy = "usuarios")
     private Set<Contrato> contratos;
 
@@ -110,6 +114,14 @@ public class Usuario {
 
     public void setFuncao(String funcao) {
         this.funcao = funcao;
+    }
+
+    public String getSenha() {
+        return senha;
+    }
+
+    public void setSenha(String senha) {
+        this.senha = senha;
     }
 
     public Set<Contrato> getContratos() {

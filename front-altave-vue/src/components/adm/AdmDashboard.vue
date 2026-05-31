@@ -209,29 +209,8 @@ function limparFormulario() {
           <!-- KPIs -->
           <section class="metrics-grid" aria-label="Indicadores principais">
             <article v-for="m in metricas" :key="m.label" class="metric-card" :class="m.tone">
-              <div class="metric-icon-wrap" :class="m.tone">
-                <!-- doc -->
-                <svg v-if="m.icon === 'doc'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
-                </svg>
-                <!-- box -->
-                <svg v-else-if="m.icon === 'box'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
-                </svg>
-                <!-- users -->
-                <svg v-else-if="m.icon === 'users'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                </svg>
-                <!-- clock -->
-                <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-                </svg>
-              </div>
-              <div class="metric-body">
-                <div class="metric-label">{{ m.label }}</div>
-                <div class="metric-value">{{ isLoading ? '—' : m.value }}</div>
-              </div>
+              <div class="metric-label">{{ m.label }}</div>
+              <div class="metric-value">{{ isLoading ? '—' : m.value }}</div>
             </article>
           </section>
 
@@ -421,43 +400,7 @@ function limparFormulario() {
 /* content */
 .content-area { padding: 24px; display: flex; flex-direction: column; gap: 20px; }
 
-/* KPIs */
-.metrics-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
-}
-.metric-card {
-  background: var(--white);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 1px 4px rgba(0,0,0,.06);
-  padding: 18px 20px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  border-top: 3px solid transparent;
-}
-.metric-card.blue  { border-top-color: var(--blue-500, #3b82f6); }
-.metric-card.green { border-top-color: #22c55e; }
-.metric-card.amber { border-top-color: #f59e0b; }
-.metric-card.red   { border-top-color: #ef4444; }
-
-.metric-icon-wrap {
-  width: 42px;
-  height: 42px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-.metric-icon-wrap.blue  { background: #eff6ff; color: #3b82f6; }
-.metric-icon-wrap.green { background: #f0fdf4; color: #22c55e; }
-.metric-icon-wrap.amber { background: #fffbeb; color: #f59e0b; }
-.metric-icon-wrap.red   { background: #fef2f2; color: #ef4444; }
-
-.metric-label { font-size: 12px; color: var(--gray-500); margin-bottom: 4px; }
-.metric-value { font-size: 26px; font-weight: 700; color: var(--gray-900); }
+/* KPIs — usa estilo global de .metrics-grid / .metric-card (assets/main.css) */
 
 /* tabela */
 .contracts-card { margin-bottom: 0; }

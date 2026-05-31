@@ -295,7 +295,7 @@ onMounted(async () => {
         <!-- Topbar -->
         <header class="topbar">
           <div class="topbar-left">
-            <button class="btn btn-ghost btn-sm" type="button" @click="router.push('/adm/index')">
+            <button class="btn btn-ghost btn-sm" type="button" @click="router.push('/adm/contratos')">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="19" y1="12" x2="5" y2="12" />
                 <polyline points="12 19 5 12 12 5" />
@@ -395,6 +395,20 @@ onMounted(async () => {
               <div class="card" style="margin-top: 14px;">
                 <div class="card-title" style="margin-bottom: 10px;">Descrição</div>
                 <p class="desc-text">{{ contrato.descricao || '—' }}</p>
+              </div>
+
+              <!-- Plantas -->
+              <div class="card" style="margin-top: 14px;">
+                <div class="card-header" style="margin-bottom: 12px;">
+                  <div class="card-title">Plantas</div>
+                  <span class="card-sub">{{ plantasContrato.length }} planta(s)</span>
+                </div>
+                <div v-if="plantasContrato.length === 0" class="empty-state">
+                  Nenhuma planta cadastrada neste contrato.
+                </div>
+                <div v-else class="chips-inline">
+                  <span v-for="p in plantasContrato" :key="p.id" class="chip-planta">{{ p.nome }}</span>
+                </div>
               </div>
 
               <!-- Usuários vinculados -->
