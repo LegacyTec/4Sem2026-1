@@ -35,6 +35,14 @@
         </svg>
         Usuários
       </RouterLink>
+
+      <RouterLink to="/adm/ativos" class="nav-item" active-class="active">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="7" width="20" height="14" rx="2"/>
+          <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+        </svg>
+        Ativos
+      </RouterLink>
     </nav>
 
     <div class="sidebar-footer">
