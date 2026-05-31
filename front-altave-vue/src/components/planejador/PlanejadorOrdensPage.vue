@@ -20,6 +20,20 @@ import { buscarAtivosPorContrato } from '@/services/AtivoService'
 import type { IAtivo } from '@/services/AtivoService'
 import { computed, onMounted, reactive, ref } from 'vue'
 
+/* ─── identidade do planejador (localStorage) ─── */
+const STORAGE_KEY = 'sgm_planejador_id'
+const planejadorId = ref<number | null>(
+  localStorage.getItem(STORAGE_KEY) ? Number(localStorage.getItem(STORAGE_KEY)) : null,
+)
+function selecionarPlanejador(id: number) {
+  planejadorId.value = id
+  localStorage.setItem(STORAGE_KEY, String(id))
+}
+function trocarPlanejador() {
+  planejadorId.value = null
+  localStorage.removeItem(STORAGE_KEY)
+}
+
 /* ─── estado principal ─── */
 const ordens = ref<IOrdem[]>([])
 const usuarios = ref<IUsuario[]>([])
@@ -109,7 +123,12 @@ async function onContratoChange() {
     ])
     plantasContrato.value = plantas
     ativosContrato.value = ativos
-    usuariosContrato.value = usuarios.value
+    // Apenas técnicos vinculados ao contrato selecionado
+    const contratoSel = contratos.value.find(c => c.id === Number(cid))
+    const idsDoContrato = new Set(contratoSel?.usuarios?.map(u => u.id) ?? [])
+    usuariosContrato.value = usuarios.value.filter(
+      u => idsDoContrato.has(u.id) && u.cargo === 'Técnico',
+    )
   } catch (e) {
     console.error('Erro ao carregar dados do contrato:', e)
   } finally {
@@ -214,6 +233,16 @@ function labelAtivo(o: IOrdem) {
   return [o.ativo.tipo, o.ativo.predio, o.ativo.planta].filter(Boolean).join(' · ') || `Ativo #${o.ativo.id}`
 }
 
+/* ─── planejadores e contratos filtrados ─── */
+const planejadores = computed(() => usuarios.value.filter(u => u.cargo === 'Planejador'))
+const planejadorAtual = computed(() => usuarios.value.find(u => u.id === planejadorId.value) ?? null)
+const contratosDoPlanejador = computed(() => {
+  if (!planejadorId.value) return []
+  return contratos.value.filter(c =>
+    c.usuarios?.some(u => u.id === planejadorId.value),
+  )
+})
+
 /* ─── ciclo de vida ─── */
 onMounted(async () => {
   isLoading.value = true
@@ -245,16 +274,58 @@ onMounted(async () => {
             <h1 class="topbar-title">Ordens de Manutenção</h1>
           </div>
           <div class="topbar-actions">
-            <button class="btn btn-primary btn-sm" type="button" @click="abrirCriar">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-              </svg>
-              Criar Ordem
-            </button>
+            <div class="planejador-identity">
+                <span v-if="planejadorAtual" class="planejador-name">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="8" r="5"/><path d="M3 21v-1a9 9 0 0 1 18 0v1"/>
+                  </svg>
+                  {{ planejadorAtual.nomeCompleto }}
+                </span>
+                <button v-if="planejadorAtual" class="btn btn-ghost btn-sm" type="button" @click="trocarPlanejador">
+                  Trocar
+                </button>
+              </div>
+              <button class="btn btn-primary btn-sm" type="button" @click="abrirCriar" :disabled="!planejadorId">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                Criar Ordem
+              </button>
           </div>
         </header>
 
         <div class="pl-content">
+
+        <!-- painel de identificação — exibido se nenhum planejador foi selecionado -->
+        <div v-if="!isLoading && !planejadorId" class="identity-panel">
+          <div class="identity-card">
+            <div class="identity-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="12" cy="8" r="5"/><path d="M3 21v-1a9 9 0 0 1 18 0v1"/>
+              </svg>
+            </div>
+            <h2 class="identity-title">Quem é você?</h2>
+            <p class="identity-sub">Selecione seu usuário para ver apenas as ordens e contratos do seu escopo.</p>
+            <div v-if="planejadores.length === 0" class="identity-empty">
+              Nenhum usuário com cargo <strong>Planejador</strong> cadastrado.
+            </div>
+            <div v-else class="identity-list">
+              <button
+                v-for="p in planejadores"
+                :key="p.id"
+                class="identity-btn"
+                type="button"
+                @click="selecionarPlanejador(p.id)"
+              >
+                <div class="identity-avatar">{{ p.nomeCompleto.charAt(0).toUpperCase() }}</div>
+                <div>
+                  <div class="identity-btn-name">{{ p.nomeCompleto }}</div>
+                  <div class="identity-btn-role">Planejador</div>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
 
           <!-- ── cards de resumo ── -->
           <section class="summary-grid">
@@ -497,7 +568,7 @@ onMounted(async () => {
         <label class="form-label">Contrato *
           <select v-model="form.contratoId" class="form-select" @change="onContratoChange">
             <option value="" disabled>Selecione o contrato...</option>
-            <option v-for="c in contratos" :key="c.id" :value="c.id">{{ c.nomeEmpresa }}</option>
+            <option v-for="c in contratosDoPlanejador" :key="c.id" :value="c.id">{{ c.nomeEmpresa }}</option>
           </select>
         </label>
 
@@ -553,10 +624,11 @@ onMounted(async () => {
         <!-- 7. Técnicos responsáveis -->
         <div class="form-group">
           <span class="form-label">Técnicos responsáveis</span>
-          <div v-if="!form.contratoId" class="form-hint">Selecione um contrato para ver os usuários.</div>
+          <div v-if="!form.contratoId" class="form-hint">Selecione um contrato para ver os técnicos.</div>
+          <div v-else-if="usuariosContrato.length === 0" class="form-hint">Nenhum técnico vinculado a este contrato.</div>
           <div v-else class="tecnicos-grid">
             <label
-              v-for="u in usuarios"
+              v-for="u in usuariosContrato"
               :key="u.id"
               class="tecnico-item"
               :class="{ selected: tecnicosSelecionados.includes(u.id) }"
@@ -582,6 +654,46 @@ onMounted(async () => {
 </template>
 
 <style scoped>
+/* ── identidade planejador ── */
+.planejador-identity {
+  display: flex; align-items: center; gap: 8px;
+}
+.planejador-name {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.75);
+}
+.identity-panel {
+  display: flex; align-items: center; justify-content: center;
+  padding: 48px 24px;
+}
+.identity-card {
+  background: var(--white); border-radius: var(--radius-lg);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  padding: 40px 32px; max-width: 440px; width: 100%;
+  text-align: center;
+}
+.identity-icon { color: var(--blue-400); margin-bottom: 16px; }
+.identity-title { font-size: 20px; font-weight: 700; color: var(--gray-900); margin: 0 0 8px; }
+.identity-sub { font-size: 13px; color: var(--gray-500); margin: 0 0 24px; line-height: 1.6; }
+.identity-empty { font-size: 13px; color: var(--gray-400); }
+.identity-list { display: flex; flex-direction: column; gap: 8px; }
+.identity-btn {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px; border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md); background: var(--white);
+  cursor: pointer; transition: all 0.15s; text-align: left; width: 100%;
+  font: inherit;
+}
+.identity-btn:hover { border-color: var(--blue-400); background: var(--blue-50); }
+.identity-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--blue-400); color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 600; flex-shrink: 0;
+}
+.identity-btn-name { font-size: 13px; font-weight: 600; color: var(--gray-900); }
+.identity-btn-role { font-size: 11px; color: var(--gray-500); }
+
 /* ── layout ── */
 .pl-layout {
   min-height: 100vh;

@@ -10,6 +10,7 @@ export interface IContrato {
   descricao: string;
   status: string;
   criador?: string;
+  usuarios?: { id: number; nomeCompleto: string; cargo?: string }[];
 }
 
 export interface IContratoPayload {

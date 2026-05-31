@@ -27,3 +27,13 @@ export async function criarSupervisao(payload: ISupervisaoPayload): Promise<ISup
   const response = await api.post<ISupervisao>("/supervisao", payload);
   return response.data;
 }
+
+export async function atualizarSupervisorSupervisao(
+  idSupervisao: number,
+  idSupervisor: number,
+): Promise<ISupervisao> {
+  const response = await api.patch<ISupervisao>(`/supervisao/${idSupervisao}/supervisor`, {
+    idSupervisor,
+  });
+  return response.data;
+}

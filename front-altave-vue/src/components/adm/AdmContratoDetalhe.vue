@@ -7,7 +7,7 @@ import { buscarOrdens, buscarUsuarios, labelStatus, labelTipo } from '@/services
 import type { IOrdem, IUsuario } from '@/services/OrdemService'
 import { buscarPlantasPorContrato } from '@/services/PlantaService'
 import type { IPlanta } from '@/services/PlantaService'
-import { buscarSupervisoesPorContrato, criarSupervisao } from '@/services/SupervisaoService'
+import { buscarSupervisoesPorContrato, criarSupervisao, atualizarSupervisorSupervisao } from '@/services/SupervisaoService'
 import type { ISupervisao } from '@/services/SupervisaoService'
 import { buscarAtivosPorContrato, criarAtivo } from '@/services/AtivoService'
 import type { IAtivo } from '@/services/AtivoService'
@@ -52,6 +52,44 @@ const isSupervDrawerOpen   = ref(false)
 const novaSupervIsSubmitting = ref(false)
 const novaSupervError      = ref('')
 const plantasSelecionadas  = ref<number[]>([])
+
+// ─── Edição inline de supervisor ──────────────────────────────────────────────
+const supervisaoEditandoId        = ref<number | null>(null)
+const supervisaoEditandoSupervId  = ref<number | ''>('')
+const editSupervLoading           = ref(false)
+const editSupervError             = ref('')
+
+function iniciarEdicaoSupervisor(s: ISupervisao) {
+  supervisaoEditandoId.value       = s.id
+  supervisaoEditandoSupervId.value = s.supervisor?.id ?? ''
+  editSupervError.value            = ''
+}
+function cancelarEdicaoSupervisor() {
+  supervisaoEditandoId.value       = null
+  supervisaoEditandoSupervId.value = ''
+  editSupervError.value            = ''
+}
+async function confirmarEdicaoSupervisor(idSupervisao: number) {
+  if (!supervisaoEditandoSupervId.value) {
+    editSupervError.value = 'Selecione um supervisor.'
+    return
+  }
+  editSupervLoading.value = true
+  editSupervError.value   = ''
+  try {
+    const atualizada = await atualizarSupervisorSupervisao(
+      idSupervisao,
+      Number(supervisaoEditandoSupervId.value),
+    )
+    const idx = supervisoes.value.findIndex(s => s.id === idSupervisao)
+    if (idx !== -1) supervisoes.value[idx] = atualizada
+    cancelarEdicaoSupervisor()
+  } catch {
+    editSupervError.value = 'Erro ao atualizar supervisor.'
+  } finally {
+    editSupervLoading.value = false
+  }
+}
 
 const novaSupervForm = reactive({
   nome: '',
@@ -444,12 +482,46 @@ onMounted(async () => {
                           </div>
                         </td>
                         <td>
-                          <div v-if="s.supervisor" class="supervisor-cell">
-                            <div class="avatar-xs">{{ s.supervisor.nomeCompleto.charAt(0).toUpperCase() }}</div>
-                            <span>{{ s.supervisor.nomeCompleto }}</span>
-                          </div>
-                          <span v-else class="muted">—</span>
-                        </td>
+                            <!-- modo leitura -->
+                            <div v-if="supervisaoEditandoId !== s.id">
+                              <div v-if="s.supervisor" class="supervisor-cell">
+                                <div class="avatar-xs">{{ s.supervisor.nomeCompleto.charAt(0).toUpperCase() }}</div>
+                                <span>{{ s.supervisor.nomeCompleto }}</span>
+                                <button type="button" class="btn-edit-inline" @click="iniciarEdicaoSupervisor(s)">
+                                  Editar
+                                </button>
+                              </div>
+                              <div v-else class="supervisor-cell">
+                                <span class="muted">—</span>
+                                <button type="button" class="btn-edit-inline" @click="iniciarEdicaoSupervisor(s)">
+                                  Atribuir
+                                </button>
+                              </div>
+                            </div>
+                            <!-- modo edição inline -->
+                            <div v-else class="supervisor-edit">
+                              <select v-model="supervisaoEditandoSupervId" class="select-input-sm">
+                                <option value="" disabled>Selecione...</option>
+                                <option v-for="u in usuariosContrato" :key="u.id" :value="u.id">
+                                  {{ u.nomeCompleto }}
+                                </option>
+                              </select>
+                              <div style="display:flex;gap:4px;margin-top:4px">
+                                <button
+                                  type="button"
+                                  class="btn btn-primary btn-xs"
+                                  :disabled="editSupervLoading"
+                                  @click="confirmarEdicaoSupervisor(s.id)"
+                                >
+                                  {{ editSupervLoading ? '...' : '✓ Salvar' }}
+                                </button>
+                                <button type="button" class="btn btn-secondary btn-xs" @click="cancelarEdicaoSupervisor">
+                                  Cancelar
+                                </button>
+                              </div>
+                              <p v-if="editSupervError" class="form-error" style="margin:4px 0 0;font-size:11px">{{ editSupervError }}</p>
+                            </div>
+                          </td>
                         <td class="muted">{{ s.descricao || '—' }}</td>
                       </tr>
                     </tbody>
@@ -685,11 +757,15 @@ onMounted(async () => {
         <div class="field-group">
           <span class="field-label">Supervisor responsável *</span>
           <select v-model="novaSupervForm.idSupervisor" class="select-input">
-            <option value="" disabled>Selecione um usuário...</option>
-            <option v-for="u in usuariosDisponiveis" :key="u.id" :value="u.id">
+            <option value="" disabled>Selecione um usuário do contrato...</option>
+            <option v-for="u in usuariosContrato" :key="u.id" :value="u.id">
               {{ u.nomeCompleto }} {{ u.cargo ? `— ${u.cargo}` : '' }}
             </option>
           </select>
+          <p v-if="usuariosContrato.length === 0" class="form-hint">
+            Nenhum usuário vinculado ao contrato. Vincule um usuário na aba
+            <strong>Visão Geral</strong> antes de criar a supervisão.
+          </p>
         </div>
 
         <p v-if="novaSupervError" class="form-error">{{ novaSupervError }}</p>
@@ -981,7 +1057,22 @@ onMounted(async () => {
   border: 1px solid #bfdbfe; border-radius: 20px;
   font-size: 11px; font-weight: 600;
 }
-.supervisor-cell { display: flex; align-items: center; gap: 8px; }
+.supervisor-cell { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.btn-edit-inline {
+  border: 1px solid var(--gray-200); background: var(--white);
+  color: var(--blue-600); font: inherit; font-size: 11px;
+  padding: 2px 8px; border-radius: 4px; cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-edit-inline:hover { background: var(--blue-50); border-color: var(--blue-300); }
+.supervisor-edit { display: flex; flex-direction: column; gap: 4px; min-width: 180px; }
+.select-input-sm {
+  padding: 5px 8px; border: 1px solid var(--gray-300); border-radius: 6px;
+  font: inherit; font-size: 12px; color: var(--gray-900); outline: none; width: 100%;
+}
+.select-input-sm:focus { border-color: var(--blue-400); box-shadow: 0 0 0 2px var(--blue-50); }
+.btn-xs { padding: 4px 10px !important; font-size: 11px !important; }
+.form-hint { font-size: 11px; color: var(--gray-500); margin: 4px 0 0; }
 .avatar-xs {
   width: 26px; height: 26px; border-radius: 50%;
   background: var(--blue-400, #60a5fa); color: white;

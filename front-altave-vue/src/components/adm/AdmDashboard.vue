@@ -54,17 +54,7 @@ function removerPlanta(index: number) {
   novoContrato.plantas.splice(index, 1)
 }
 
-/* ─── drawer detalhe contrato ─── */
-const detalheAberto      = ref(false)
-const contratoSelecionado = ref<Contract | null>(null)
 
-function abrirDetalhe(c: Contract) {
-  contratoSelecionado.value = c
-  detalheAberto.value = true
-}
-function fecharDetalhe() {
-  detalheAberto.value = false
-}
 
 /* ─── KPIs computados ─── */
 const totalAtivos = computed(() => contratos.value.reduce((acc, c) => acc + (c.quantidadeAtivos || 0), 0))
@@ -187,9 +177,7 @@ function limparFormulario() {
   novaPlantaNome.value     = ''
 }
 
-function irParaContratos() {
-  router.push('/adm/contratos')
-}
+
 </script>
 
 <template>
@@ -203,7 +191,7 @@ function irParaContratos() {
         <!-- topbar -->
         <header class="topbar">
           <div>
-            <span class="topbar-title">Dashboard</span>
+            <span class="topbar-title">Geral</span>
             <span class="topbar-sub">Visão geral do sistema</span>
           </div>
           <div class="topbar-actions">
@@ -256,9 +244,7 @@ function irParaContratos() {
                   {{ isLoading ? 'Carregando...' : contratos.length === 0 ? 'Nenhum contrato' : `${contratos.length} contrato(s) cadastrado(s)` }}
                 </div>
               </div>
-              <button class="btn btn-secondary btn-sm" type="button" @click="irParaContratos">
-                Ver todos →
-              </button>
+
             </div>
 
             <div class="table-wrap">
@@ -271,7 +257,6 @@ function irParaContratos() {
                     <th>Plantas</th>
                     <th>Ativos</th>
                     <th>Status</th>
-                    <th />
                   </tr>
                 </thead>
                 <tbody>
@@ -302,11 +287,7 @@ function irParaContratos() {
                           'badge-done':    c.status === 'Inativo',
                         }">{{ c.status }}</span>
                       </td>
-                      <td>
-                        <button class="link-button" type="button" @click="abrirDetalhe(c)">
-                          Ver →
-                        </button>
-                      </td>
+
                     </tr>
                   </template>
                 </tbody>
@@ -320,8 +301,8 @@ function irParaContratos() {
     <!-- backdrop -->
     <div
       class="drawer-backdrop"
-      :class="{ open: isPanelOpen || detalheAberto }"
-      @click="isPanelOpen ? fecharPainel() : fecharDetalhe()"
+      :class="{ open: isPanelOpen }"
+      @click="fecharPainel()"
     />
 
     <!-- drawer: CRIAR CONTRATO -->
@@ -389,68 +370,7 @@ function irParaContratos() {
       </form>
     </aside>
 
-    <!-- drawer: DETALHE CONTRATO -->
-    <aside class="detail-overlay contract-drawer" :class="{ open: detalheAberto }">
-      <div class="detail-header">
-        <button class="detail-close" type="button" @click="fecharDetalhe">✕</button>
-        <strong>{{ contratoSelecionado?.nomeEmpresa }}</strong>
-        <span v-if="contratoSelecionado" class="badge mt-4" :class="{
-          'badge-active':  contratoSelecionado.status === 'Ativo',
-          'badge-pending': contratoSelecionado.status === 'Expirando',
-          'badge-done':    contratoSelecionado.status === 'Inativo',
-        }">{{ contratoSelecionado.status }}</span>
-      </div>
 
-      <div v-if="contratoSelecionado" class="detail-body detail-info">
-        <div class="info-group">
-          <div class="info-row">
-            <span class="info-label">Início</span>
-            <span class="info-value">{{ formatarData(contratoSelecionado.dataInicio) }}</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Término</span>
-            <span class="info-value">{{ formatarData(contratoSelecionado.dataFim) }}</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Plantas</span>
-            <span class="info-value">{{ contratoSelecionado.quantidadePlantas }}</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Ativos</span>
-            <span class="info-value">{{ contratoSelecionado.quantidadeAtivos }}</span>
-          </div>
-        </div>
-
-        <div class="info-group">
-          <div class="info-label mb-6">Descrição</div>
-          <p class="info-desc">{{ contratoSelecionado.descricao || 'Sem descrição.' }}</p>
-        </div>
-
-        <div v-if="contratoSelecionado.usuarios && contratoSelecionado.usuarios.length > 0" class="info-group">
-          <div class="info-label mb-6">Usuários vinculados</div>
-          <div class="user-list">
-            <div v-for="u in contratoSelecionado.usuarios" :key="u.id" class="user-chip">
-              <div class="chip-avatar">{{ u.nomeCompleto.charAt(0).toUpperCase() }}</div>
-              <div>
-                <div class="chip-name">{{ u.nomeCompleto }}</div>
-                <div class="chip-role">{{ u.cargo || 'Sem cargo' }}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div v-else class="info-group">
-          <div class="info-label mb-6">Usuários vinculados</div>
-          <p class="info-desc muted">Nenhum usuário vinculado.</p>
-        </div>
-
-        <div class="drawer-actions">
-          <button class="btn btn-secondary" type="button" @click="fecharDetalhe">Fechar</button>
-          <button class="btn btn-primary" type="button" @click="router.push(`/adm/contratos/${contratoSelecionado.id}`)">
-            Ver detalhes completos →
-          </button>
-        </div>
-      </div>
-    </aside>
   </div>
 </template>
 

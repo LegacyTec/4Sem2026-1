@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @CrossOrigin
@@ -42,6 +43,22 @@ public class SupervisaoController {
         Long idSupervisor,
         List<Long> idPlantas
     ) {}
+
+    @PatchMapping("/supervisao/{id}/supervisor")
+    @JsonView(View.Contrato.class)
+    public ResponseEntity<Supervisao> atualizarSupervisor(
+            @PathVariable Long id,
+            @RequestBody Map<String, Long> body) {
+        Supervisao supervisao = supervisaoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Supervisão não encontrada: " + id));
+        Long idSupervisor = body.get("idSupervisor");
+        if (idSupervisor != null) {
+            Usuario supervisor = usuarioRepository.findById(idSupervisor)
+                    .orElseThrow(() -> new RuntimeException("Usuário não encontrado: " + idSupervisor));
+            supervisao.setSupervisor(supervisor);
+        }
+        return ResponseEntity.ok(supervisaoRepository.save(supervisao));
+    }
 
     @PostMapping("/supervisao")
     @JsonView(View.Contrato.class)
