@@ -43,6 +43,7 @@ const salvarErro    = ref('')
 const novoUsuario   = reactive({
   nomeCompleto: '',
   email: '',
+  senha: '',
   status: 'ATIVO',
   dataNascimento: '',
   cargo: '',
@@ -53,12 +54,18 @@ function abrirDrawer() { drawerAberto.value = true; salvarErro.value = '' }
 function fecharDrawer() {
   drawerAberto.value = false
   salvarErro.value = ''
-  Object.assign(novoUsuario, { nomeCompleto:'', email:'', status:'ATIVO', dataNascimento:'', cargo:'', funcao:'' })
+  Object.assign(novoUsuario, { nomeCompleto:'', email:'', senha:'', status:'ATIVO', dataNascimento:'', cargo:'', funcao:'' })
 }
 
 async function salvarUsuario() {
   salvarErro.value = ''
-  if (!novoUsuario.nomeCompleto.trim() || !novoUsuario.email.trim() || !novoUsuario.cargo || !novoUsuario.dataNascimento) {
+  if (
+    !novoUsuario.nomeCompleto.trim() ||
+    !novoUsuario.email.trim() ||
+    !novoUsuario.senha.trim() ||
+    !novoUsuario.cargo ||
+    !novoUsuario.dataNascimento
+  ) {
     salvarErro.value = 'Preencha todos os campos obrigatórios.'
     return
   }
@@ -67,6 +74,7 @@ async function salvarUsuario() {
     const response = await api.post('/usuario', {
       nomeCompleto: novoUsuario.nomeCompleto.trim(),
       email: novoUsuario.email.trim(),
+      senha: novoUsuario.senha,
       status: novoUsuario.status,
       dataNascimento: novoUsuario.dataNascimento,
       cargo: novoUsuario.cargo.trim(),
@@ -147,7 +155,7 @@ async function salvarUsuario() {
     <div class="drawer-backdrop" :class="{ open: drawerAberto }" @click="fecharDrawer" />
 
     <!-- drawer -->
-    <aside class="detail-overlay" :class="{ open: drawerAberto }">
+    <aside class="detail-overlay user-drawer" :class="{ open: drawerAberto }">
       <div class="detail-header">
         <button class="detail-close" type="button" @click="fecharDrawer">✕</button>
         <strong>Cadastrar Usuário</strong>
@@ -155,32 +163,34 @@ async function salvarUsuario() {
       </div>
       <form class="drawer-form" @submit.prevent="salvarUsuario">
 
-        <label>Nome completo *
-          <input v-model="novoUsuario.nomeCompleto" type="text" placeholder="Ex: João Silva" />
-        </label>
+        <div class="form-grid-2">
+          <label>Nome completo *
+            <input v-model="novoUsuario.nomeCompleto" type="text" placeholder="Ex: João Silva" />
+          </label>
 
-        <label>E-mail *
-          <input v-model="novoUsuario.email" type="email" placeholder="joao@email.com" />
-        </label>
+          <label>E-mail *
+            <input v-model="novoUsuario.email" type="email" placeholder="joao@email.com" />
+          </label>
+        </div>
 
-        <label>Cargo *
-          <select v-model="novoUsuario.cargo" class="select-field">
-            <option value="" disabled>Selecione o cargo...</option>
-            <option value="ADM">ADM</option>
-            <option value="Supervisor">Supervisor</option>
-            <option value="Planejador">Planejador</option>
-            <option value="Técnico">Técnico</option>
-          </select>
-        </label>
-
-        <label>Função
-          <input v-model="novoUsuario.funcao" type="text" placeholder="Ex: Inspeção, Manutenção..." />
+        <label>Senha *
+          <input v-model="novoUsuario.senha" type="password" placeholder="Defina uma senha (ex: 12345)" />
+          <small class="form-hint">
+            Esta senha será usada no login do usuário.
+          </small>
         </label>
 
         <div class="form-grid-2">
-          <label>Data de nascimento *
-            <input v-model="novoUsuario.dataNascimento" type="date" />
+          <label>Cargo *
+            <select v-model="novoUsuario.cargo" class="select-field">
+              <option value="" disabled>Selecione o cargo...</option>
+              <option value="ADM">ADM</option>
+              <option value="Supervisor">Supervisor</option>
+              <option value="Planejador">Planejador</option>
+              <option value="Técnico">Técnico</option>
+            </select>
           </label>
+
           <label>Status *
             <select v-model="novoUsuario.status" class="select-field">
               <option value="ATIVO">Ativo</option>
@@ -188,6 +198,14 @@ async function salvarUsuario() {
             </select>
           </label>
         </div>
+
+        <label>Função
+          <input v-model="novoUsuario.funcao" type="text" placeholder="Ex: Inspeção, Manutenção..." />
+        </label>
+
+        <label>Data de nascimento *
+          <input v-model="novoUsuario.dataNascimento" type="date" />
+        </label>
 
         <p v-if="salvarErro" class="form-error">{{ salvarErro }}</p>
 
@@ -243,6 +261,10 @@ async function salvarUsuario() {
 .row-hover:hover { background:var(--gray-50); }
 
 /* drawer */
+.user-drawer {
+  width: min(560px, 96vw);
+}
+
 .drawer-backdrop {
   position: fixed; inset: 0;
   background: rgba(11,31,51,.3);
@@ -252,7 +274,10 @@ async function salvarUsuario() {
 .drawer-backdrop.open { opacity:1; visibility:visible; }
 
 .drawer-form {
-  display: flex; flex-direction: column; gap: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
 }
 .drawer-form label {
   display: flex; flex-direction: column; gap: 6px;
@@ -272,10 +297,15 @@ async function salvarUsuario() {
 }
 .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .select-field { width: 100%; cursor: pointer; }
+.form-hint { font-size: 11px; color: var(--gray-500); font-weight: 500; }
 .form-error { color: #ef4444; font-size: 12px; margin: 0; }
 .drawer-actions {
   display: flex; justify-content: flex-end; gap: 10px;
   padding-top: 16px; border-top: 1px solid var(--gray-200);
 }
 .drawer-actions .btn:disabled { opacity: .65; cursor: not-allowed; }
+
+@media (max-width: 540px) {
+  .form-grid-2 { grid-template-columns: 1fr; }
+}
 </style>
