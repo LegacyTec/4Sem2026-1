@@ -91,8 +91,7 @@ Consulte o [Manual de Instalação](./Manual%20de%20Instalação.md) para instru
 |----|-----------|--------|
 | RF01 | Agendar manutenções preventivas e corretivas respeitando intervalo contratual e criticidade | 1 |
 | RF02 | Registrar e acompanhar execução de manutenções por meio de checklist | 1 |
-| RF03 | Controlar retirada e devolução de ferramentas para cada viagem (formulário de retirada) | 2 |
-| RF04 | Visualizar localização geográfica de sistemas e técnicos em mapa GIS | 2 |
+| RF04 | Visualizar localização geográfica de ativos em mapa | 2 |
 | RF05 | Consultar histórico completo de manutenções por equipamento | 2 |
 | RF06 | Calcular e exibir previsão de chegada dos técnicos ao local de manutenção | 3 |
 | RF07 | Avaliar impacto de manutenções urgentes sobre o planejamento vigente *(desejável)* | 3 |
