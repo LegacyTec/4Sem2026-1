@@ -72,6 +72,11 @@ public class Ativo {
     @JsonIgnore
     private Contrato contrato;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "id_supervisao")
+    @JsonView(View.Ordem.class)
+    private Supervisao supervisao;
+
     @OneToMany(mappedBy = "ativo", fetch = FetchType.LAZY)
     @JsonIgnore
     private Set<OrdemManutencao> ordens;
@@ -82,6 +87,14 @@ public class Ativo {
 
     public void setContrato(Contrato contrato) {
         this.contrato = contrato;
+    }
+
+    public Supervisao getSupervisao() {
+        return supervisao;
+    }
+
+    public void setSupervisao(Supervisao supervisao) {
+        this.supervisao = supervisao;
     }
 
     public Set<OrdemManutencao> getOrdens() {

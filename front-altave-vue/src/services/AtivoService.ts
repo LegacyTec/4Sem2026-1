@@ -11,6 +11,7 @@ export interface IAtivo {
   dataInstalacao?: string;
   predio?: string;
   planta?: string;
+  supervisao?: { id: number; nome: string } | null;
 }
 
 export interface IAtivoPayload {
@@ -23,6 +24,7 @@ export interface IAtivoPayload {
   dataInstalacao: string;
   predio?: string;
   planta?: string;
+  idSupervisao?: number;
   // contrato vem pelo id na URL — não deve ser enviado no body (campo @JsonIgnore na entidade)
 }
 

@@ -5,8 +5,9 @@ import { buscarContratos, formatarData, resolverStatus } from '@/services/Contra
 import type { IContrato } from '@/services/ContratoService'
 import { buscarOrdens, buscarUsuarios, labelStatus, labelTipo } from '@/services/OrdemService'
 import type { IOrdem, IUsuario } from '@/services/OrdemService'
-import { buscarPlantasPorContrato } from '@/services/PlantaService'
+import { buscarPlantasPorContrato, criarPlanta } from '@/services/PlantaService'
 import type { IPlanta } from '@/services/PlantaService'
+import MapPicker from '@/components/geral/MapPicker.vue'
 import { buscarSupervisoesPorContrato, criarSupervisao, atualizarSupervisorSupervisao } from '@/services/SupervisaoService'
 import type { ISupervisao } from '@/services/SupervisaoService'
 import { buscarAtivosPorContrato, criarAtivo } from '@/services/AtivoService'
@@ -156,6 +157,48 @@ const isLoadingAtivos = ref(false)
 const isAtivoDrawerOpen = ref(false)
 const ativoIsSubmitting = ref(false)
 const ativoError = ref('')
+// ─── Nova Planta (com mapa) ──────────────────────────────────────────────
+const isPlantaDrawerOpen  = ref(false)
+const plantaIsSubmitting  = ref(false)
+const plantaError         = ref('')
+const novaPlantaNome      = ref('')
+const novaPlantaBusca     = ref('')
+const novaPlantaLocation  = ref<{ lat: number; lng: number } | null>(null)
+const mapPicker = ref<{ buscarEndereco: (q: string) => Promise<void> }>()
+
+function abrirPlantaDrawer() {
+  isPlantaDrawerOpen.value = true
+  plantaError.value = ''
+  novaPlantaNome.value = ''
+  novaPlantaBusca.value = ''
+  novaPlantaLocation.value = null
+}
+function fecharPlantaDrawer() {
+  isPlantaDrawerOpen.value = false
+}
+async function salvarNovaPlanta() {
+  plantaError.value = ''
+  if (!novaPlantaNome.value.trim()) {
+    plantaError.value = 'Informe o nome da planta.'
+    return
+  }
+  plantaIsSubmitting.value = true
+  try {
+    const criada = await criarPlanta(
+      novaPlantaNome.value.trim().toUpperCase(),
+      contratoId,
+      novaPlantaLocation.value?.lat,
+      novaPlantaLocation.value?.lng,
+    )
+    plantasContrato.value.push(criada)
+    fecharPlantaDrawer()
+  } catch {
+    plantaError.value = 'Erro ao salvar planta.'
+  } finally {
+    plantaIsSubmitting.value = false
+  }
+}
+
 const ativoForm = reactive({
   nome: '',
   tipo: '',
@@ -166,13 +209,14 @@ const ativoForm = reactive({
   dataInstalacao: '',
   predio: '',
   plantaNome: '',
+  idSupervisao: '' as number | '',
 })
 
 function abrirAtivoDrawer() { isAtivoDrawerOpen.value = true; ativoError.value = '' }
 function fecharAtivoDrawer() {
   isAtivoDrawerOpen.value = false
   ativoError.value = ''
-  Object.assign(ativoForm, { nome: '', tipo: '', status: 'OPERACIONAL', fabricante: '', periodicidadeManutencao: 30, descricao: '', dataInstalacao: '', predio: '', plantaNome: '' })
+  Object.assign(ativoForm, { nome: '', tipo: '', status: 'OPERACIONAL', fabricante: '', periodicidadeManutencao: 30, descricao: '', dataInstalacao: '', predio: '', plantaNome: '', idSupervisao: '' })
 }
 
 async function salvarAtivo() {
@@ -189,6 +233,7 @@ async function salvarAtivo() {
       status: ativoForm.status,
       fabricante: ativoForm.fabricante.trim() || undefined,
       periodicidadeManutencao: Number(ativoForm.periodicidadeManutencao),
+      idSupervisao: ativoForm.idSupervisao ? Number(ativoForm.idSupervisao) : undefined,
       descricao: ativoForm.descricao.trim() || undefined,
       dataInstalacao: ativoForm.dataInstalacao,
       predio: ativoForm.predio.trim() || undefined,
@@ -400,14 +445,30 @@ onMounted(async () => {
               <!-- Plantas -->
               <div class="card" style="margin-top: 14px;">
                 <div class="card-header" style="margin-bottom: 12px;">
-                  <div class="card-title">Plantas</div>
-                  <span class="card-sub">{{ plantasContrato.length }} planta(s)</span>
+                  <div>
+                    <div class="card-title">Plantas</div>
+                    <div class="card-sub">{{ plantasContrato.length }} planta(s)</div>
+                  </div>
+                  <button class="btn btn-secondary btn-sm" type="button" @click="abrirPlantaDrawer">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    Nova Planta
+                  </button>
                 </div>
-                <div v-if="plantasContrato.length === 0" class="empty-state">
-                  Nenhuma planta cadastrada neste contrato.
+                <div v-if="plantasContrato.length === 0" class="empty-state" style="padding:16px;">
+                  Nenhuma planta cadastrada. Clique em <strong>Nova Planta</strong>.
                 </div>
-                <div v-else class="chips-inline">
-                  <span v-for="p in plantasContrato" :key="p.id" class="chip-planta">{{ p.nome }}</span>
+                <div v-else class="plantas-lista">
+                  <div v-for="p in plantasContrato" :key="p.id" class="planta-item">
+                    <span class="chip-planta">{{ p.nome }}</span>
+                    <span v-if="p.latitude && p.longitude" class="planta-coords">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+                      </svg>
+                      {{ p.latitude.toFixed(4) }}, {{ p.longitude.toFixed(4) }}
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -568,6 +629,7 @@ onMounted(async () => {
                         <th>Planta</th>
                         <th>Prédio</th>
                         <th>Status</th>
+                        <th>Supervisão</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -588,9 +650,10 @@ onMounted(async () => {
                             'badge-pending': a.status === 'EM_MANUTENCAO',
                             'badge-done': a.status === 'INATIVO' || a.status === 'REMOVIDO',
                           }">
-                            {{ a.status === 'OPERACIONAL' ? 'Operacional' : a.status === 'EM_MANUTENCAO' ? 'Em manutenção' : a.status }}
+                            {{ a.status === 'OPERACIONAL' ? 'Operacional' : a.status === 'EM_MANUTENCAO' ? 'Em Manutencao' : a.status }}
                           </span>
                         </td>
+                        <td>{{ a.supervisao?.nome || '—' }}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -665,7 +728,54 @@ onMounted(async () => {
     <!-- ── Backdrop Supervisão ────────────────────────────────────────────────── -->
     <div class="drawer-backdrop" :class="{ open: isSupervDrawerOpen }" @click="fecharSupervDrawer" />
 
-    <!-- ── Backdrop Ativo ─────────────────────────────────────────────────────── -->
+    <!-- ── Backdrop Planta ───────────────────────────────────────────────────── -->
+    <div class="drawer-backdrop" :class="{ open: isPlantaDrawerOpen }" @click="fecharPlantaDrawer" />
+
+    <!-- ── Drawer Nova Planta ──────────────────────────────────────────── -->
+    <aside class="detail-overlay" :class="{ open: isPlantaDrawerOpen }" aria-label="Nova planta">
+      <div class="detail-header">
+        <button class="detail-close" type="button" @click="fecharPlantaDrawer">✕</button>
+        <strong>Nova Planta</strong>
+        <p>Defina o nome e a localização da planta no mapa.</p>
+      </div>
+      <form class="detail-body contract-form" @submit.prevent="salvarNovaPlanta">
+        <label>
+          Nome da planta *
+          <input v-model="novaPlantaNome" type="text" placeholder="Ex: SJK, BOT, ITA" />
+        </label>
+
+        <div class="field-group">
+          <span class="field-label">Localização (opcional)</span>
+          <div class="map-search-row">
+            <input
+              v-model="novaPlantaBusca"
+              type="text"
+              class="map-search-input"
+              placeholder="Buscar endereço ou cidade..."
+              @keydown.enter.prevent="mapPicker?.buscarEndereco(novaPlantaBusca)"
+            />
+            <button
+              type="button"
+              class="btn btn-secondary btn-sm"
+              @click="mapPicker?.buscarEndereco(novaPlantaBusca)"
+            >
+              Buscar
+            </button>
+          </div>
+          <MapPicker ref="mapPicker" v-model="novaPlantaLocation" height="260px" />
+        </div>
+
+        <p v-if="plantaError" class="form-error">{{ plantaError }}</p>
+        <div class="drawer-actions">
+          <button class="btn btn-secondary" type="button" @click="fecharPlantaDrawer">Cancelar</button>
+          <button class="btn btn-primary" type="submit" :disabled="plantaIsSubmitting">
+            {{ plantaIsSubmitting ? 'Salvando...' : 'Salvar planta' }}
+          </button>
+        </div>
+      </form>
+    </aside>
+
+    <!-- ── Backdrop Ativo ────────────────────────────────────────────────────── -->
     <div class="drawer-backdrop" :class="{ open: isAtivoDrawerOpen }" @click="fecharAtivoDrawer" />
 
     <!-- ── Drawer Novo Ativo ───────────────────────────────────────────────── -->
@@ -695,6 +805,12 @@ onMounted(async () => {
           <select v-model="ativoForm.plantaNome" class="select-input">
             <option value="" disabled>Selecione a planta...</option>
             <option v-for="p in plantasContrato" :key="p.id" :value="p.nome">{{ p.nome }}</option>
+          </select>
+        </label>
+        <label>Supervisão
+          <select v-model="ativoForm.idSupervisao" class="select-input">
+            <option value="">Nenhuma</option>
+            <option v-for="s in supervisoes" :key="s.id" :value="s.id">{{ s.nome }}</option>
           </select>
         </label>
         <div class="form-grid">
@@ -1099,6 +1215,20 @@ onMounted(async () => {
 .field-group { display: flex; flex-direction: column; gap: 8px; }
 .field-label { font-size: 12px; font-weight: 600; color: var(--gray-700); }
 .plants-hint { font-size: 12px; color: var(--gray-400); padding: 6px 0; }
+
+/* Plantas lista com coordenadas */
+.plantas-lista { display: flex; flex-direction: column; gap: 6px; padding: 4px 0; }
+.planta-item { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.planta-coords { display: flex; align-items: center; gap: 3px; font-size: 11px; color: var(--gray-500); }
+
+/* Busca no mapa */
+.map-search-row { display: flex; gap: 6px; margin-bottom: 6px; }
+.map-search-input {
+  flex: 1; padding: 8px 10px; border: 1px solid var(--gray-300);
+  border-radius: var(--radius-md, 6px); font: inherit; font-size: 13px;
+  color: var(--gray-900); outline: none;
+}
+.map-search-input:focus { border-color: var(--blue-400); box-shadow: 0 0 0 2px var(--blue-50); }
 .plantas-check-list { display: flex; flex-direction: column; gap: 4px; }
 .planta-check-item {
   display: flex; align-items: center; gap: 10px;

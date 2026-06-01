@@ -1,4 +1,18 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+import { getCurrentUser } from '@/services/AuthService'
+
+const user = computed(() => getCurrentUser())
+const iniciais = computed(() => {
+  return (
+    user.value?.nomeCompleto
+      ?.split(' ')
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((p) => p.charAt(0).toUpperCase())
+      .join('') ?? 'AD'
+  )
+})
 </script>
 
 <template>
@@ -58,10 +72,10 @@
 
     <div class="sidebar-footer">
       <div class="user-card">
-        <div class="avatar avatar-blue" aria-hidden="true">AD</div>
+        <div class="avatar avatar-blue" aria-hidden="true">{{ iniciais }}</div>
         <div class="user-info">
-          <div class="user-name">Usuário autenticado</div>
-          <div class="user-role">Administrador</div>
+          <div class="user-name">{{ user?.nomeCompleto ?? 'Usuário' }}</div>
+          <div class="user-role">{{ user?.cargo ?? 'Administrador' }}</div>
         </div>
         <div class="status-dot" title="Status da sessão" />
       </div>

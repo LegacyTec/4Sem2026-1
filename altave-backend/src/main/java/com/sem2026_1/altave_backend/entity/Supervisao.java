@@ -13,11 +13,11 @@ public class Supervisao {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_supervisao")
-    @JsonView(View.Contrato.class)
+    @JsonView({View.Contrato.class, View.Ordem.class})
     private Long id;
 
     @Column(name = "nome", nullable = false)
-    @JsonView(View.Contrato.class)
+    @JsonView({View.Contrato.class, View.Ordem.class})
     private String nome;
 
     @Column(name = "descricao")

@@ -39,6 +39,12 @@ public class PlantaController {
         Planta planta = new Planta();
         planta.setNome(nome);
         planta.setContrato(contrato);
+        if (body.get("latitude") != null) {
+            planta.setLatitude(Double.parseDouble(body.get("latitude").toString()));
+        }
+        if (body.get("longitude") != null) {
+            planta.setLongitude(Double.parseDouble(body.get("longitude").toString()));
+        }
         return ResponseEntity.ok(plantaRepository.save(planta));
     }
 }
