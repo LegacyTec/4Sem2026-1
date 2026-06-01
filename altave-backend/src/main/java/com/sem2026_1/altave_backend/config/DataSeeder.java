@@ -1,18 +1,23 @@
 package com.sem2026_1.altave_backend.config;
 
+import java.time.LocalDate;
+
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import com.sem2026_1.altave_backend.entity.Usuario;
 import com.sem2026_1.altave_backend.repository.UsuarioRepository;
 
 /**
- * Cria usuários de teste no primeiro startup.
- * É idempotente: só cria se ainda não existir um usuário com aquele e-mail,
- * portanto pode rodar a cada deploy sem duplicar dados.
+ * Cria usuários de teste no startup.
+ * Idempotente por e-mail; garante senha em usuários já existentes.
  */
 @Component
+@Order(1)
 public class DataSeeder implements CommandLineRunner {
+
+    private static final String SENHA_PADRAO = "12345";
 
     private final UsuarioRepository usuarioRepository;
 
@@ -22,23 +27,37 @@ public class DataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        criarSeNaoExiste("Marcos Fernando", "marcos.fernando@altave.com", "12345", "ADM", "Administrador");
-        criarSeNaoExiste("Carla Souza", "carla.souza@altave.com", "12345", "Supervisor", "Supervisão de campo");
-        criarSeNaoExiste("Pedro Almeida", "pedro.almeida@altave.com", "12345", "Planejador", "Planejamento de manutenção");
-        criarSeNaoExiste("João Silva", "joao.silva@altave.com", "12345", "Técnico", "Manutenção");
+        garantirUsuario("Marcos Fernando", "marcos.fernando@altave.com", "ADM", "Administrador", LocalDate.of(1985, 4, 12));
+        garantirUsuario("Juliana Rocha", "juliana.rocha@altave.com", "ADM", "Administradora", LocalDate.of(1988, 9, 3));
+        garantirUsuario("Carla Souza", "carla.souza@altave.com", "Supervisor", "Supervisão de campo", LocalDate.of(1990, 6, 18));
+        garantirUsuario("Fernanda Lima", "fernanda.lima@altave.com", "Supervisor", "Supervisão industrial", LocalDate.of(1987, 11, 25));
+        garantirUsuario("Pedro Almeida", "pedro.almeida@altave.com", "Planejador", "Planejamento de manutenção", LocalDate.of(1992, 2, 14));
+        garantirUsuario("Lucas Pereira", "lucas.pereira@altave.com", "Planejador", "Planejamento operacional", LocalDate.of(1991, 8, 7));
+        garantirUsuario("João Silva", "joao.silva@altave.com", "Técnico", "Manutenção", LocalDate.of(1995, 3, 10));
+        garantirUsuario("Ana Costa", "ana.costa@altave.com", "Técnico", "Manutenção elétrica", LocalDate.of(1994, 12, 1));
+        garantirUsuario("Ricardo Mendes", "ricardo.mendes@altave.com", "Técnico", "Manutenção mecânica", LocalDate.of(1993, 5, 22));
+        garantirUsuario("Bruno Santos", "bruno.santos@altave.com", "Técnico", "Inspeção", LocalDate.of(1996, 7, 30));
     }
 
-    private void criarSeNaoExiste(String nome, String email, String senha, String cargo, String funcao) {
-        if (usuarioRepository.findByEmail(email).isPresent()) {
-            return;
-        }
-        Usuario u = new Usuario();
-        u.setNomeCompleto(nome);
-        u.setEmail(email);
-        u.setSenha(senha);
-        u.setCargo(cargo);
-        u.setFuncao(funcao);
-        u.setStatus("ATIVO");
-        usuarioRepository.save(u);
+    private void garantirUsuario(String nome, String email, String cargo, String funcao, LocalDate nascimento) {
+        usuarioRepository.findByEmail(email).ifPresentOrElse(
+            existente -> {
+                if (existente.getSenha() == null || existente.getSenha().isBlank()) {
+                    existente.setSenha(SENHA_PADRAO);
+                    usuarioRepository.save(existente);
+                }
+            },
+            () -> {
+                Usuario u = new Usuario();
+                u.setNomeCompleto(nome);
+                u.setEmail(email);
+                u.setSenha(SENHA_PADRAO);
+                u.setCargo(cargo);
+                u.setFuncao(funcao);
+                u.setStatus("ATIVO");
+                u.setDataNascimento(nascimento);
+                usuarioRepository.save(u);
+            }
+        );
     }
 }
