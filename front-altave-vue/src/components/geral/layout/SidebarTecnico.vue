@@ -1,3 +1,23 @@
+<script setup lang="ts">
+import { getCurrentUser } from '@/services/AuthService'
+import { computed } from 'vue'
+
+const user = getCurrentUser()
+
+const iniciais = computed(() =>
+  user
+    ? user.nomeCompleto
+        .split(' ')
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((p) => p.charAt(0).toUpperCase())
+        .join('')
+    : 'TC',
+)
+
+const nomeUsuario = computed(() => user?.nomeCompleto ?? 'Técnico')
+</script>
+
 <template>
     <aside class="plnj-sidebar" aria-label="Navegação do técnico">
       <div class="sidebar-logo">
@@ -28,9 +48,9 @@
 
       <div class="sidebar-footer">
         <div class="user-card">
-          <div class="avatar avatar-blue" aria-hidden="true">TC</div>
+          <div class="avatar avatar-blue" aria-hidden="true">{{ iniciais }}</div>
           <div class="user-info">
-            <div class="user-name">João Silva</div>
+            <div class="user-name">{{ nomeUsuario }}</div>
             <div class="user-role">Técnico</div>
           </div>
           <div class="status-dot" title="Status da sessão" />

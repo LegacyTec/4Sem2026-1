@@ -11,11 +11,10 @@ import {
   labelTipo,
   type IOrdem,
 } from '@/services/OrdemService'
+import { getCurrentUser } from '@/services/AuthService'
 import { computed, onMounted, ref } from 'vue'
 
-/* ─── simulação de usuário logado ─── */
-/* Sem auth ainda: mostramos as ordens do técnico com id=1 (João Silva) */
-const TECNICO_ID = 1
+const tecnicoLogado = getCurrentUser()
 
 /* ─── estado ─── */
 const todasOrdens = ref<IOrdem[]>([])
@@ -28,11 +27,13 @@ const drawerAberto = ref(false)
 const salvandoStatus = ref(false)
 
 /* ─── ordens filtradas: só as do técnico logado ─── */
-const minhasOrdens = computed(() =>
-  todasOrdens.value.filter((o) =>
-    (o.usuarios ?? []).some((u) => u.id === TECNICO_ID),
-  ),
-)
+const minhasOrdens = computed(() => {
+  const id = tecnicoLogado?.id
+  if (!id) return []
+  return todasOrdens.value.filter((o) =>
+    (o.usuarios ?? []).some((u) => u.id === id),
+  )
+})
 
 const pendentes = computed(() =>
   minhasOrdens.value.filter((o) => o.status === 'PENDENTE'),
