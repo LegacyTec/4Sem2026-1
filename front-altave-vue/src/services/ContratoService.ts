@@ -31,6 +31,16 @@ export async function criarContrato(payload: IContratoPayload): Promise<IContrat
   return response.data;
 }
 
+export async function editarContrato(id: number, payload: IContratoPayload): Promise<IContrato> {
+  const response = await api.put<IContrato>(`/contrato/${id}`, payload);
+  return response.data;
+}
+
+export async function desabilitarContrato(id: number): Promise<IContrato> {
+  const response = await api.patch<IContrato>(`/contrato/${id}/desabilitar`);
+  return response.data;
+}
+
 export function formatarData(iso: string | null | undefined): string {
   if (!iso) return "—";
   try {

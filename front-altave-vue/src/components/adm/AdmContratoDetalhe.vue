@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppHeaderRoles from '@/components/geral/layout/AppHeaderRoles.vue'
 import SidebarAdm from '@/components/geral/layout/SidebarAdm.vue'
-import { buscarContratos, formatarData, resolverStatus } from '@/services/ContratoService'
+import { buscarContratos, desabilitarContrato, editarContrato, formatarData, resolverStatus } from '@/services/ContratoService'
 import type { IContrato } from '@/services/ContratoService'
 import { buscarOrdens, buscarUsuarios, labelStatus, labelTipo } from '@/services/OrdemService'
 import type { IOrdem, IUsuario } from '@/services/OrdemService'
@@ -275,10 +275,61 @@ async function confirmarVincular() {
 const ordens = ref<IOrdem[]>([])
 const isLoadingOrdens = ref(false)
 
-// ─── Desabilitar contrato ──────────────────────────────────────────────────────
+// ─── Desabilitar / Editar contrato ─────────────────────────────────────────────
 const isDesabilitando = ref(false)
+const isEditDrawerOpen = ref(false)
+const editIsSubmitting = ref(false)
+const editError = ref('')
+const editForm = reactive({
+  nomeEmpresa: '',
+  dataInicio: '',
+  dataFim: '',
+  quantidadePlanta: 1,
+  descricao: '',
+})
 
-async function desabilitarContrato() {
+function abrirEdicaoContrato() {
+  if (!contrato.value) return
+  editForm.nomeEmpresa = contrato.value.nomeEmpresa
+  editForm.dataInicio = contrato.value.dataInicio
+  editForm.dataFim = contrato.value.dataFim
+  editForm.quantidadePlanta = contrato.value.quantidadePlanta
+  editForm.descricao = contrato.value.descricao
+  editError.value = ''
+  isEditDrawerOpen.value = true
+}
+
+function fecharEdicaoContrato() {
+  isEditDrawerOpen.value = false
+  editError.value = ''
+}
+
+async function salvarEdicaoContrato() {
+  if (!contrato.value) return
+  if (!editForm.nomeEmpresa.trim() || !editForm.dataInicio || !editForm.dataFim || !editForm.descricao.trim()) {
+    editError.value = 'Preencha todos os campos obrigatórios.'
+    return
+  }
+  editIsSubmitting.value = true
+  editError.value = ''
+  try {
+    const atualizado = await editarContrato(contratoId, {
+      nomeEmpresa: editForm.nomeEmpresa.trim(),
+      quantidadePlanta: Number(editForm.quantidadePlanta),
+      dataInicio: editForm.dataInicio,
+      dataFim: editForm.dataFim,
+      descricao: editForm.descricao.trim(),
+    })
+    contrato.value = atualizado
+    fecharEdicaoContrato()
+  } catch {
+    editError.value = 'Erro ao atualizar contrato.'
+  } finally {
+    editIsSubmitting.value = false
+  }
+}
+
+async function desabilitarContratoHandler() {
   if (!contrato.value) return
   const confirmar = window.confirm(
     `Desabilitar o contrato de "${contrato.value.nomeEmpresa}"? Esta ação não pode ser desfeita.`,
@@ -286,7 +337,7 @@ async function desabilitarContrato() {
   if (!confirmar) return
   isDesabilitando.value = true
   try {
-    await api.patch(`/contrato/${contratoId}/desabilitar`)
+    await desabilitarContrato(contratoId)
     router.push('/adm/contratos')
   } catch (e: unknown) {
     console.error('Erro ao desabilitar contrato:', e)
@@ -367,10 +418,18 @@ onMounted(async () => {
           <div class="topbar-actions">
             <button
               v-if="contrato"
+              class="btn btn-secondary btn-sm"
+              type="button"
+              @click="abrirEdicaoContrato"
+            >
+              Editar
+            </button>
+            <button
+              v-if="contrato"
               class="btn btn-danger btn-sm"
               type="button"
               :disabled="isDesabilitando || statusResolvido === 'Inativo'"
-              @click="desabilitarContrato"
+              @click="desabilitarContratoHandler"
             >
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="10" />
@@ -904,6 +963,47 @@ onMounted(async () => {
           <button class="btn btn-secondary" type="button" @click="fecharSupervDrawer">Cancelar</button>
           <button class="btn btn-primary" type="submit" :disabled="novaSupervIsSubmitting">
             {{ novaSupervIsSubmitting ? 'Salvando...' : 'Criar supervisão' }}
+          </button>
+        </div>
+      </form>
+    </aside>
+
+    <!-- ── Drawer Editar Contrato ───────────────────────────────────────────── -->
+    <div class="drawer-backdrop" :class="{ open: isEditDrawerOpen }" @click="fecharEdicaoContrato" />
+    <aside class="detail-overlay" :class="{ open: isEditDrawerOpen }" aria-label="Editar contrato">
+      <div class="detail-header">
+        <button class="detail-close" type="button" @click="fecharEdicaoContrato">✕</button>
+        <strong>Editar Contrato</strong>
+        <p>Atualize os dados do contrato.</p>
+      </div>
+      <form class="detail-body contract-form" @submit.prevent="salvarEdicaoContrato">
+        <label>
+          Empresa *
+          <input v-model="editForm.nomeEmpresa" type="text" required />
+        </label>
+        <div class="form-grid">
+          <label>
+            Data início *
+            <input v-model="editForm.dataInicio" type="date" required />
+          </label>
+          <label>
+            Data término *
+            <input v-model="editForm.dataFim" type="date" required />
+          </label>
+        </div>
+        <label>
+          Plantas *
+          <input v-model.number="editForm.quantidadePlanta" type="number" min="1" required />
+        </label>
+        <label>
+          Descrição *
+          <textarea v-model="editForm.descricao" rows="4" required />
+        </label>
+        <p v-if="editError" class="form-error">{{ editError }}</p>
+        <div class="drawer-actions">
+          <button class="btn btn-secondary" type="button" @click="fecharEdicaoContrato">Cancelar</button>
+          <button class="btn btn-primary" type="submit" :disabled="editIsSubmitting">
+            {{ editIsSubmitting ? 'Salvando...' : 'Salvar alterações' }}
           </button>
         </div>
       </form>

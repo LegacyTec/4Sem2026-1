@@ -8,6 +8,12 @@ import type { IContrato } from '@/services/ContratoService'
 import { buscarSupervisoesPorContrato } from '@/services/SupervisaoService'
 import type { ISupervisao } from '@/services/SupervisaoService'
 import { computed, onMounted, ref, watch } from 'vue'
+import {
+  isEmManutencao,
+  isInativo,
+  isOperacional,
+  labelStatusAtivo,
+} from '@/services/AtivoMetricService'
 
 type AtivoEnriquecido = IAtivo & { contratoId: number; contratoNome: string }
 
@@ -53,12 +59,12 @@ const ativosFiltrados = computed(() => {
 
 const metricas = computed(() => {
   const lista = ativosFiltrados.value
-  const ativos = lista.filter((a) => a.status?.toLowerCase() === 'ativo').length
-  const inativos = lista.filter((a) => a.status?.toLowerCase() === 'inativo').length
-  const manutencao = lista.filter((a) => a.status?.toLowerCase() === 'manutenção' || a.status?.toLowerCase() === 'manutencao').length
+  const operacionais = lista.filter((a) => isOperacional(a.status)).length
+  const inativos = lista.filter((a) => isInativo(a.status)).length
+  const manutencao = lista.filter((a) => isEmManutencao(a.status)).length
   return [
     { label: 'Total de Ativos', value: lista.length, tone: 'blue' as const },
-    { label: 'Ativos', value: ativos, tone: 'green' as const },
+    { label: 'Em Operação', value: operacionais, tone: 'green' as const },
     { label: 'Em Manutenção', value: manutencao, tone: 'amber' as const },
     { label: 'Inativos', value: inativos, tone: 'red' as const },
   ]
@@ -254,12 +260,12 @@ function limparFiltros() {
                         <span
                           class="badge"
                           :class="{
-                            'badge-active': a.status?.toLowerCase() === 'ativo',
-                            'badge-pending': a.status?.toLowerCase() === 'manutenção' || a.status?.toLowerCase() === 'manutencao',
-                            'badge-done': a.status?.toLowerCase() === 'inativo',
+                            'badge-active': isOperacional(a.status),
+                            'badge-pending': isEmManutencao(a.status),
+                            'badge-done': isInativo(a.status),
                           }"
                         >
-                          {{ a.status || '—' }}
+                          {{ labelStatusAtivo(a.status) }}
                         </span>
                       </td>
                       <td>{{ a.fabricante || '—' }}</td>

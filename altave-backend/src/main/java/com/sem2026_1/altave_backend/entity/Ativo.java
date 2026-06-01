@@ -48,12 +48,14 @@ public class Ativo {
     private String tipo;
 
     @Column(name = "periodicidade_manutencao")
+    @JsonView(View.Ordem.class)
     private Long periodicidadeManutencao;
 
     @Column(name = "descricao")
     private String descricao;
 
     @Column(name = "data_instalacao")
+    @JsonView(View.Ordem.class)
     private LocalDate dataInstalacao;
 
     @Column(name="data_remocao")

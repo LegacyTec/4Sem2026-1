@@ -50,7 +50,6 @@ public class ContratoController {
     @JsonView(View.Contrato.class)
     @PutMapping("/{id}")
     public ResponseEntity<Contrato> editar(@PathVariable Long id, @RequestBody Contrato contrato){
-        contrato =  contratoService.editarContrato(id, contrato);
         return ResponseEntity.ok(contratoService.editarContrato(id, contrato));
     }
 

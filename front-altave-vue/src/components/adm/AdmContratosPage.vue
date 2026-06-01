@@ -4,6 +4,8 @@ import SidebarAdm from '@/components/geral/layout/SidebarAdm.vue'
 import {
   buscarContratos,
   criarContrato,
+  desabilitarContrato,
+  editarContrato,
   formatarData,
   resolverStatus,
 } from '@/services/ContratoService'
@@ -29,6 +31,8 @@ const isSubmitting = ref(false)
 const isLoading = ref(false)
 const errorMessage = ref('')
 const busca = ref('')
+const contratoEmEdicao = ref<number | null>(null)
+const excluindoId = ref<number | null>(null)
 
 const novoContrato = reactive({
   nomeEmpresa: '',
@@ -84,12 +88,27 @@ function verContrato(id: number) {
 }
 
 function abrirPainel() {
+  contratoEmEdicao.value = null
+  limparFormulario()
+  isPanelOpen.value = true
+}
+
+function abrirEdicao(c: Contract) {
+  contratoEmEdicao.value = c.id
+  novoContrato.nomeEmpresa = c.nomeEmpresa
+  novoContrato.dataInicio = c.dataInicio
+  novoContrato.dataFim = c.dataFim
+  novoContrato.quantidadePlantas = c.quantidadePlantas
+  novoContrato.descricao = c.descricao
+  errorMessage.value = ''
   isPanelOpen.value = true
 }
 
 function fecharPainel() {
   isPanelOpen.value = false
+  contratoEmEdicao.value = null
   errorMessage.value = ''
+  limparFormulario()
 }
 
 async function salvarContrato() {
@@ -104,31 +123,67 @@ async function salvarContrato() {
   }
   isSubmitting.value = true
   errorMessage.value = ''
+  const payload = {
+    nomeEmpresa: novoContrato.nomeEmpresa.trim(),
+    quantidadePlanta: Number(novoContrato.quantidadePlantas),
+    dataInicio: novoContrato.dataInicio,
+    dataFim: novoContrato.dataFim,
+    descricao: novoContrato.descricao.trim(),
+  }
   try {
-    const criado = await criarContrato({
-      nomeEmpresa: novoContrato.nomeEmpresa.trim(),
-      quantidadePlanta: Number(novoContrato.quantidadePlantas),
-      dataInicio: novoContrato.dataInicio,
-      dataFim: novoContrato.dataFim,
-      descricao: novoContrato.descricao.trim(),
-    })
-    contratos.value.unshift({
-      id: criado.id,
-      nomeEmpresa: criado.nomeEmpresa,
-      dataInicio: criado.dataInicio,
-      dataFim: criado.dataFim,
-      quantidadePlantas: criado.quantidadePlanta || 0,
-      quantidadeAtivos: criado.quantidadeAtivos || 0,
-      status: resolverStatus(criado.dataFim),
-      descricao: criado.descricao,
-    })
-    limparFormulario()
+    if (contratoEmEdicao.value !== null) {
+      const atualizado = await editarContrato(contratoEmEdicao.value, payload)
+      const idx = contratos.value.findIndex((c) => c.id === contratoEmEdicao.value)
+      if (idx !== -1) {
+        contratos.value[idx] = {
+          id: atualizado.id,
+          nomeEmpresa: atualizado.nomeEmpresa,
+          dataInicio: atualizado.dataInicio,
+          dataFim: atualizado.dataFim,
+          quantidadePlantas: atualizado.quantidadePlanta || 0,
+          quantidadeAtivos: atualizado.quantidadeAtivos || 0,
+          status: resolverStatus(atualizado.dataFim),
+          descricao: atualizado.descricao,
+        }
+      }
+    } else {
+      const criado = await criarContrato(payload)
+      contratos.value.unshift({
+        id: criado.id,
+        nomeEmpresa: criado.nomeEmpresa,
+        dataInicio: criado.dataInicio,
+        dataFim: criado.dataFim,
+        quantidadePlantas: criado.quantidadePlanta || 0,
+        quantidadeAtivos: criado.quantidadeAtivos || 0,
+        status: resolverStatus(criado.dataFim),
+        descricao: criado.descricao,
+      })
+    }
     fecharPainel()
   } catch (e: unknown) {
-    errorMessage.value = 'Erro ao salvar contrato.'
+    errorMessage.value = contratoEmEdicao.value !== null
+      ? 'Erro ao atualizar contrato.'
+      : 'Erro ao salvar contrato.'
     console.error(e)
   } finally {
     isSubmitting.value = false
+  }
+}
+
+async function excluirContrato(c: Contract) {
+  const confirmar = window.confirm(
+    `Desabilitar o contrato de "${c.nomeEmpresa}"? Esta ação não pode ser desfeita.`,
+  )
+  if (!confirmar) return
+  excluindoId.value = c.id
+  try {
+    await desabilitarContrato(c.id)
+    contratos.value = contratos.value.filter((ct) => ct.id !== c.id)
+  } catch (e: unknown) {
+    errorMessage.value = 'Erro ao excluir contrato.'
+    console.error(e)
+  } finally {
+    excluindoId.value = null
   }
 }
 
@@ -216,7 +271,7 @@ function limparFormulario() {
                     <th>Ativos</th>
                     <th>Ordens abertas</th>
                     <th>Status</th>
-                    <th />
+                    <th>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -258,9 +313,22 @@ function limparFormulario() {
                         </span>
                       </td>
                       <td>
-                        <button class="link-button" type="button" @click="verContrato(c.id)">
-                          Ver →
-                        </button>
+                        <div class="row-actions">
+                          <button class="link-button" type="button" @click="verContrato(c.id)">
+                            Ver
+                          </button>
+                          <button class="link-button" type="button" @click="abrirEdicao(c)">
+                            Editar
+                          </button>
+                          <button
+                            class="link-button link-danger"
+                            type="button"
+                            :disabled="excluindoId === c.id"
+                            @click="excluirContrato(c)"
+                          >
+                            {{ excluindoId === c.id ? 'Excluindo...' : 'Excluir' }}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   </template>
@@ -279,8 +347,8 @@ function limparFormulario() {
     <aside class="detail-overlay contract-drawer" :class="{ open: isPanelOpen }" aria-label="Criar contrato">
       <div class="detail-header">
         <button class="detail-close" type="button" @click="fecharPainel">✕</button>
-        <strong>Criar Contrato</strong>
-        <p>Preencha os dados do novo contrato.</p>
+        <strong>{{ contratoEmEdicao !== null ? 'Editar Contrato' : 'Criar Contrato' }}</strong>
+        <p>{{ contratoEmEdicao !== null ? 'Atualize os dados do contrato.' : 'Preencha os dados do novo contrato.' }}</p>
       </div>
 
       <form class="detail-body contract-form" @submit.prevent="salvarContrato">
@@ -320,7 +388,7 @@ function limparFormulario() {
         <div class="drawer-actions">
           <button class="btn btn-secondary" type="button" @click="fecharPainel">Cancelar</button>
           <button class="btn btn-primary" type="submit" :disabled="isSubmitting">
-            {{ isSubmitting ? 'Salvando...' : 'Salvar contrato' }}
+            {{ isSubmitting ? 'Salvando...' : contratoEmEdicao !== null ? 'Salvar alterações' : 'Salvar contrato' }}
           </button>
         </div>
       </form>
@@ -416,6 +484,26 @@ function limparFormulario() {
 .link-button:hover {
   color: var(--blue-700);
   text-decoration: underline;
+}
+
+.row-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.link-danger {
+  color: var(--red) !important;
+}
+
+.link-danger:hover {
+  color: #991b1b !important;
+}
+
+.link-danger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* Drawer */

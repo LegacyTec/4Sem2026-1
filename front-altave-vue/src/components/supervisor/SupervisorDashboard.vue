@@ -1,6 +1,16 @@
 <script setup lang="ts">
 import AppHeaderRoles from '@/components/geral/layout/AppHeaderRoles.vue'
 import SidebarSupervisor from '@/components/geral/layout/SidebarSupervisor.vue'
+import { buscarAtivosPorContrato } from '@/services/AtivoService'
+import type { IAtivo } from '@/services/AtivoService'
+import {
+  calcularMtbfMedio,
+  calcularMttrMedio,
+  formatarMtbf,
+  formatarMttr,
+  isEmManutencao,
+  isOperacional,
+} from '@/services/AtivoMetricService'
 import { buscarContratos, resolverStatus } from '@/services/ContratoService'
 import {
   buscarOrdens,
@@ -16,6 +26,7 @@ import { computed, onMounted, ref } from 'vue'
 
 // ── Estado ────────────────────────────────────
 const contratos = ref<IContrato[]>([])
+const ativos = ref<IAtivo[]>([])
 const ordens = ref<IOrdem[]>([])
 const isLoading = ref(false)
 const filtroTipo = ref('')
@@ -24,8 +35,15 @@ const filtroStatus = ref('')
 onMounted(async () => {
   isLoading.value = true
   try {
-    const [c, o] = await Promise.all([buscarContratos(), buscarOrdens()])
+    const c = await buscarContratos()
     contratos.value = c
+
+    const contrato = c.find((ct) => resolverStatus(ct.dataFim) === 'Ativo') ?? c[0] ?? null
+    const [ativosData, o] = await Promise.all([
+      contrato ? buscarAtivosPorContrato(contrato.id) : Promise.resolve([]),
+      buscarOrdens(),
+    ])
+    ativos.value = ativosData
     ordens.value = o
   } catch (e) {
     console.error('Erro ao carregar dados do supervisor:', e)
@@ -43,19 +61,28 @@ const nomeContrato = computed(() => contratoAtivo.value?.nomeEmpresa ?? 'Contrat
 
 const plantasContrato = computed(() => {
   const s = new Set<string>()
-  ordens.value.forEach(o => { if (o.ativo?.planta) s.add(o.ativo.planta) })
+  ativos.value.forEach((a) => { if (a.planta) s.add(a.planta) })
   return [...s].join(' + ') || 'Plantas do contrato'
 })
 
+const idsAtivosContrato = computed(() => new Set(ativos.value.map((a) => a.id)))
+
+const ordensContrato = computed(() =>
+  ordens.value.filter((o) => o.ativo?.id != null && idsAtivosContrato.value.has(o.ativo.id)),
+)
+
 // ── KPIs ──────────────────────────────────────
-const totalAtivos = computed(() => contratoAtivo.value?.quantidadeAtivos ?? 0)
-const emManutencao = computed(() => ordens.value.filter(o => o.status === 'EM_ANDAMENTO').length)
-const ativosOperando = computed(() => Math.max(0, totalAtivos.value - emManutencao.value))
+const totalAtivos = computed(() => ativos.value.length)
+const emManutencao = computed(() => ativos.value.filter((a) => isEmManutencao(a.status)).length)
+const ativosOperando = computed(() => ativos.value.filter((a) => isOperacional(a.status)).length)
+
+const mttrMedio = computed(() => calcularMttrMedio(ativos.value, ordensContrato.value))
+const mtbfMedio = computed(() => calcularMtbfMedio(ativos.value, ordensContrato.value))
 
 const ordensAtrasadas = computed(() => {
   const hoje = new Date()
   hoje.setHours(0, 0, 0, 0)
-  return ordens.value.filter(o => {
+  return ordensContrato.value.filter(o => {
     if (!o.dataFim) return false
     const fim = new Date(o.dataFim + 'T00:00:00')
     return fim < hoje && o.status !== 'CONCLUIDA' && o.status !== 'CANCELADA'
@@ -65,7 +92,7 @@ const ordensAtrasadas = computed(() => {
 const ativoComMaisOrdens = computed(() => {
   const count: Record<string, number> = {}
   const names: Record<string, string> = {}
-  ordens.value.forEach(o => {
+  ordensContrato.value.forEach(o => {
     if (o.ativo?.id != null) {
       const k = String(o.ativo.id)
       count[k] = (count[k] ?? 0) + 1
@@ -93,12 +120,12 @@ const last6Months = computed(() => {
 
 const chartData = computed(() =>
   last6Months.value.map(({ year, month }) => {
-    const prev = ordens.value.filter(o => {
+    const prev = ordensContrato.value.filter(o => {
       if (!o.dataInicio) return false
       const d = new Date(o.dataInicio + 'T00:00:00')
       return d.getFullYear() === year && d.getMonth() === month && o.tipoManutencao === 'PREVENTIVA'
     }).length
-    const corr = ordens.value.filter(o => {
+    const corr = ordensContrato.value.filter(o => {
       if (!o.dataInicio) return false
       const d = new Date(o.dataInicio + 'T00:00:00')
       return d.getFullYear() === year && d.getMonth() === month && o.tipoManutencao === 'CORRETIVA'
@@ -125,7 +152,7 @@ const ativosEmAlerta = computed<OrdemAlerta[]>(() => {
   const limite = new Date(hoje)
   limite.setDate(limite.getDate() + 7)
 
-  return ordens.value
+  return ordensContrato.value
     .filter(o => {
       if (o.status !== 'PENDENTE' || !o.dataFim) return false
       const fim = new Date(o.dataFim + 'T00:00:00')
@@ -144,7 +171,7 @@ const criticosCount = computed(() => ativosEmAlerta.value.filter(a => a.atrasado
 
 // ── Tabela de ordens ──────────────────────────
 const ordensFiltradas = computed(() =>
-  ordens.value.filter(o => {
+  ordensContrato.value.filter(o => {
     const tipoOk = !filtroTipo.value || o.tipoManutencao === filtroTipo.value
     const statusOk = !filtroStatus.value || o.status === filtroStatus.value
     return tipoOk && statusOk
@@ -231,19 +258,19 @@ function statusBadgeClass(status: string): string {
             <article class="kpi-card kpi-amber">
               <div class="kpi-label">Em Manutenção</div>
               <div class="kpi-value">{{ emManutencao }}</div>
-              <div class="kpi-sub">ordens ativas</div>
+              <div class="kpi-sub">ativos em manutenção</div>
             </article>
 
             <article class="kpi-card kpi-purple">
               <div class="kpi-label">MTTR Médio</div>
-              <div class="kpi-value">6,4 h</div>
-              <div class="kpi-delta down">↑ vs. mês anterior</div>
+              <div class="kpi-value">{{ formatarMttr(mttrMedio) }}</div>
+              <div class="kpi-sub">tempo médio de reparo</div>
             </article>
 
             <article class="kpi-card kpi-green">
               <div class="kpi-label">MTBF Médio</div>
-              <div class="kpi-value">42 dias</div>
-              <div class="kpi-delta up">↑ estável</div>
+              <div class="kpi-value">{{ formatarMtbf(mtbfMedio) }}</div>
+              <div class="kpi-sub">tempo médio entre falhas</div>
             </article>
 
             <article class="kpi-card kpi-red">
