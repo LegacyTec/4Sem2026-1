@@ -1,6 +1,6 @@
 # Sistema de Gestão de Manutenções — Altave
 
-> 🚀 **LegacyTech** | 4º Semestre - FATEC SJC | API — Sprint 1 🔄 CONCLUÍDA
+> 🚀 **LegacyTech** | 4º Semestre - FATEC SJC | API — Sprint 2 🔄 CONCLUÍDA
 
 <p align="center">
     <a href="#-sobre-o-projeto">Sobre</a> |
