@@ -1,3 +1,35 @@
+<script setup lang="ts">
+import { getCurrentUser } from '@/services/AuthService'
+import { carregarContextoSupervisor } from '@/services/SupervisorContextService'
+import { onMounted, ref } from 'vue'
+
+const totalAtivos = ref(0)
+const totalEquipe = ref(0)
+const totalOrdensAbertas = ref(0)
+
+const user = getCurrentUser()
+const iniciais = user
+  ? user.nomeCompleto
+      .split(' ')
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((p) => p.charAt(0).toUpperCase())
+      .join('')
+  : '—'
+const nomeUsuario = user?.nomeCompleto ?? 'Supervisor'
+
+onMounted(async () => {
+  try {
+    const ctx = await carregarContextoSupervisor()
+    totalAtivos.value = ctx.ativos.length
+    totalEquipe.value = ctx.membros.length
+    totalOrdensAbertas.value = ctx.ordensAbertas.length
+  } catch {
+    /* badges ficam em 0 */
+  }
+})
+</script>
+
 <template>
   <aside class="sv-sidebar" aria-label="Navegação do supervisor">
     <div class="sidebar-logo">
@@ -32,7 +64,7 @@
           <line x1="12" y1="22.08" x2="12" y2="12" />
         </svg>
         Ativos
-        <span class="nav-badge">124</span>
+        <span v-if="totalAtivos > 0" class="nav-badge">{{ totalAtivos }}</span>
       </RouterLink>
 
       <RouterLink to="/supervisor/equipe" class="nav-item" active-class="active">
@@ -43,7 +75,7 @@
           <path d="M16 3.13a4 4 0 0 1 0 7.75" />
         </svg>
         Minha Equipe
-        <span class="nav-badge">12</span>
+        <span v-if="totalEquipe > 0" class="nav-badge">{{ totalEquipe }}</span>
       </RouterLink>
 
       <RouterLink to="/supervisor/ordens" class="nav-item" active-class="active">
@@ -54,23 +86,16 @@
           <line x1="9" y1="16" x2="12" y2="16" />
         </svg>
         Ordens
-        <span class="nav-badge danger">8</span>
-      </RouterLink>
-
-      <RouterLink to="/supervisor/manutencao" class="nav-item" active-class="active">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
-        </svg>
-        Manutenção
+        <span v-if="totalOrdensAbertas > 0" class="nav-badge danger">{{ totalOrdensAbertas }}</span>
       </RouterLink>
     </nav>
 
     <div class="sidebar-footer">
       <div class="user-card">
-        <div class="avatar avatar-blue" aria-hidden="true">LM</div>
+        <div class="avatar avatar-blue" aria-hidden="true">{{ iniciais }}</div>
         <div class="user-info">
-          <div class="user-name">Lívia Mendes</div>
-          <div class="user-role">Supervisora</div>
+          <div class="user-name">{{ nomeUsuario }}</div>
+          <div class="user-role">Supervisor</div>
         </div>
         <div class="status-dot" title="Status da sessão" />
       </div>

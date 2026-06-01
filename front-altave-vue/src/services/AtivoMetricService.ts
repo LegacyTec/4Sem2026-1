@@ -29,23 +29,22 @@ export function labelStatusAtivo(status?: string): string {
 }
 
 export function calcularMttrAtivo(ativoId: number, ordens: IOrdem[]): number | null {
-  const corretivas = ordens.filter(
+  const concluidas = ordens.filter(
     (o) =>
       o.ativo?.id === ativoId &&
-      o.tipoManutencao === "CORRETIVA" &&
       o.status === "CONCLUIDA" &&
       o.dataInicio &&
       o.dataFim,
   );
-  if (corretivas.length === 0) return null;
+  if (concluidas.length === 0) return null;
 
-  const totalHoras = corretivas.reduce((acc, o) => {
+  const totalHoras = concluidas.reduce((acc, o) => {
     const inicio = new Date(`${o.dataInicio}T00:00:00`).getTime();
     const fim = new Date(`${o.dataFim!}T00:00:00`).getTime();
     return acc + Math.max(0, (fim - inicio) / 3_600_000);
   }, 0);
 
-  return totalHoras / corretivas.length;
+  return totalHoras / concluidas.length;
 }
 
 export function calcularMtbfAtivo(
@@ -79,19 +78,34 @@ export function calcularMtbfAtivo(
 }
 
 export function calcularMttrMedio(ativos: IAtivo[], ordens: IOrdem[]): number | null {
-  const valores = ativos
-    .map((a) => calcularMttrAtivo(a.id, ordens))
-    .filter((v): v is number => v !== null);
-  if (valores.length === 0) return null;
-  return valores.reduce((acc, v) => acc + v, 0) / valores.length;
+  if (ativos.length === 0) return null;
+
+  const valores = ativos.map((a) => {
+    const mttr = calcularMttrAtivo(a.id, ordens);
+    if (mttr !== null) return mttr;
+    if (a.periodicidadeManutencao && a.periodicidadeManutencao > 0) {
+      return a.periodicidadeManutencao * 0.25;
+    }
+    return null;
+  });
+
+  const validos = valores.filter((v): v is number => v !== null);
+  if (validos.length === 0) return null;
+
+  return validos.reduce((acc, v) => acc + v, 0) / ativos.length;
 }
 
 export function calcularMtbfMedio(ativos: IAtivo[], ordens: IOrdem[]): number | null {
-  const valores = ativos
-    .map((a) => calcularMtbfAtivo(a.id, ordens, a.periodicidadeManutencao))
-    .filter((v): v is number => v !== null);
-  if (valores.length === 0) return null;
-  return valores.reduce((acc, v) => acc + v, 0) / valores.length;
+  if (ativos.length === 0) return null;
+
+  const valores = ativos.map(
+    (a) => calcularMtbfAtivo(a.id, ordens, a.periodicidadeManutencao) ?? null,
+  );
+
+  const validos = valores.filter((v): v is number => v !== null);
+  if (validos.length === 0) return null;
+
+  return validos.reduce((acc, v) => acc + v, 0) / ativos.length;
 }
 
 export function formatarMttr(horas: number | null): string {

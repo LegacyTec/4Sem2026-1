@@ -1,8 +1,5 @@
 <script setup lang="ts">
-import AppHeaderRoles from '@/components/geral/layout/AppHeaderRoles.vue'
-import SidebarSupervisor from '@/components/geral/layout/SidebarSupervisor.vue'
-import { buscarAtivosPorContrato } from '@/services/AtivoService'
-import type { IAtivo } from '@/services/AtivoService'
+import SupervisorLayout from '@/components/supervisor/SupervisorLayout.vue'
 import {
   calcularMtbfMedio,
   calcularMttrMedio,
@@ -11,23 +8,19 @@ import {
   isEmManutencao,
   isOperacional,
 } from '@/services/AtivoMetricService'
-import { buscarContratos, resolverStatus } from '@/services/ContratoService'
 import {
-  buscarOrdens,
   formatarData,
   iniciaisNome,
   avatarColor,
   labelTipo,
   labelStatus,
 } from '@/services/OrdemService'
-import type { IContrato } from '@/services/ContratoService'
 import type { IOrdem } from '@/services/OrdemService'
+import { carregarContextoSupervisor } from '@/services/SupervisorContextService'
+import type { ISupervisorContext } from '@/services/SupervisorContextService'
 import { computed, onMounted, ref } from 'vue'
 
-// ── Estado ────────────────────────────────────
-const contratos = ref<IContrato[]>([])
-const ativos = ref<IAtivo[]>([])
-const ordens = ref<IOrdem[]>([])
+const ctx = ref<ISupervisorContext | null>(null)
 const isLoading = ref(false)
 const filtroTipo = ref('')
 const filtroStatus = ref('')
@@ -35,16 +28,7 @@ const filtroStatus = ref('')
 onMounted(async () => {
   isLoading.value = true
   try {
-    const c = await buscarContratos()
-    contratos.value = c
-
-    const contrato = c.find((ct) => resolverStatus(ct.dataFim) === 'Ativo') ?? c[0] ?? null
-    const [ativosData, o] = await Promise.all([
-      contrato ? buscarAtivosPorContrato(contrato.id) : Promise.resolve([]),
-      buscarOrdens(),
-    ])
-    ativos.value = ativosData
-    ordens.value = o
+    ctx.value = await carregarContextoSupervisor()
   } catch (e) {
     console.error('Erro ao carregar dados do supervisor:', e)
   } finally {
@@ -52,24 +36,16 @@ onMounted(async () => {
   }
 })
 
-// ── Contrato ──────────────────────────────────
-const contratoAtivo = computed<IContrato | null>(() =>
-  contratos.value.find(c => resolverStatus(c.dataFim) === 'Ativo') ?? contratos.value[0] ?? null,
-)
+const nomeContrato = computed(() => ctx.value?.contrato?.nomeEmpresa ?? 'Contrato')
 
-const nomeContrato = computed(() => contratoAtivo.value?.nomeEmpresa ?? 'Contrato')
+const ativos = computed(() => ctx.value?.ativos ?? [])
+const ordensContrato = computed(() => ctx.value?.ordensContrato ?? [])
 
 const plantasContrato = computed(() => {
   const s = new Set<string>()
   ativos.value.forEach((a) => { if (a.planta) s.add(a.planta) })
   return [...s].join(' + ') || 'Plantas do contrato'
 })
-
-const idsAtivosContrato = computed(() => new Set(ativos.value.map((a) => a.id)))
-
-const ordensContrato = computed(() =>
-  ordens.value.filter((o) => o.ativo?.id != null && idsAtivosContrato.value.has(o.ativo.id)),
-)
 
 // ── KPIs ──────────────────────────────────────
 const totalAtivos = computed(() => ativos.value.length)
@@ -211,42 +187,7 @@ function statusBadgeClass(status: string): string {
 </script>
 
 <template>
-  <div class="sv-layout">
-    <AppHeaderRoles />
-
-    <div class="sv-workspace">
-      <SidebarSupervisor />
-
-      <main class="sv-main">
-        <!-- Topbar -->
-        <header class="sv-topbar">
-          <div class="topbar-left">
-            <span class="topbar-title">{{ nomeContrato }}</span>
-            <span class="topbar-sub">{{ plantasContrato }}</span>
-          </div>
-          <div class="topbar-actions">
-            <button class="btn btn-secondary btn-sm" type="button" disabled title="Em breve">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                <polyline points="14,2 14,8 20,8" />
-                <line x1="16" y1="13" x2="8" y2="13" />
-                <line x1="16" y1="17" x2="11" y2="17" />
-              </svg>
-              Relatório
-            </button>
-            <button class="btn btn-primary btn-sm" type="button" disabled title="Em breve">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5" y1="12" x2="19" y2="12" />
-              </svg>
-              + Novo Ativo
-            </button>
-          </div>
-        </header>
-
-        <!-- Conteúdo principal -->
-        <section class="content-area sv-content">
-
+  <SupervisorLayout :title="nomeContrato" :subtitle="plantasContrato">
           <!-- KPI Cards -->
           <div class="kpi-grid">
             <article class="kpi-card kpi-blue">
@@ -466,93 +407,10 @@ function statusBadgeClass(status: string): string {
             </div>
           </div>
 
-        </section>
-      </main>
-    </div>
-  </div>
+  </SupervisorLayout>
 </template>
 
 <style scoped>
-/* ── Layout ──────────────────────────────────── */
-.sv-layout {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: var(--gray-50);
-}
-
-.sv-workspace {
-  display: flex;
-  flex: 1;
-  min-height: 0;
-}
-
-.sv-main {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-/* ── Topbar ──────────────────────────────────── */
-.sv-topbar {
-  height: var(--topbar-h);
-  background: var(--white);
-  border-bottom: 1px solid var(--gray-200);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 24px;
-  gap: 12px;
-  flex-shrink: 0;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.topbar-left {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  flex: 1;
-  min-width: 0;
-}
-
-.topbar-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--gray-900);
-  white-space: nowrap;
-}
-
-.topbar-sub {
-  font-size: 12px;
-  color: var(--gray-500);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.topbar-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-shrink: 0;
-}
-
-.topbar-actions .btn:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
-/* ── Conteúdo ────────────────────────────────── */
-.sv-content {
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
 /* ── KPI Grid (6 colunas) ────────────────────── */
 .kpi-grid {
   display: grid;
@@ -806,23 +664,6 @@ function statusBadgeClass(status: string): string {
 }
 
 @media (max-width: 860px) {
-  .sv-workspace { flex-direction: column; }
-
-  .sv-topbar {
-    height: auto;
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 14px 16px;
-    gap: 10px;
-  }
-
-  .topbar-actions {
-    width: 100%;
-    flex-wrap: wrap;
-  }
-
-  .sv-content { padding: 16px; }
-
   .kpi-grid { grid-template-columns: repeat(2, 1fr); }
 }
 

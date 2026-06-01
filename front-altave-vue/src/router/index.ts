@@ -10,6 +10,9 @@ import AdmContratoDetalhe from "@/components/adm/AdmContratoDetalhe.vue";
 import AdmContratosPage from "@/components/adm/AdmContratosPage.vue";
 import AdmUsuariosPage from "@/components/adm/AdmUsuariosPage.vue";
 import AdmAtivosPage from "@/components/adm/AdmAtivosPage.vue";
+import SupervisorAtivosPage from "@/components/supervisor/SupervisorAtivosPage.vue";
+import SupervisorEquipePage from "@/components/supervisor/SupervisorEquipePage.vue";
+import SupervisorOrdensPage from "@/components/supervisor/SupervisorOrdensPage.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -55,6 +58,21 @@ const router = createRouter({
       path: "/supervisor/inicio",
       name: "supervisor-inicio",
       component: Supervisor,
+    },
+    {
+      path: "/supervisor/ativos",
+      name: "supervisor-ativos",
+      component: SupervisorAtivosPage,
+    },
+    {
+      path: "/supervisor/equipe",
+      name: "supervisor-equipe",
+      component: SupervisorEquipePage,
+    },
+    {
+      path: "/supervisor/ordens",
+      name: "supervisor-ordens",
+      component: SupervisorOrdensPage,
     },
     // Planejador
     {
