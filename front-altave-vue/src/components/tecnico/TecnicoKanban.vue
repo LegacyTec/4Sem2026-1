@@ -11,6 +11,9 @@ import {
   labelTipo,
   type IOrdem,
 } from '@/services/OrdemService'
+import { buscarContratos } from '@/services/ContratoService'
+import { buscarPlantasPorContrato, type IPlanta } from '@/services/PlantaService'
+import MapView from '@/components/geral/MapView.vue'
 import { getCurrentUser } from '@/services/AuthService'
 import { computed, onMounted, ref } from 'vue'
 
@@ -18,6 +21,7 @@ const tecnicoLogado = getCurrentUser()
 
 /* ─── estado ─── */
 const todasOrdens = ref<IOrdem[]>([])
+const plantasPorNome = ref<Map<string, IPlanta>>(new Map())
 const isLoading = ref(false)
 const erro = ref('')
 
@@ -61,6 +65,39 @@ function labelAtivo(o: IOrdem) {
     .join(' · ') || `Ativo #${o.ativo.id}`
 }
 
+function nomePlantaOrdem(o: IOrdem | null): string {
+  if (!o) return '—'
+  return o.planta || o.ativo?.planta || '—'
+}
+
+function nomePredioOrdem(o: IOrdem | null): string {
+  if (!o) return '—'
+  return o.predio || o.ativo?.predio || '—'
+}
+
+function resolverPlanta(nome: string): IPlanta | null {
+  const chave = nome.trim().toUpperCase()
+  if (!chave) return null
+  const direta = plantasPorNome.value.get(chave)
+  if (direta) return direta
+  for (const p of plantasPorNome.value.values()) {
+    if (p.nome.trim().toUpperCase() === chave) return p
+  }
+  return null
+}
+
+const plantaSelecionada = computed(() => {
+  if (!ordemSelecionada.value) return null
+  const nome = ordemSelecionada.value.planta || ordemSelecionada.value.ativo?.planta
+  if (!nome) return null
+  return resolverPlanta(nome)
+})
+
+const temMapaPlanta = computed(() => {
+  const p = plantaSelecionada.value
+  return p?.latitude != null && p?.longitude != null
+})
+
 function classTipoBadge(tipo: string) {
   return {
     'badge-preventiva': tipo === 'PREVENTIVA',
@@ -74,7 +111,20 @@ function classTipoBadge(tipo: string) {
 onMounted(async () => {
   isLoading.value = true
   try {
-    todasOrdens.value = await buscarOrdens()
+    const [ordens, contratos] = await Promise.all([buscarOrdens(), buscarContratos()])
+    todasOrdens.value = ordens
+
+    const listasPlantas = await Promise.allSettled(
+      contratos.map((c) => buscarPlantasPorContrato(c.id)),
+    )
+    const mapa = new Map<string, IPlanta>()
+    for (const resultado of listasPlantas) {
+      if (resultado.status !== 'fulfilled') continue
+      for (const p of resultado.value) {
+        mapa.set(p.nome.trim().toUpperCase(), p)
+      }
+    }
+    plantasPorNome.value = mapa
   } catch (e: any) {
     erro.value = 'Não foi possível carregar as ordens.'
     console.error(e)
@@ -395,11 +445,25 @@ async function mudarStatus(novoStatus: IOrdem['status']) {
             </div>
             <div class="info-row">
               <span class="info-label">Planta</span>
-              <span class="info-value">{{ ordemSelecionada.planta || '—' }}</span>
+              <span class="info-value">{{ nomePlantaOrdem(ordemSelecionada) }}</span>
             </div>
             <div class="info-row">
               <span class="info-label">Prédio</span>
-              <span class="info-value">{{ ordemSelecionada.predio || '—' }}</span>
+              <span class="info-value">{{ nomePredioOrdem(ordemSelecionada) }}</span>
+            </div>
+            <div v-if="temMapaPlanta && plantaSelecionada" class="info-row info-row--map">
+              <span class="info-label">Localização</span>
+              <MapView
+                :key="`map-${ordemSelecionada.id}-${plantaSelecionada.id}`"
+                :lat="plantaSelecionada.latitude!"
+                :lng="plantaSelecionada.longitude!"
+                :label="plantaSelecionada.nome"
+                height="200px"
+              />
+            </div>
+            <div v-else-if="nomePlantaOrdem(ordemSelecionada) !== '—'" class="info-row">
+              <span class="info-label">Localização</span>
+              <span class="info-value info-value--muted">Coordenadas não cadastradas para esta planta</span>
             </div>
             <div class="info-row">
               <span class="info-label">Ativo</span>
@@ -799,6 +863,8 @@ async function mudarStatus(novoStatus: IOrdem['status']) {
 /* ── info ── */
 .info-grid { display: flex; flex-direction: column; gap: 12px; }
 .info-row  { display: flex; flex-direction: column; gap: 3px; }
+.info-row--map { gap: 8px; }
+.info-value--muted { color: var(--gray-400); font-size: 12px; }
 .info-label {
   font-size: 11px;
   font-weight: 600;
