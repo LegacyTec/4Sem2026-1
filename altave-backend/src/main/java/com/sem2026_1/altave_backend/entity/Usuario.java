@@ -51,7 +51,11 @@ public class Usuario {
     private String funcao;
 
     @Column(name = "senha")
-    @com.fasterxml.jackson.annotation.JsonIgnore
+    // Permite que a senha seja recebida no POST /usuario (write-only),
+    // mas evita que ela seja retornada nas respostas da API.
+    @com.fasterxml.jackson.annotation.JsonProperty(
+        access = com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY
+    )
     private String senha;
 
     @ManyToMany(mappedBy = "usuarios")
