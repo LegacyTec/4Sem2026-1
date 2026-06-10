@@ -114,8 +114,8 @@ Consulte o [Manual de Instalação](./Manual%20de%20Instalação.md) para instru
 
 | Rank | Prioridade | User Story | SP | Sprint |
 |------|-----------|------------|----|--------|
-| 1 | 🔴 Alta | **Como** Técnico **Quero** visualizar todas as ordens atribuídas a mim **para que** eu possa acompanhar minhas atividades e prioridades. | 13 | 1 |
-| 2 | 🔴 Alta | **Como** Planejador **Quero** visualizar indicadores das ordens de manutenção **para que** eu possa acompanhar o desempenho operacional. | 8 | 1 |
+| 1 | 🔴 Alta | **Como** Técnico **quero** visualizar todas as ordens atribuídas a mim **para que** eu possa acompanhar minhas atividades e prioridades. | 13 | 1 |
+| 2 | 🔴 Alta | **Como** Planejador **quero** visualizar indicadores das ordens de manutenção **para que** eu possa acompanhar o desempenho operacional. | 8 | 1 |
 | 3 | 🔴 Alta | **Como** Planejador **quero** cadastrar uma nova ordem de manutenção **para que** ela seja atribuída a um técnico responsável. | 8 | 1 |
 | 4 | 🔴 Alta | **Como** Planejador **quero** visualizar todas as ordens cadastradas **para que** eu possa acompanhar e gerenciar as manutenções.| 13 | 1 |
 | 5 | 🟡 Média | Como **gestor**, quero **consultar o histórico de manutenções por equipamento** para que **eu tenha rastreabilidade completa das intervenções realizadas**. | 5 | 2 |
@@ -130,7 +130,7 @@ Consulte o [Manual de Instalação](./Manual%20de%20Instalação.md) para instru
 ### Sprint 1 — Concluída ✅
 **Período:** 16/03/2026 a 05/04/2026
 
-📄 [**Sprint 1 – Módulo de Gestão de Ordens de Manutenção**](/documentacao/sprint1.md)
+📄 [**Sprint 1 – Módulo de Gestão de Ordens de Manutenção**](/Documentacao/sprint1.md)
 
 ### Sprint 2 
 
