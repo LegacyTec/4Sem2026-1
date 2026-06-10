@@ -118,10 +118,11 @@ Consulte o [Manual de Instalação](./Manual%20de%20Instalação.md) para instru
 | 2 | 🔴 Alta | **Como** Planejador **quero** visualizar indicadores das ordens de manutenção **para que** eu possa acompanhar o desempenho operacional. | 8 | 1 |
 | 3 | 🔴 Alta | **Como** Planejador **quero** cadastrar uma nova ordem de manutenção **para que** ela seja atribuída a um técnico responsável. | 8 | 1 |
 | 4 | 🔴 Alta | **Como** Planejador **quero** visualizar todas as ordens cadastradas **para que** eu possa acompanhar e gerenciar as manutenções.| 13 | 1 |
-| 5 | 🟡 Média | Como **gestor**, quero **consultar o histórico de manutenções por equipamento** para que **eu tenha rastreabilidade completa das intervenções realizadas**. | 5 | 2 |
-| 6 | 🟡 Média | Como **gestor**, quero **visualizar a previsão de chegada dos técnicos** para que **o planejamento das manutenções seja mais preciso**. | 8 | 3 |
-| 7 | 🟡 Média | Como **gestor**, quero **avaliar o impacto de uma manutenção urgente no planejamento vigente** para que **eu possa reordenar prioridades sem comprometer outros atendimentos**. | 8 | 3 |
-| 8 | 🟢 Baixa | Como **gestor**, quero **cadastrar equipamentos, técnicos e contratos** para que **os dados possam ser mantidos diretamente pelo sistema quando necessário**. | 13 | 3 *(se houver tempo)* |
+| 5 | 🟡 Média | **Como** Administrador **quero** cadastrar, visualizar e acompanhar os contratos dos clientes **para que** eu possa gerenciar as empresas atendidas e monitorar os recursos vinculados a cada contrato | 5 | 2 |
+| 6 | 🟡 Média | **Como** Administrador **quero** cadastrar e visualizar usuários do sistema **para que** eu possa controlar os acessos e responsabilidades de cada colaborador. | 8 | 2 |
+| 7 | 🟡 Média | Como **gestor**, quero **visualizar a previsão de chegada dos técnicos** para que **o planejamento das manutenções seja mais preciso**. | 8 | 3 |
+| 8 | 🟡 Média | Como **gestor**, quero **avaliar o impacto de uma manutenção urgente no planejamento vigente** para que **eu possa reordenar prioridades sem comprometer outros atendimentos**. | 8 | 3 |
+| 9 | 🟢 Baixa | Como **gestor**, quero **cadastrar equipamentos, técnicos e contratos** para que **os dados possam ser mantidos diretamente pelo sistema quando necessário**. | 13 | 3 *(se houver tempo)* |
 
 ---
 
