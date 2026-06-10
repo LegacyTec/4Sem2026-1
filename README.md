@@ -114,10 +114,10 @@ Consulte o [Manual de Instalação](./Manual%20de%20Instalação.md) para instru
 
 | Rank | Prioridade | User Story | SP | Sprint |
 |------|-----------|------------|----|--------|
-| 1 | 🔴 Alta | Como **gestor**, quero **agendar manutenções preventivas e corretivas** para que **o intervalo contratual seja respeitado e as prioridades sejam atendidas**. | 13 | 1 |
-| 2 | 🔴 Alta | Como **técnico**, quero **acessar e preencher o checklist de manutenção** para que **a execução seja padronizada e registrada corretamente**. | 8 | 1 |
-| 3 | 🔴 Alta | Como **gestor**, quero **controlar a retirada de ferramentas e equipamentos para a viagem** para que **extravios sejam evitados e a logística seja rastreável**. | 8 | 2 |
-| 4 | 🔴 Alta | Como **gestor**, quero **visualizar a localização dos sistemas e técnicos em um mapa** para que **eu possa tomar decisões logísticas com base na posição geográfica**. | 13 | 2 |
+| 1 | 🔴 Alta | **Como** Técnico **Quero** visualizar todas as ordens atribuídas a mim **para que** eu possa acompanhar minhas atividades e prioridades. | 13 | 1 |
+| 2 | 🔴 Alta | **Como** Planejador **Quero** visualizar indicadores das ordens de manutenção **para que** eu possa acompanhar o desempenho operacional. | 8 | 1 |
+| 3 | 🔴 Alta | **Como** Planejador **quero** cadastrar uma nova ordem de manutenção **para que** ela seja atribuída a um técnico responsável. | 8 | 1 |
+| 4 | 🔴 Alta | **Como** Planejador **quero** visualizar todas as ordens cadastradas **para que** eu possa acompanhar e gerenciar as manutenções.| 13 | 1 |
 | 5 | 🟡 Média | Como **gestor**, quero **consultar o histórico de manutenções por equipamento** para que **eu tenha rastreabilidade completa das intervenções realizadas**. | 5 | 2 |
 | 6 | 🟡 Média | Como **gestor**, quero **visualizar a previsão de chegada dos técnicos** para que **o planejamento das manutenções seja mais preciso**. | 8 | 3 |
 | 7 | 🟡 Média | Como **gestor**, quero **avaliar o impacto de uma manutenção urgente no planejamento vigente** para que **eu possa reordenar prioridades sem comprometer outros atendimentos**. | 8 | 3 |
@@ -128,17 +128,19 @@ Consulte o [Manual de Instalação](./Manual%20de%20Instalação.md) para instru
 ## 🏃 Sprints e Progresso
 
 ### Sprint 1 — Concluída ✅
-**Período:** 24/03/2026 a 05/04/2026
+**Período:** 16/03/2026 a 05/04/2026
 
-Para acessar o detalhamento técnico, as User Stories executadas e o **Gráfico de Burndown**, consulte:
-
-📄 [**Relatório Completo da Sprint 1 → SPRINT_1.md**](./SPRINT_1.md)
-
+📄 [**Sprint 1 – Módulo de Gestão de Ordens de Manutenção**](/documentacao/sprint1.md)
 
 ### Sprint 2 
+
+**Período:** 13/04/2026 a 03/05/2026
+
 Controle logístico de ferramentas e viagem; visualização GIS com Leaflet; histórico de manutenções por equipamento 
 
 ### Sprint 3
+
+**Período:** 11/05/2026 a 31/05/2026
 Previsão de chegada; avaliação de impacto de urgências; telas de cadastro (se houver tempo); deploy em cloud e ajustes finais
 
 ---
