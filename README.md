@@ -120,9 +120,10 @@ Consulte o [Manual de Instalação](./Manual%20de%20Instalação.md) para instru
 | 4 | 🔴 Alta | **Como** Planejador **quero** visualizar todas as ordens cadastradas **para que** eu possa acompanhar e gerenciar as manutenções.| 13 | 1 |
 | 5 | 🟡 Média | **Como** Administrador **quero** cadastrar, visualizar e acompanhar os contratos dos clientes **para que** eu possa gerenciar as empresas atendidas e monitorar os recursos vinculados a cada contrato | 5 | 2 |
 | 6 | 🟡 Média | **Como** Administrador **quero** cadastrar e visualizar usuários do sistema **para que** eu possa controlar os acessos e responsabilidades de cada colaborador. | 8 | 2 |
-| 7 | 🟡 Média | Como **gestor**, quero **visualizar a previsão de chegada dos técnicos** para que **o planejamento das manutenções seja mais preciso**. | 8 | 3 |
-| 8 | 🟡 Média | Como **gestor**, quero **avaliar o impacto de uma manutenção urgente no planejamento vigente** para que **eu possa reordenar prioridades sem comprometer outros atendimentos**. | 8 | 3 |
-| 9 | 🟢 Baixa | Como **gestor**, quero **cadastrar equipamentos, técnicos e contratos** para que **os dados possam ser mantidos diretamente pelo sistema quando necessário**. | 13 | 3 *(se houver tempo)* |
+| 7 | 🟡 Média | **Como** Administrador **quero** visualizar os detalhes de um contrato, gerenciar suas plantas e colaboradores vinculados **para que** eu possa administrar a estrutura operacional de cada cliente. | 8 | 2 |
+| 8 | 🟡 Média | **Como** Administrador **quero** criar e gerenciar supervisões vinculadas aos contratos **para que** eu possa organizar a gestão das plantas e definir responsáveis pelo acompanhamento das operações. | 8 | 2 |
+| 9 | 🟡 Média | **Como** Administrador **quero** cadastrar e visualizar os ativos vinculados a um contrato **para que** eu possa gerenciar os equipamentos monitorados e mantidos pelo sistema. | 8 | 2 |
+| 10 | 🟢 Baixa | Como **gestor**, quero **cadastrar equipamentos, técnicos e contratos** para que **os dados possam ser mantidos diretamente pelo sistema quando necessário**. | 13 | 3 *(se houver tempo)* |
 
 ---
 
@@ -174,5 +175,3 @@ feature/nome    → Features individuais
 - `chore`: Configs de build/dependências
 
 ---
-
-🔥 **#GoLegacyTech** 🚀
