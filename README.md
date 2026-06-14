@@ -176,4 +176,6 @@ feature/nome    → Features individuais
 - `refactor`: Refatoração de código
 - `chore`: Configs de build/dependências
 
----
+### Video Projeto
+
+[![Sitema de Gerenciamento de Manutenção - SGM](https://youtu.be/iRu0ifsni8Q?si=PnKdVUI4KiRd6awU)](https://youtu.be/iRu0ifsni8Q?si=PnKdVUI4KiRd6awU)
