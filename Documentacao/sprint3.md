@@ -129,7 +129,9 @@
 
 ## User Story  — Detalhes da equipe, ordens e ativos do contrato
 
-**Como** Supervisor **quero** visualizar minha equipe, os ativos e as ordens de manutenção vinculados ao contrato em que estou alocado **para** que eu possa acompanhar a operação e auxiliar na tomada de decisão.
+| Rank | Prioridade | User Story | SP | Sprint |
+|------|-----------|------------|----|--------|
+| 11 | 🟢 Baixa | **Como** Supervisor **quero** visualizar minha equipe, os ativos e as ordens de manutenção vinculados ao contrato em que estou alocado **para** que eu possa acompanhar a operação e auxiliar na tomada de decisão. | 13 | 3 *(se houver tempo)* |
 
 ### Critérios de Aceitação
 

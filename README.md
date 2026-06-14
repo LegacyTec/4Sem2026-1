@@ -139,12 +139,13 @@ Consulte o [Manual de Instalação](./Manual%20de%20Instalação.md) para instru
 
 **Período:** 13/04/2026 a 03/05/2026
 
-Controle logístico de ferramentas e viagem; visualização GIS com Leaflet; histórico de manutenções por equipamento 
+📄 [**Sprint 2 – Gerenciamento de Contratos - Tela ADM**](/Documentacao/sprint2.md)
 
 ### Sprint 3
 
 **Período:** 11/05/2026 a 31/05/2026
-Previsão de chegada; avaliação de impacto de urgências; telas de cadastro (se houver tempo); deploy em cloud e ajustes finais
+
+📄 [**Sprint 3 – KPIs, Dashboard e Gestão de Ordens de Manutenção (Supervisor)**](/Documentacao/sprint3.md)
 
 ---
 
