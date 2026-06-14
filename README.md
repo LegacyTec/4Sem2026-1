@@ -135,13 +135,13 @@ Consulte o [Manual de Instalação](./Manual%20de%20Instalação.md) para instru
 
 📄 [**Sprint 1 – Módulo de Gestão de Ordens de Manutenção**](/Documentacao/sprint1.md)
 
-### Sprint 2 
+### Sprint 2 - Concluída ✅
 
 **Período:** 13/04/2026 a 03/05/2026
 
 📄 [**Sprint 2 – Gerenciamento de Contratos - Tela ADM**](/Documentacao/sprint2.md)
 
-### Sprint 3
+### Sprint 3 - Concluída ✅
 
 **Período:** 11/05/2026 a 31/05/2026
 
