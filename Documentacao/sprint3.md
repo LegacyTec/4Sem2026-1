@@ -122,3 +122,54 @@
 - Aplicar filtros combinados.
 - Atualizar tabela dinamicamente.
 - Criar estado vazio para filtros.
+
+#### Wireframe
+<img src="assets/wireframe-sup-dash.png" width="500"> <img src="assets/wireframe-sup-dash1.png" width="500">
+
+
+## User Story  — Detalhes da equipe, ordens e ativos do contrato
+
+**Como** Supervisor **quero** visualizar minha equipe, os ativos e as ordens de manutenção vinculados ao contrato em que estou alocado **para** que eu possa acompanhar a operação e auxiliar na tomada de decisão.
+
+### Critérios de Aceitação
+
+- Listagem dos ativos com as informações:
+  - Nome
+  - Tipo
+  - Planta
+  - Status
+  - MTTR
+  - MTBF
+- Listagem da minha equipe contendo as informações principais de cada membro:
+  - Nome
+  - Cargo
+  - Função
+- Listagem da ordem de manutenção contendo as seguintes informações:
+  - Número da ordem
+  - Tipo da ordem
+  - Ativo
+  - Técnico Responsável
+  - Início Previsto
+  - Prazo 
+  - Status
+- Todos devem conter o sistema de filtros, seja por busca ou filtragem de dados.
+
+### Tarefas técnicas
+
+#### Ativos
+- Desenvolver tabela para listar todos os ativos do contrato
+- Sistema de busca pelo nome do ativo
+
+#### Equipe
+
+- Desenvolver tabela para listar todos os colaboradores que fazem parte da equipe do supervisor logado
+- Sistema de busca pelo nome, cargo e função 
+
+#### Ordens
+- Desenvolver tabela para listar todas as ordens atreladas ao contrato
+- Criar filtros por tipos de ordens e status
+
+### Wireframe
+
+<img src="assets/wireframe-ativos.png" width="500"> <img src="assets/wireframe-ordens.png" width="500">
+<img src="assets/wireframe-equipe.png" width="500">

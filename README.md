@@ -123,7 +123,8 @@ Consulte o [Manual de Instalação](./Manual%20de%20Instalação.md) para instru
 | 7 | 🟡 Média | **Como** Administrador **quero** visualizar os detalhes de um contrato, gerenciar suas plantas e colaboradores vinculados **para que** eu possa administrar a estrutura operacional de cada cliente. | 8 | 2 |
 | 8 | 🟡 Média | **Como** Administrador **quero** criar e gerenciar supervisões vinculadas aos contratos **para que** eu possa organizar a gestão das plantas e definir responsáveis pelo acompanhamento das operações. | 8 | 2 |
 | 9 | 🟡 Média | **Como** Administrador **quero** cadastrar e visualizar os ativos vinculados a um contrato **para que** eu possa gerenciar os equipamentos monitorados e mantidos pelo sistema. | 8 | 2 |
-| 10 | 🟢 Baixa | Como **gestor**, quero **cadastrar equipamentos, técnicos e contratos** para que **os dados possam ser mantidos diretamente pelo sistema quando necessário**. | 13 | 3 *(se houver tempo)* |
+| 10 | 🟡 Média | **Como** supervisor **quero** visualizar os principais indicadores em cards, gráficos e listagem de ativos com manutenções atrasadas, **para** acompanhar rapidamente a situação dos ativos, manutenções e ordens pendentes. | 5 | 3 |
+| 11 | 🟢 Baixa | **Como** Supervisor **quero** visualizar minha equipe, os ativos e as ordens de manutenção vinculados ao contrato em que estou alocado **para** que eu possa acompanhar a operação e auxiliar na tomada de decisão. | 13 | 3 *(se houver tempo)* |
 
 ---
 
