@@ -1,8 +1,9 @@
 package com.sem2026_1.altave_backend.controller;
 
 import com.fasterxml.jackson.annotation.JsonView;
-import com.sem2026_1.altave_backend.entity.*;
-import com.sem2026_1.altave_backend.repository.*;
+import com.sem2026_1.altave_backend.dto.SupervisaoCreateDTO;
+import com.sem2026_1.altave_backend.entity.Supervisao;
+import com.sem2026_1.altave_backend.service.SupervisaoService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,69 +14,29 @@ import java.util.Map;
 @CrossOrigin
 public class SupervisaoController {
 
-    private final SupervisaoRepository supervisaoRepository;
-    private final ContratoRepository contratoRepository;
-    private final UsuarioRepository usuarioRepository;
-    private final PlantaRepository plantaRepository;
+    private final SupervisaoService supervisaoService;
 
-    public SupervisaoController(
-            SupervisaoRepository supervisaoRepository,
-            ContratoRepository contratoRepository,
-            UsuarioRepository usuarioRepository,
-            PlantaRepository plantaRepository) {
-        this.supervisaoRepository = supervisaoRepository;
-        this.contratoRepository = contratoRepository;
-        this.usuarioRepository = usuarioRepository;
-        this.plantaRepository = plantaRepository;
+    public SupervisaoController(SupervisaoService supervisaoService) {
+        this.supervisaoService = supervisaoService;
     }
 
     @GetMapping("/contrato/{id}/supervisoes")
     @JsonView(View.Contrato.class)
     public ResponseEntity<List<Supervisao>> listarPorContrato(@PathVariable Long id) {
-        return ResponseEntity.ok(supervisaoRepository.findByContratoId(id));
+        return ResponseEntity.ok(supervisaoService.listarPorContrato(id));
     }
-
-    // DTO interno para receber o payload
-    record SupervisaoPayload(
-        String nome,
-        String descricao,
-        Long idContrato,
-        Long idSupervisor,
-        List<Long> idPlantas
-    ) {}
 
     @PatchMapping("/supervisao/{id}/supervisor")
     @JsonView(View.Contrato.class)
     public ResponseEntity<Supervisao> atualizarSupervisor(
             @PathVariable Long id,
             @RequestBody Map<String, Long> body) {
-        Supervisao supervisao = supervisaoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Supervisão não encontrada: " + id));
-        Long idSupervisor = body.get("idSupervisor");
-        if (idSupervisor != null) {
-            Usuario supervisor = usuarioRepository.findById(idSupervisor)
-                    .orElseThrow(() -> new RuntimeException("Usuário não encontrado: " + idSupervisor));
-            supervisao.setSupervisor(supervisor);
-        }
-        return ResponseEntity.ok(supervisaoRepository.save(supervisao));
+        return ResponseEntity.ok(supervisaoService.atualizarSupervisor(id, body.get("idSupervisor")));
     }
 
     @PostMapping("/supervisao")
     @JsonView(View.Contrato.class)
-    public ResponseEntity<Supervisao> criar(@RequestBody SupervisaoPayload payload) {
-        Contrato contrato = contratoRepository.findById(payload.idContrato())
-                .orElseThrow(() -> new RuntimeException("Contrato não encontrado"));
-        Usuario supervisor = usuarioRepository.findById(payload.idSupervisor())
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
-        List<Planta> plantas = plantaRepository.findAllById(payload.idPlantas());
-
-        Supervisao supervisao = new Supervisao();
-        supervisao.setNome(payload.nome());
-        supervisao.setDescricao(payload.descricao());
-        supervisao.setContrato(contrato);
-        supervisao.setSupervisor(supervisor);
-        supervisao.setPlantas(plantas);
-
-        return ResponseEntity.ok(supervisaoRepository.save(supervisao));
+    public ResponseEntity<Supervisao> criar(@RequestBody SupervisaoCreateDTO payload) {
+        return ResponseEntity.ok(supervisaoService.criar(payload));
     }
 }

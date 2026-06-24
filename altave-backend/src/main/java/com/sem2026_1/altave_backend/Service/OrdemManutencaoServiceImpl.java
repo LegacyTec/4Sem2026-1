@@ -60,6 +60,10 @@ public class OrdemManutencaoServiceImpl implements OrdemManutencaoService {
     @Override
     @Transactional
     public OrdemManutencao atualizarStatus(Long id, String novoStatus) {
+        if (novoStatus == null || novoStatus.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Status é obrigatório");
+        }
+
         OrdemManutencao ordem = ordemManutencaoRepository.findById(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ordem não encontrada!"));
         try {

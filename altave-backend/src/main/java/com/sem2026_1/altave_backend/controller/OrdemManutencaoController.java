@@ -23,7 +23,7 @@ import com.sem2026_1.altave_backend.service.OrdemManutencaoService;
 @RequestMapping("/ordem")
 public class OrdemManutencaoController {
 
-    OrdemManutencaoService ordemManutencaoService;
+    private final OrdemManutencaoService ordemManutencaoService;
 
     public OrdemManutencaoController(OrdemManutencaoService ordemManutencaoService) {
         this.ordemManutencaoService = ordemManutencaoService;
@@ -47,10 +47,6 @@ public class OrdemManutencaoController {
     public ResponseEntity<OrdemManutencao> atualizarStatus(
             @PathVariable Long id,
             @RequestBody Map<String, String> body) {
-        String novoStatus = body.get("status");
-        if (novoStatus == null || novoStatus.isBlank()) {
-            return ResponseEntity.badRequest().build();
-        }
-        return ResponseEntity.ok(ordemManutencaoService.atualizarStatus(id, novoStatus));
+        return ResponseEntity.ok(ordemManutencaoService.atualizarStatus(id, body.get("status")));
     }
 }
